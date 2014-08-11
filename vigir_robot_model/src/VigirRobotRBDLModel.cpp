@@ -69,89 +69,33 @@ VigirRobotRBDLModel::VigirRobotRBDLModel()
 //  0.1244, 0.0008, -0.0007,
 //  0.0008, 0.0958, -0.0005,
 // -0.0007,-0.0005,  0.1167]
- bool VigirRobotRBDLModel::loadRobotModel(const std::string xml,
-                                          const double& base_mass,
-                                          const Vector3d& base_com,
-                                          const Matrix3d& base_inertia,
-                                          const std::string& root_name,
-                                          const std::string& r_foot_name,
-                                          const std::string& l_foot_name,
-                                          const std::string& r_hand_name,
-                                          const std::string& l_hand_name,
-                                          const std::string& head_base_name,
-                                          const double& mass_factor)
+ uint32_t VigirRobotRBDLModel::loadRobotModel(const std::string xml,
+                                          const double& mass_factor,
+                                          const bool& verbose)
  {
 
-     std::cout << " loadRobotModel ..." << std::endl;
-     root_link_name_ = root_name;
-     rfoot_link_name_= r_foot_name;
-     lfoot_link_name_= l_foot_name;
-     rhand_link_name_= r_hand_name;
-     lhand_link_name_= l_hand_name;
-     head_base_name_ = head_base_name;
-
      std::cout << " Initialize robot with:" << std::endl;
-     std::cout << "          " << head_base_name_  << std::endl;
      std::cout << lhand_link_name_ << "  " << rhand_link_name_  << std::endl;
-     std::cout << "          " << root_link_name_  << std::endl;
+     std::cout << "  " << root_link_name_  << std::endl;
      std::cout << lfoot_link_name_ << "  " << rfoot_link_name_  << std::endl;
 
-     std::cout << " initString ..." << std::endl;
+     std::cout << " Calling urdf model initString ..." << std::endl;
+     //std::cout << xml << std::endl;
 
      urdf::Model urdf_model;
      bool rc = urdf_model.initString(xml);
      if (!rc) {
          std::cout << "Failed to load robot model in urdf" << std::endl;
-         std::cerr << "Failed to load robot model in urdf" << std::endl;
+         std::cerr << "Error: Failed to load robot model in urdf" << std::endl;
          return false;
      }
 
-
-
      std::cout << "Load the RBDL model from urdf using mass factor = " << mass_factor << std::endl;
 
-     std::cout << "Set intertial properities of floating base link ..." << std::endl;
-     my_rbdl_->rbdl_model_.mBodies[0].mMass = base_mass;
-     my_rbdl_->rbdl_model_.mBodies[0].mCenterOfMass = RigidBodyDynamics::Math::Vector3d(base_com[0],base_com[1],base_com[2]);
-
-     { // inertia calculations from rbdl Body.h
-         using namespace RigidBodyDynamics;
-         Math::Vector3d com = my_rbdl_->rbdl_model_.mBodies[0].mCenterOfMass;
-         Math::Matrix3d com_cross (
-                0.  , -com[2],  com[1],
-              com[2],    0.  , -com[0],
-             -com[1],  com[0],    0.
-             );
-         Math::Matrix3d parallel_axis;
-         parallel_axis = my_rbdl_->rbdl_model_.mBodies[0].mMass * com_cross * com_cross.transpose();
-
-        my_rbdl_->rbdl_model_.mBodies[0].mInertia = Math::Matrix3d (
-                    base_inertia(0,0), base_inertia(0,1), base_inertia(0,2),
-                    base_inertia(1,0), base_inertia(1,1), base_inertia(1,2),
-                    base_inertia(2,0), base_inertia(2,1), base_inertia(2,2));
-
-         Math::Matrix3d pa (parallel_axis);
-         Math::Matrix3d mcc = my_rbdl_->rbdl_model_.mBodies[0].mMass * com_cross;
-         Math::Matrix3d mccT = mcc.transpose();
-
-         Math::Matrix3d inertia_O = my_rbdl_->rbdl_model_.mBodies[0].mInertia + pa;
-
-        my_rbdl_->rbdl_model_.mBodies[0].mSpatialInertia.set (
-             inertia_O(0,0), inertia_O(0,1), inertia_O(0,2), mcc(0, 0), mcc(0, 1), mcc(0, 2),
-             inertia_O(1,0), inertia_O(1,1), inertia_O(1,2), mcc(1, 0), mcc(1, 1), mcc(1, 2),
-             inertia_O(2,0), inertia_O(2,1), inertia_O(2,2), mcc(2, 0), mcc(2, 1), mcc(2, 2),
-             mccT(0, 0), mccT(0, 1), mccT(0, 2), my_rbdl_->rbdl_model_.mBodies[0].mMass, 0., 0.,
-             mccT(1, 0), mccT(1, 1), mccT(1, 2), 0., my_rbdl_->rbdl_model_.mBodies[0].mMass, 0.,
-             mccT(2, 0), mccT(2, 1), mccT(2, 2), 0., 0., my_rbdl_->rbdl_model_.mBodies[0].mMass
-             );
-     } // end rbdl Body.h inertia calculations
-
-     bool verbose = false; // don't dump the RBDL data
-
-     if (!construct_model (&urdf_model, verbose, mass_factor)) {
-        std::cout << "Failed to load robot model into RBDL format!"<< std::endl;
-        std::cerr << "Failed to load robot model into RBDL format!"<< std::endl;
-        return false;
+     if (uint32_t rc = construct_model (&urdf_model, verbose, mass_factor)) {
+        std::cout << "Failed to load robot model into RBDL format (rc=" << rc <<")!"<< std::endl;
+        std::cerr << "Failed to load robot model into RBDL format (rc=" << rc <<")!"<< std::endl;
+        return rc;
      }
 
      // Assume model in upright pose
@@ -175,7 +119,7 @@ void VigirRobotRBDLModel::updateJointState(const uint64_t& timestamp, const Vect
 
     for (uint ndx = 0; ndx < n_joints_; ++ndx)
     {
-        int8_t rbdl_ndx      = urdf_to_rbdl_joint[ndx];
+        int8_t rbdl_ndx            = ctrl_to_rbdl_joint[ndx];
         my_rbdl_->Q_[rbdl_ndx]     = joint_positions[ndx];
         my_rbdl_->QDot_[rbdl_ndx]  = joint_velocities[ndx];
         my_rbdl_->QDDot_[rbdl_ndx] = joint_accelerations[ndx]; // Later
@@ -310,15 +254,15 @@ void VigirRobotRBDLModel::calcRequiredTorques()
 void VigirRobotRBDLModel::getRequiredTorques(VectorNd& cmd_efforts)
 {
     // Load into the state vector
-    for (uint ndx = 0; ndx < urdf_to_rbdl_joint.size(); ++ndx)
+    for (uint ndx = 0; ndx < ctrl_to_rbdl_joint.size(); ++ndx)
     {
-        int8_t rbdl_ndx  = urdf_to_rbdl_joint[ndx];
+        int8_t rbdl_ndx  = ctrl_to_rbdl_joint[ndx];
         cmd_efforts[ndx] = my_rbdl_->tau_[rbdl_ndx];
     }
 }
 
 
-bool VigirRobotRBDLModel::construct_model( urdf::Model *urdf_model, bool verbose, const double& mass_factor) {
+uint32_t VigirRobotRBDLModel::construct_model( urdf::Model *urdf_model, bool verbose, const double& mass_factor) {
     using namespace RigidBodyDynamics;
     using namespace Math;
     using namespace std;
@@ -345,6 +289,27 @@ bool VigirRobotRBDLModel::construct_model( urdf::Model *urdf_model, bool verbose
 
     stack<LinkPtr > link_stack;
     stack<int> joint_index_stack;
+
+    if (verbose)
+    { // Debug link masses
+        double total_mass = 0.0;
+        int count  = 0;
+        for(URDFLinkMap::const_iterator lm_itr = link_map.begin();
+            lm_itr != link_map.end(); ++lm_itr)
+        {
+            if (lm_itr->second->inertial)
+            {
+                printf("Link(% 3d) %s mass=%f\n",count, lm_itr->second->name.c_str(), lm_itr->second->inertial->mass);
+                total_mass += lm_itr->second->inertial->mass;
+            }
+            else
+            {
+                printf("Link(% 3d) %s Non-inertial \n",count, lm_itr->second->name.c_str());
+            }
+            ++count;
+        }
+        printf(" Total count=%d mass = %f\n\n",count, total_mass);
+    }
 
     // add the bodies in a depth-first order of the model tree
     printf(" Initial root link = <%s>\n", urdf_model->getRoot()->name.c_str());
@@ -384,11 +349,77 @@ bool VigirRobotRBDLModel::construct_model( urdf::Model *urdf_model, bool verbose
 
     std::string base_joint = root_link_name_;
     std::cout << "Initial base joint name = " << base_joint << std::endl;
+    try {
+        LinkPtr urdf_base = link_map.at(base_joint);
+
+        if (urdf_base->inertial)
+        {
+            std::cout << "Set inertial properities of floating base link ..." << std::endl;
+            my_rbdl_->rbdl_model_.mBodies[0].mMass = urdf_base->inertial->mass;
+            my_rbdl_->rbdl_model_.mBodies[0].mCenterOfMass = RigidBodyDynamics::Math::Vector3d(
+                        urdf_base->inertial->origin.position.x,
+                        urdf_base->inertial->origin.position.y,
+                        urdf_base->inertial->origin.position.z);
+
+            { // inertia calculations from rbdl Body.h
+                using namespace RigidBodyDynamics;
+                Math::Vector3d com = my_rbdl_->rbdl_model_.mBodies[0].mCenterOfMass;
+                Math::Matrix3d com_cross (
+                       0.  , -com[2],  com[1],
+                     com[2],    0.  , -com[0],
+                    -com[1],  com[0],    0.
+                    );
+                Math::Matrix3d parallel_axis;
+                parallel_axis = my_rbdl_->rbdl_model_.mBodies[0].mMass * com_cross * com_cross.transpose();
+
+               my_rbdl_->rbdl_model_.mBodies[0].mInertia = Math::Matrix3d (
+                           urdf_base->inertial->ixx, urdf_base->inertial->ixy, urdf_base->inertial->ixz,
+                           urdf_base->inertial->ixy, urdf_base->inertial->iyy, urdf_base->inertial->ixy,
+                           urdf_base->inertial->ixz, urdf_base->inertial->iyz, urdf_base->inertial->izz);
+
+                Math::Matrix3d pa (parallel_axis);
+                Math::Matrix3d mcc = my_rbdl_->rbdl_model_.mBodies[0].mMass * com_cross;
+                Math::Matrix3d mccT = mcc.transpose();
+
+                Math::Matrix3d inertia_O = my_rbdl_->rbdl_model_.mBodies[0].mInertia + pa;
+
+                my_rbdl_->rbdl_model_.mBodies[0].mSpatialInertia.set (
+                    inertia_O(0,0), inertia_O(0,1), inertia_O(0,2), mcc(0, 0), mcc(0, 1), mcc(0, 2),
+                    inertia_O(1,0), inertia_O(1,1), inertia_O(1,2), mcc(1, 0), mcc(1, 1), mcc(1, 2),
+                    inertia_O(2,0), inertia_O(2,1), inertia_O(2,2), mcc(2, 0), mcc(2, 1), mcc(2, 2),
+                    mccT(0, 0), mccT(0, 1), mccT(0, 2), my_rbdl_->rbdl_model_.mBodies[0].mMass, 0., 0.,
+                    mccT(1, 0), mccT(1, 1), mccT(1, 2), 0., my_rbdl_->rbdl_model_.mBodies[0].mMass, 0.,
+                    mccT(2, 0), mccT(2, 1), mccT(2, 2), 0., 0., my_rbdl_->rbdl_model_.mBodies[0].mMass
+                    );
+            } // end rbdl Body.h inertia calculations
+        }
+        else
+        {
+            std::cerr << "Invalid floating base link inertia data!" << std::endl;
+            return 5;
+        }
+    }
+    catch(...)
+    {
+        std::cerr << "Invalid floating base link inertia data!" << std::endl;
+        return 5;
+    }
+
+    double total_mass = my_rbdl_->rbdl_model_.mBodies[0].mMass;
     unsigned int j;
-    for (j = 0; j < joint_names.size(); j++) {
-        JointPtr urdf_joint = joint_map[joint_names[j]];
+    for (j = 0; j < joint_names.size(); j++)
+    {
+        try{
+            joint_map.at(joint_names[j]);
+        }
+        catch(...)
+        {
+            std::cerr << "Failed to find joint name - error in URDF!" << std::endl;
+            return 1;
+        }
+        JointPtr urdf_joint = joint_map.at(joint_names[j]);
         LinkPtr urdf_parent = link_map[urdf_joint->parent_link_name];
-        LinkPtr urdf_child = link_map[urdf_joint->child_link_name];
+        LinkPtr urdf_child  = link_map[urdf_joint->child_link_name];
 
         // determine where to add the current joint and child body
         unsigned int rbdl_parent_id = 0; // initialize to the base joint
@@ -397,12 +428,13 @@ bool VigirRobotRBDLModel::construct_model( urdf::Model *urdf_model, bool verbose
             rbdl_parent_id = rbdl_model->GetBodyId (urdf_parent->name.c_str());
 
 
-        // @todo: This is Atlas specific code due to joint names
-        if ((std::string::npos != urdf_child->name.find("left")) ||
-            (std::string::npos != urdf_child->name.find("right")) ||
-            (std::string::npos != urdf_child->name.find("hokuyo")) )
+        uint8_t ctrl_joint_ndx = -1;
+        try {
+            ctrl_joint_ndx = joint_map_.at(urdf_joint->name);
+        }
+        catch(...)
         {
-            printf("Assign child body <%s> as fixed joint ", urdf_child->name.c_str());
+            printf("Assign child body <%s> as fixed joint for %s\n", urdf_child->name.c_str(), urdf_joint->name.c_str());
             urdf_joint->type = urdf::Joint::FIXED;
         }
 
@@ -428,7 +460,7 @@ bool VigirRobotRBDLModel::construct_model( urdf::Model *urdf_model, bool verbose
             // todo: which two directions should be used that are perpendicular
             // to the specified axis?
             cerr << "Error while processing joint '" << urdf_joint->name << "': planar joints not yet supported!" << endl;
-            return false;
+            return 2;
         }
 
         // compute the joint transformation
@@ -454,9 +486,10 @@ bool VigirRobotRBDLModel::construct_model( urdf::Model *urdf_model, bool verbose
         Matrix3d link_inertial_inertia  = Matrix3d::Zero();
         double link_inertial_mass       = 0.0;
 
-        // but only if we actually have inertial data
+        // but only if we actually have inertial data      
         if (urdf_child->inertial) {
             link_inertial_mass = urdf_child->inertial->mass * mass_factor;
+            total_mass += link_inertial_mass;
 
             link_inertial_position = Vector3d(
                     urdf_child->inertial->origin.position.x,
@@ -543,32 +576,25 @@ bool VigirRobotRBDLModel::construct_model( urdf::Model *urdf_model, bool verbose
             l_hand_id_ = body_id;
             printf(" Found end effector %s at %d\n", urdf_child->name.c_str(),body_id);
         }
-    }
+    } // end of joints loop
 
     printf(" List of all robot body parts (%d fixed, %d movable, %d DOF, %d joints):\n",
            uint8_t(rbdl_model->mFixedBodies.size()), uint8_t(rbdl_model->mBodies.size()),
            rbdl_model->dof_count,uint8_t(rbdl_model->mJoints.size()));
     printf("Note: fixed bodies are already joined to moveable parents\n");
+    double total_mass2= 0.0;
     for (int ndx = 0; ndx < int8_t(rbdl_model->mBodies.size()); ++ndx) {
+            total_mass2 += rbdl_model->mBodies[ndx].mMass;
              printf("Body  : % 3d :%s : mass=%f\n",
                     ndx, rbdl_model->GetBodyName(ndx).c_str(),
                     rbdl_model->mBodies[ndx].mMass);
     }
+    printf(" Total mass=%f = %f\n\n",total_mass, total_mass2);
 
     // Maps from one to another representation
-    n_joints_ = rbdl_model->mJoints.size();  // @todo - fix this Atlas?
-    rbdl_to_urdf_joint.resize(rbdl_model->mJoints.size(),-1);
-    urdf_to_rbdl_joint.resize(n_joints_);
-    printf(" %10s : %10s :%s :%s\n", "Joint Name", "Child Link", "OSRF", "RBDL");
-
-    /// HACK ALERT - CHECK OLD NAMES IF NEW NAMES FAIL  // @todo - fix this Atlas?
-    std::vector<std::string> old_joint_names;
-        old_joint_names.push_back("back_lbz"); old_joint_names.push_back("back_mby"); old_joint_names.push_back("back_ubx");
-        old_joint_names.push_back("neck_ay" );
-        old_joint_names.push_back("l_leg_uhz"); old_joint_names.push_back( "l_leg_mhx"); old_joint_names.push_back("l_leg_lhy"); old_joint_names.push_back("l_leg_kny" ); old_joint_names.push_back("l_leg_uay" ); old_joint_names.push_back( "l_leg_lax" );
-        old_joint_names.push_back("r_leg_uhz"); old_joint_names.push_back( "r_leg_mhx"); old_joint_names.push_back("r_leg_lhy"); old_joint_names.push_back("r_leg_kny" ); old_joint_names.push_back("r_leg_uay" ); old_joint_names.push_back( "r_leg_lax" );
-        old_joint_names.push_back("l_arm_usy"); old_joint_names.push_back( "l_arm_shx"); old_joint_names.push_back("l_arm_ely"); old_joint_names.push_back("l_arm_elx" ); old_joint_names.push_back("l_arm_uwy" ); old_joint_names.push_back( "l_arm_mwx" );
-        old_joint_names.push_back("r_arm_usy"); old_joint_names.push_back( "r_arm_shx"); old_joint_names.push_back("r_arm_ely"); old_joint_names.push_back("r_arm_elx" ); old_joint_names.push_back("r_arm_uwy" ); old_joint_names.push_back( "r_arm_mwx" );
+    rbdl_to_ctrl_joint.resize(rbdl_model->mJoints.size(),-1);
+    ctrl_to_rbdl_joint.resize(n_joints_);
+    printf(" %10s : %10s :%s :%s\n", "Joint Name", "Child Link", "Control", "RBDL");
 
     for(std::map<std::string, int8_t>::const_iterator jm_itr = joint_map_.begin();
         jm_itr != joint_map_.end(); ++jm_itr)
@@ -579,20 +605,15 @@ bool VigirRobotRBDLModel::construct_model( urdf::Model *urdf_model, bool verbose
         JointPtr urdf_joint = joint_map[jnt_name];
         if (!urdf_joint)
         {
-            ROS_WARN("Could not find osrf joint <%s> in URDF try old name=%s",jnt_name.c_str(),old_joint_names[jnt_ndx].c_str());
-            urdf_joint = joint_map[old_joint_names[jnt_ndx]];
-            if (!urdf_joint)
-            {
-                ROS_ERROR("    Failed again!");
-                return false;
-            }
+            ROS_WARN("Could not find controlled joint <%s> in URDF ",jnt_name.c_str());
+            return 3;
         }
 
         int body_ndx = rbdl_model->GetBodyId(urdf_joint->child_link_name.c_str());
         if (rbdl_model->IsBodyId(body_ndx))
         {
-            rbdl_to_urdf_joint[body_ndx] = jnt_ndx; // maps body index to the osrf joint that moves the body
-            urdf_to_rbdl_joint[jnt_ndx]  = body_ndx-1; // maps osrf joint to the Q vector index (not what documentation says!)
+            rbdl_to_ctrl_joint[body_ndx] = jnt_ndx;    // maps body index to the osrf joint that moves the body
+            ctrl_to_rbdl_joint[jnt_ndx]  = body_ndx-1; // maps osrf joint to the Q vector index (not what documentation says!)
             printf(" %10s : %10s : % 3d : % 3d\n",
                    jnt_name.c_str(), urdf_joint->child_link_name.c_str(),
                    jnt_ndx, body_ndx);
@@ -600,24 +621,25 @@ bool VigirRobotRBDLModel::construct_model( urdf::Model *urdf_model, bool verbose
         else
         {
             ROS_ERROR("Could not find body for joint <%s> - child <%s>",jnt_name.c_str(), urdf_joint->child_link_name.c_str());
-            return false;
+            return 4;
         }
     }
-    for (uint ndx = 0; ndx < rbdl_to_urdf_joint.size(); ++ndx)
+    for (uint ndx = 0; ndx < rbdl_to_ctrl_joint.size(); ++ndx)
     {
-        printf("RBDL body: %s osrf ndx=%d\n",rbdl_model->GetBodyName(ndx).c_str(), rbdl_to_urdf_joint[ndx]);
+        printf("RBDL body: %s ctrl ndx=%d\n",rbdl_model->GetBodyName(ndx).c_str(), rbdl_to_ctrl_joint[ndx]);
     }
-    for (uint ndx = 0; ndx < urdf_to_rbdl_joint.size(); ++ndx)
+    for (uint ndx = 0; ndx < ctrl_to_rbdl_joint.size(); ++ndx)
     {
-        printf("OSRF link: %d rbdl ndx=%d\n",ndx, urdf_to_rbdl_joint[ndx]);
+        printf("Controlled link: %d rbdl ndx=%d\n",ndx, ctrl_to_rbdl_joint[ndx]);
     }
 
     if (( r_foot_id_ < 1) || ( l_foot_id_ < 1) || (r_hand_id_ < 1) || (l_hand_id_ < 1))
     {
         printf(" Failed to find all end effectors feet(%d, %d) hands (%d, %d)\n", l_foot_id_, r_foot_id_, l_hand_id_, r_hand_id_);
-        return false;
+        return 4;
     }
-    return true;
+
+    return 0; // all is well
 }
 
 void VigirRobotRBDLModel::getLeftHandMass(Vector3d& CoM, float& mass)

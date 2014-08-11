@@ -60,17 +60,9 @@ public:
   /**
     * Load model from XML-based urdf string
     */
-  bool loadRobotModel(const std::string xml,
-                      const double& base_mass,
-                      const Vector3d& base_com,
-                      const Matrix3d& base_inertia,
-                      const std::string& root_name,
-                      const std::string& r_foot_name,
-                      const std::string& l_foot_name,
-                      const std::string& r_hand_name,
-                      const std::string& l_hand_name,
-                      const std::string& head_base_name="",
-                      const double& mass_factor = 1.0);
+  uint32_t loadRobotModel(const std::string xml,
+                          const double& mass_factor = 1.0,
+                          const bool& verbose = false);
 
   inline void getCoM(Vector3d& CoM, double& mass)
   {
@@ -159,8 +151,8 @@ public:
 protected:
 
   // RBDL
-  std::vector<int8_t>             rbdl_to_urdf_joint;
-  std::vector<int8_t>             urdf_to_rbdl_joint;
+  std::vector<int8_t>             rbdl_to_ctrl_joint;
+  std::vector<int8_t>             ctrl_to_rbdl_joint;
 
   // Current values of kinematics
   uint64_t                          timestamp_; // last update time
@@ -177,7 +169,7 @@ private:
 
   boost::shared_ptr<VigirRobotRBDLPrivate>  my_rbdl_;
 
-  bool construct_model (urdf::Model *urdf_model, bool verbose, const double& mass_factor);
+  uint32_t construct_model (urdf::Model *urdf_model, bool verbose, const double& mass_factor);
 
 
 };

@@ -48,4 +48,44 @@ VigirRobotModel::VigirRobotModel()
 
  }
 
+ uint32_t VigirRobotModel::initializeRobotJoints(const std::vector<std::string>& controlled_joints,
+                            const std::string& root_link_name,
+                            const std::string& l_foot_link_name,
+                            const std::string& r_foot_link_name,
+                            const std::string& l_hand_link_name,
+                            const std::string& r_hand_link_name)
+ {
+     root_link_name_ = root_link_name;
+     rfoot_link_name_= r_foot_link_name;
+     lfoot_link_name_= l_foot_link_name;
+     rhand_link_name_= r_hand_link_name;
+     lhand_link_name_= l_hand_link_name;
+
+     n_joints_ = controlled_joints.size();
+
+     printf(" Root(%s) Hands(%s, %s) Feet(%s, %s) n_joints=%d\n",
+            root_link_name_.c_str(),
+            rfoot_link_name_.c_str(),
+            lfoot_link_name_.c_str(),
+            rhand_link_name_.c_str(),
+            lhand_link_name_.c_str(),
+            n_joints_);
+
+     // Load map of controlled joint names
+     joint_map_.clear();
+     std::cout << "Loading joint map with controlled joint list ..." << std::endl;
+     for (uint8_t ndx=0; ndx < n_joints_; ndx++)
+     {
+         std::cout << uint32_t(ndx) << " : " << controlled_joints[ndx] << std::endl;
+         joint_map_.insert(std::pair<std::string,uint8_t>(controlled_joints[ndx],ndx));
+     }
+
+     std::cout << "Joint Map size = " << joint_map_.size() << std::endl;
+
+     if (joint_map_.size() == n_joints_)
+         return 0; // all is well
+     else
+         return 1;
+ }
+
 } /* namespace flor_control */

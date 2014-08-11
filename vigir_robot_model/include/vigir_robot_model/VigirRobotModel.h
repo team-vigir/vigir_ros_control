@@ -85,17 +85,16 @@ namespace vigir_control {
     Transform                       l_hand_transform_;
     bool                            b_transforms_up_to_date;
 
-    virtual bool loadRobotModel(const std::string xml,
-                                const double& base_mass,
-                                const Vector3d& base_com,
-                                const Matrix3d& base_inertia,
-                                const std::string& root_name,
-                                const std::string& r_foot_name,
-                                const std::string& l_foot_name,
-                                const std::string& r_hand_name,
-                                const std::string& l_hand_name,
-                                const std::string& head_base_name="",
-                                const double& mass_factor = 1.0) =  0;
+    uint32_t initializeRobotJoints(const std::vector<std::string>& controlled_joints,
+                                   const std::string& root_link_name,
+                                   const std::string& l_foot_link_name,
+                                   const std::string& r_foot_link_name,
+                                   const std::string& l_hand_link_name,
+                                   const std::string& r_hand_link_name);
+
+    virtual uint32_t loadRobotModel(const std::string xml,
+                                    const double& mass_factor = 1.0,
+                                    const bool& verbose = false) =  0;
 
     virtual void updateJointState(const uint64_t& timestamp, const VectorNd& joint_positions, const VectorNd& joint_velocities, const VectorNd& joint_accelerations)=0;
     virtual void updateKinematics(const Quatd& pelvis_orientation) = 0;  // update RBDL kinematics and gravity vector given latest robot state

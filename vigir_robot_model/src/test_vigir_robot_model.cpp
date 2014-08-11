@@ -1,6 +1,7 @@
 
 //#include <flor_dynamics/FlorStability.h>
 #include <vigir_robot_model/VigirRobotRBDLModel.h>
+#include <vigir_robot_model/VigirRobotState.h>
 #include <fstream>
 
 #include <ros/ros.h>
@@ -8,36 +9,111 @@ int main(int argc, char ** argv)
 {
     ros::init(argc,argv,"");
 
-    vigir_control::VigirRobotRBDLModel      robot_model;
+    std::cout <<"\n\n\nStart robot model test" << std::endl;
 
-    std::ifstream in("/usr/share/drcsim-2.2/gazebo_models/atlas_description/atlas_sandia_hands/atlas_sandia_hands.urdf");
-    std::stringstream ss;
-    ss << in.rdbuf();
+//    //std::ifstream in("/home/david/flor_repo/rosbuild_ws/vigir_robot/flor_atlas_description/urdf/atlas.urdf");
+//    std::ifstream in("/home/david/atlas.urdf");
+//    if (!in.is_open())
+//    {
+//        std::cerr << "Failed to open the robot urdf file for test!" << std::endl;
+//        return 1;
+//    }
 
-    std::string xml = ss.str();
+//    std::stringstream ss;
+//    ss << in.rdbuf();
 
-    // Default masses of the base link
-    const double mass=17.882;
-    const vigir_control::Vector3d com(0.0111, 0.0, 0.0271);
-    vigir_control::Matrix3d inertia;
-    inertia(0,0)=  0.1244;inertia(0,1)= 0.0008;inertia(0,2)= -0.0007;
-    inertia(1,0)=  0.0008;inertia(1,1)= 0.0958;inertia(1,2)= -0.0005;
-    inertia(2,0)= -0.0007;inertia(2,1)=-0.0005;inertia(2,2)=  0.1167;
+//    std::string xml_result = ss.str();
+//    if (xml_result.length() == 0)
+//    {
+//        std::cerr << "Failed to load the robot urdf file for test!" << std::endl;
+//        return 1;
+//    }
+    ros::NodeHandle nh;
+    ros::NodeHandle nhp("~");
 
-    if (robot_model.loadRobotModel(xml, mass, com, inertia,
-                                   "pelvis",
-                                   "r_foot", "l_foot",
-                                   "r_hand", "l_hand",
-                                   "hokuyo",
-                                   1.0))
+    std::string urdf_xml, full_urdf_xml,xml_result;
+    urdf_xml = std::string("robot_description");
+    // Get URDF XML
+    nhp.searchParam(urdf_xml,full_urdf_xml);
+
+    std::cout << "Reading xml file from parameter server" << std::endl;
+    if (!nhp.getParam(full_urdf_xml, xml_result))
     {
-        printf("load = true");
+        std::cerr << "Failed to load the robot urdf from parameter server for test!" << std::endl;
         return 1;
     }
-    else
+    //std::cout << xml << std::endl << std::endl << std::endl << std::endl << std::endl;
+
+    std::vector<std::string> controlled_joints;
+    controlled_joints.clear();;
+    controlled_joints.push_back("back_bkz" );
+    controlled_joints.push_back("back_bky" );
+    controlled_joints.push_back("back_bkx" );
+    controlled_joints.push_back("neck_ry"  );
+    controlled_joints.push_back("l_leg_hpz");
+    controlled_joints.push_back("l_leg_hpx");
+    controlled_joints.push_back("l_leg_hpy");
+    controlled_joints.push_back("l_leg_kny");
+    controlled_joints.push_back("l_leg_aky");
+    controlled_joints.push_back("l_leg_akx");
+    controlled_joints.push_back("r_leg_hpz");
+    controlled_joints.push_back("r_leg_hpx");
+    controlled_joints.push_back("r_leg_hpy");
+    controlled_joints.push_back("r_leg_kny");
+    controlled_joints.push_back("r_leg_aky");
+    controlled_joints.push_back("r_leg_akx");
+    controlled_joints.push_back("l_arm_shy");
+    controlled_joints.push_back("l_arm_shx");
+    controlled_joints.push_back("l_arm_ely");
+    controlled_joints.push_back("l_arm_elx");
+    controlled_joints.push_back("l_arm_wry");
+    controlled_joints.push_back("l_arm_wrx");
+    controlled_joints.push_back("r_arm_shy");
+    controlled_joints.push_back("r_arm_shx");
+    controlled_joints.push_back("r_arm_ely");
+    controlled_joints.push_back("r_arm_elx");
+    controlled_joints.push_back("r_arm_wry");
+    controlled_joints.push_back("r_arm_wrx");
+
+
+    std::cout << " Loading robot model ..." << std::endl;
+    vigir_control::VigirRobotRBDLModel      robot_model;
+    int rc;
+    if (rc = robot_model.initializeRobotJoints(controlled_joints,
+                                               "pelvis",
+                                               "l_foot", "r_foot",
+                                               "l_hand", "r_hand"))
+    {
+        std::cerr << "Robot model initialization failed" << std::endl;
+        return rc;
+    }
+
+    if (robot_model.loadRobotModel(xml_result, 1.0,false))
     {
         printf("Successfully loaded the robot URDF model");
     }
+    else
+    {
+        printf("Failed to load the robot model - abort!\n");
+        return 1;
+    }
 
+    vigir_control::VigirRobotState robot_state(robot_model.n_joints_ = 0);
+
+    robot_model.updateJointState(1234,
+                                 robot_state.current_robot_state_.robot_joints_.joint_positions_,
+                                 robot_state.current_robot_state_.robot_joints_.joint_velocities_,
+                                 robot_state.current_robot_state_.robot_joints_.joint_accelerations_);
+    robot_model.updateKinematics(robot_state.current_robot_state_.pelvis_pose_.orientation);
+
+    robot_model.calcCOM();
+    robot_model.calcEETransforms();
+
+    vigir_control::Vector3d CoM;
+    double mass;
+    robot_model.getCoM(CoM,mass);
+    std::cout << " CoM = " << CoM << "  mass=" << mass << std::endl;
+
+    std::cout << "Done!" << std::endl << std::endl << std::endl << std::endl;
     return 0;
 }
