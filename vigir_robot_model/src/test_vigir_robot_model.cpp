@@ -3,6 +3,7 @@
 #include <vigir_robot_model/VigirRobotRBDLModel.h>
 #include <vigir_robot_model/VigirRobotState.h>
 #include <fstream>
+#include <flor_utilities/timing.h>
 
 #include <ros/ros.h>
 int main(int argc, char ** argv)
@@ -11,8 +12,7 @@ int main(int argc, char ** argv)
 
     std::cout <<"\n\n\nStart robot model test" << std::endl;
 
-//    //std::ifstream in("/home/david/flor_repo/rosbuild_ws/vigir_robot/flor_atlas_description/urdf/atlas.urdf");
-//    std::ifstream in("/home/david/atlas.urdf");
+//    std::ifstream in("~/atlas.urdf");
 //    if (!in.is_open())
 //    {
 //        std::cerr << "Failed to open the robot urdf file for test!" << std::endl;
@@ -31,12 +31,15 @@ int main(int argc, char ** argv)
     ros::NodeHandle nh;
     ros::NodeHandle nhp("~");
 
+    std::cout << "Reading xml file from parameter server" << std::endl;
     std::string urdf_xml, full_urdf_xml,xml_result;
     urdf_xml = std::string("robot_description");
-    // Get URDF XML
-    nhp.searchParam(urdf_xml,full_urdf_xml);
+    if (!nhp.searchParam(urdf_xml,full_urdf_xml))
+    {
+        std::cerr << "Failed to find robot_description on parameter server!" << std::endl;
+        return 1;
+    }
 
-    std::cout << "Reading xml file from parameter server" << std::endl;
     if (!nhp.getParam(full_urdf_xml, xml_result))
     {
         std::cerr << "Failed to load the robot urdf from parameter server for test!" << std::endl;
@@ -88,32 +91,93 @@ int main(int argc, char ** argv)
         return rc;
     }
 
-    if (robot_model.loadRobotModel(xml_result, 1.0,false))
+    if (uint32_t rc = robot_model.loadRobotModel(xml_result, 2.0,true))
     {
-        printf("Successfully loaded the robot URDF model");
+        printf("Failed to load the robot model (rc=%d)- abort!\n",rc);
+        return 1;
     }
     else
     {
-        printf("Failed to load the robot model - abort!\n");
-        return 1;
+        printf("Successfully loaded the robot URDF model!\n");
     }
 
-    vigir_control::VigirRobotState robot_state(robot_model.n_joints_ = 0);
 
-    robot_model.updateJointState(1234,
-                                 robot_state.current_robot_state_.robot_joints_.joint_positions_,
-                                 robot_state.current_robot_state_.robot_joints_.joint_velocities_,
-                                 robot_state.current_robot_state_.robot_joints_.joint_accelerations_);
-    robot_model.updateKinematics(robot_state.current_robot_state_.pelvis_pose_.orientation);
-
-    robot_model.calcCOM();
-    robot_model.calcEETransforms();
-
+    Timing calc_torque_timing_("VigirRobotRBDLModel:: Required torque calc",true,false);
+    Timing com_calc_timing_            ("VigirRobotRBDLModel:: CoM Calc",true,false);
+    Timing update_kinematics_timing_   ("VigirRobotRBDLModel:: Update kinematics",true,false);
+    Timing calc_ee_transforms_timing_   ("VigirRobotRBDLModel:: Calc Transforms",true,false);
+    vigir_control::VigirRobotState robot_state(robot_model.n_joints_);
+    vigir_control::VectorNd torques = robot_state.current_robot_state_.robot_joints_.joint_positions_;
+    vigir_control::PoseZYX pelvis_pose;
     vigir_control::Vector3d CoM;
     double mass;
-    robot_model.getCoM(CoM,mass);
-    std::cout << " CoM = " << CoM << "  mass=" << mass << std::endl;
+    printf(" Start loop of 1000 calls to model calculations ...\n");
+   for (int i = 0; i < 1000; ++i)
+   {
+    printf("\r counter=%d",i);
+    pelvis_pose.position[0] =  0.0;
+    pelvis_pose.position[1] =  0.0;
+    pelvis_pose.position[2] =  0.0;
 
+    pelvis_pose.orientation[0] =  0.0;
+    pelvis_pose.orientation[1] =  0.0;
+    pelvis_pose.orientation[2] =  0.0;
+
+    {DO_TIMING(update_kinematics_timing_)
+        robot_model.updateJointState(1234,
+                                     robot_state.current_robot_state_.robot_joints_.joint_positions_,
+                                     robot_state.current_robot_state_.robot_joints_.joint_velocities_,
+                                     robot_state.current_robot_state_.robot_joints_.joint_accelerations_);
+        robot_model.updateKinematics( );
+    }
+    {DO_TIMING(calc_torque_timing_)
+        robot_model.calcRequiredTorques();
+    }
+    { DO_TIMING(com_calc_timing_)
+        robot_model.calcCOM();
+    }
+    {DO_TIMING(calc_ee_transforms_timing_)
+        robot_model.calcEETransforms();
+    }
+    robot_model.getRequiredTorques(torques);
+    robot_model.getCoM(CoM,mass);
+    //std::cout << "  mass=" << mass << " CoM = " << CoM.transpose() << std::endl;
+    //std::cout << "  T=" << torques.transpose() << std::endl;
+
+    //std::cout << "Shift pelvis" << std::endl;
+    pelvis_pose.position[0] =  2.5;
+    pelvis_pose.position[1] = -1.0;
+    pelvis_pose.position[2] =  1.0;
+
+    pelvis_pose.orientation[0] =  0.0;
+    pelvis_pose.orientation[1] =  0.2;
+    pelvis_pose.orientation[2] =  0.0;
+
+    robot_state.current_robot_state_.robot_joints_.joint_positions_[1] = 0.5;
+
+    robot_model.updateBasePose(pelvis_pose);
+    //std::cout << "Update joint states " << std::endl;
+    {DO_TIMING(update_kinematics_timing_)
+        robot_model.updateJointState(1234,
+                                     robot_state.current_robot_state_.robot_joints_.joint_positions_,
+                                     robot_state.current_robot_state_.robot_joints_.joint_velocities_,
+                                     robot_state.current_robot_state_.robot_joints_.joint_accelerations_);
+        robot_model.updateKinematics( );
+    }
+    {DO_TIMING(calc_torque_timing_)
+        robot_model.calcRequiredTorques();
+    }
+    { DO_TIMING(com_calc_timing_)
+        robot_model.calcCOM();
+    }
+    {DO_TIMING(calc_ee_transforms_timing_)
+        robot_model.calcEETransforms();
+    }
+    robot_model.getRequiredTorques(torques);
+    //std::cout << "  mass=" << mass << " CoM = " << CoM.transpose() << std::endl;
+    //std::cout << "  T=" << torques.transpose() << std::endl;
+  }
+    std::cout << std::endl;
     std::cout << "Done!" << std::endl << std::endl << std::endl << std::endl;
     return 0;
 }

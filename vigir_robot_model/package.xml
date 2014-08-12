@@ -60,7 +60,6 @@
   <build_depend>rbdl</build_depend>
   <build_depend>flor_utilities</build_depend>
 
-
   <run_depend>roscpp</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>

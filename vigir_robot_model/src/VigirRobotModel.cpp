@@ -26,7 +26,8 @@
 //=================================================================================================
 */
 
-// These must occur before any other definitions to include required Eigen addons
+#include <stdio.h>
+#include <iostream>
 #include <vigir_robot_model/VigirRobotModel.h>
 
 namespace vigir_control {
@@ -34,11 +35,9 @@ namespace vigir_control {
 
 VigirRobotModel::VigirRobotModel()
     : r_foot_id_(-1), l_foot_id_(-1), r_hand_id_(-1), l_hand_id_(-1),
-    b_transforms_up_to_date(false),
-    calc_inverse_gravity_timing_("VigirRobotRBDLModel:: Inverse gravity calc"),
-    calc_ee_transforms_timing_  ("VigirRobotRBDLModel:: End effector transforms"),
-    com_calc_timing_            ("VigirRobotRBDLModel:: CoM Calc"),
-    update_kinematics_timing_   ("VigirRobotRBDLModel:: Update kinematics")
+      b_positions_up_to_date_(false), b_kinematics_up_to_date_(false),
+      b_dynamics_up_to_date_(false),  b_CoM_up_to_date_(false),
+      b_transforms_up_to_date_(false)
 {
 
 
@@ -55,12 +54,16 @@ VigirRobotModel::VigirRobotModel()
                             const std::string& l_hand_link_name,
                             const std::string& r_hand_link_name)
  {
+     // Store the names of the specific links of concern
      root_link_name_ = root_link_name;
      rfoot_link_name_= r_foot_link_name;
      lfoot_link_name_= l_foot_link_name;
      rhand_link_name_= r_hand_link_name;
      lhand_link_name_= l_hand_link_name;
 
+     // We will only process certain joints for modeling and control
+     // For example we may ignore a small spinning LIDAR or finger joints
+     // the robot stability calculations.
      n_joints_ = controlled_joints.size();
 
      printf(" Root(%s) Hands(%s, %s) Feet(%s, %s) n_joints=%d\n",
@@ -73,17 +76,17 @@ VigirRobotModel::VigirRobotModel()
 
      // Load map of controlled joint names
      joint_map_.clear();
-     std::cout << "Loading joint map with controlled joint list ..." << std::endl;
+     //std::cout << "Loading joint map with controlled joint list ..." << std::endl;
      for (uint8_t ndx=0; ndx < n_joints_; ndx++)
      {
-         std::cout << uint32_t(ndx) << " : " << controlled_joints[ndx] << std::endl;
+         //std::cout << uint32_t(ndx) << " : " << controlled_joints[ndx] << std::endl;
          joint_map_.insert(std::pair<std::string,uint8_t>(controlled_joints[ndx],ndx));
      }
 
      std::cout << "Joint Map size = " << joint_map_.size() << std::endl;
 
      if (joint_map_.size() == n_joints_)
-         return 0; // all is well
+         return 0; // all is as expected
      else
          return 1;
  }

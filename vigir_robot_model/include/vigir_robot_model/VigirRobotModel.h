@@ -32,7 +32,6 @@
 #include <map>
 #include <stdint.h>
 #include <vigir_robot_model/VigirRobotDataTypes.h>
-#include <flor_utilities/timing.h>
 
 namespace vigir_control {
 
@@ -76,14 +75,19 @@ namespace vigir_control {
     std::vector<int8_t>             torso_joint_chain_;
     std::vector<int8_t>             head_joint_chain_;
 
-    Vector3d                        CoM_pelvis_; // Center of mass in pelvis frame
+    uint64_t                        timestamp_;   // time of latest kinematic update
     double                          mass_;
+    Vector3d                        CoM_pelvis_;  // in pelvis frame
 
-    Transform                       r_foot_transform_;
+    Transform                       r_foot_transform_; // in pelvis frame
     Transform                       l_foot_transform_;
     Transform                       r_hand_transform_;
     Transform                       l_hand_transform_;
-    bool                            b_transforms_up_to_date;
+    bool                            b_positions_up_to_date_;
+    bool                            b_kinematics_up_to_date_;
+    bool                            b_dynamics_up_to_date_;
+    bool                            b_CoM_up_to_date_;
+    bool                            b_transforms_up_to_date_;
 
     uint32_t initializeRobotJoints(const std::vector<std::string>& controlled_joints,
                                    const std::string& root_link_name,
@@ -92,17 +96,35 @@ namespace vigir_control {
                                    const std::string& l_hand_link_name,
                                    const std::string& r_hand_link_name);
 
+
+    // The following methods will depend on the specific framework used to model
+    // the robot kinematics and dynamics.
     virtual uint32_t loadRobotModel(const std::string xml,
                                     const double& mass_factor = 1.0,
                                     const bool& verbose = false) =  0;
 
+    /**
+     * Updates position and velocity and filtered state given the latest robot_state data
+     * This must be called while thread protected.
+     */
     virtual void updateJointState(const uint64_t& timestamp, const VectorNd& joint_positions, const VectorNd& joint_velocities, const VectorNd& joint_accelerations)=0;
-    virtual void updateKinematics(const Quatd& pelvis_orientation) = 0;  // update RBDL kinematics and gravity vector given latest robot state
+    virtual void updatePositions()  = 0;  // update RBDL link positions given latest robot state
+    virtual void updateKinematics() = 0;  // update RBDL kinematics (position and velocity) given latest robot state
+    virtual void updateDynamics()   = 0;  // update RBDL dynamics (position, velocity, and accelerations) given latest robot state
 
+    /** Update base joint pose and velocity wrt root frame in (tx, ty, tz, Rz, Ry, Rx) */
+    virtual void updateBasePose(const PoseZYX& pose) = 0;
+    virtual void updateBaseVelocity(const PoseZYX& velocity) = 0;
+
+    /** Update base joint pose and velocity wrt root frame in (tx, ty, tz, quat) */
+    virtual void updateBasePose(const Pose& pose) = 0;
+
+    // Functions to calculate various terms given updated kinematics
     virtual void calcEETransforms() = 0;    // calculate transform of End Effectors in pelvis frame
     virtual void calcRequiredTorques() = 0; // Given gravity and joint accelerations
     virtual void calcCOM() = 0;             // calc CoM given updated kinematics
 
+    // Functions to extract parameters in generic form
     virtual void getRequiredTorques(VectorNd& cmd_efforts) = 0;
 
     virtual void getLeftHandMass(Vector3d& CoM, float& mass) = 0;
@@ -111,11 +133,62 @@ namespace vigir_control {
     virtual void setLeftHandMass( const Vector3d& CoM, const float& mass, const Vector3d& Ix, const Vector3d& Iy, const Vector3d& Iz) = 0;
     virtual void setRightHandMass(const Vector3d& CoM, const float& mass, const Vector3d& Ix, const Vector3d& Iy, const Vector3d& Iz) = 0;
 
+    inline void getCoM(Vector3d& CoM, double& mass)
+    {
+        CoM = CoM_pelvis_;
+        mass = mass_;
+    };
+
+    inline void getRightFoot(Transform& T)
+    {
+        T = this->r_foot_transform_;
+    };
+    inline void getLeftFoot(Transform& T)
+    {
+        T = this->l_foot_transform_;
+    };
+    inline void getLeftHand(Transform& T)
+    {
+        T = this->l_hand_transform_;
+    };
+    inline void getRightHand(Transform& T)
+    {
+        T = this->r_hand_transform_;
+    };
+    inline void getHands(Transform& rT, Transform& lT)
+    {
+        rT = r_hand_transform_;
+        lT = l_hand_transform_;
+    };
+
+    inline void getFeet(Transform& rT, Transform& lT)
+    {
+        rT = r_foot_transform_;
+        lT = l_foot_transform_;
+    }
+
+    inline void getTransforms(Transform& rfT, Transform& lfT, Transform& rhT, Transform& lhT)
+    {
+        rfT = r_foot_transform_;
+        lfT = l_foot_transform_;
+        rhT = r_hand_transform_;
+        lhT = l_hand_transform_;
+    }
+
+    inline void getKinematics(uint64_t& timestamp, Vector3d& CoM, double& mass, Transform& rfT, Transform& lfT, Transform& rhT, Transform& lhT)
+    {
+        timestamp  = this->timestamp_;
+        if (!b_CoM_up_to_date_) calcCOM();
+        CoM        = this->CoM_pelvis_;
+        mass       = this->mass_;
+        if (!b_transforms_up_to_date_) calcEETransforms();
+        rfT         = this->r_foot_transform_;
+        lfT         = this->l_foot_transform_;
+        rhT         = this->r_hand_transform_;
+        lhT         = this->l_hand_transform_;
+    }
+
   protected:
-    Timing calc_inverse_gravity_timing_;
-    Timing calc_ee_transforms_timing_;
-    Timing com_calc_timing_;
-    Timing update_kinematics_timing_;
 
 };
 

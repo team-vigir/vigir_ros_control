@@ -13,7 +13,7 @@ find_package(Eigen REQUIRED)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs flor_utilities urdf eigen_stl_containers eigen_conversions pcl_ros rbdl)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs flor_utilities urdf eigen_stl_containers eigen_conversions pcl_ros rbdl )
 
 #set the default path for built executables to the "bin" directory
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

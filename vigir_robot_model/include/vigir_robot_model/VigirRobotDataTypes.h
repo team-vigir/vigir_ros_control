@@ -33,14 +33,7 @@
 // These are defined using the Eigen library and are more suitable for
 // direct calculation
 
-#ifdef EIGEN_CORE_H
-#ifndef _BODY_H
-#error This header should be defined before any eigen definitions are made (unless RBDL defined)
-#endif
-#endif
-
 // Define Eigen setup used by rbdl
-#define EIGEN_DEFAULT_TO_ROW_MAJOR
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 #include <vector>
@@ -81,6 +74,14 @@ typedef struct Pose
     Vector3d position;
     Quatd    orientation;
 } Pose;
+
+typedef struct PoseZYX
+{
+    PoseZYX() : position(0.0,0.0,0.0),orientation(0.0,0.0,0.0){}
+
+    Vector3d position;
+    Vector3d orientation;
+} PoseZYX;
 
 typedef struct Transform
 {
