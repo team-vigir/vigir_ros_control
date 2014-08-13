@@ -57,12 +57,17 @@ include/${PROJECT_NAME}/VigirRobotDataTypes.h
 include/${PROJECT_NAME}/VigirRobotState.h
 include/${PROJECT_NAME}/VigirRobotModel.h
 include/${PROJECT_NAME}/VigirRobotRBDLModel.h
+include/${PROJECT_NAME}/VigirRobotFilter.h
+include/${PROJECT_NAME}/VigirRobotKalmanFilterBase.h
+include/${PROJECT_NAME}/VigirRobotBasicKF.h
 )
 
 SET(SOURCE
 src/VigirRobotState.cpp
 src/VigirRobotModel.cpp
 src/VigirRobotRBDLModel.cpp
+src/VigirRobotKalmanFilterBase.cpp
+src/VigirRobotBasicKF.cpp
 )
 ###################################
 ## catkin specific configuration ##
@@ -98,6 +103,11 @@ add_executable(test_${PROJECT_NAME} src/test_vigir_robot_model.cpp ${HEADERS})
 target_link_libraries(test_${PROJECT_NAME} ${catkin_LIBRARIES} ${PROJECT_NAME} )
 
 add_dependencies(test_${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+
+add_executable(test_vigir_robot_basic_kf src/test_vigir_robot_basic_kf.cpp ${HEADERS})
+target_link_libraries(test_vigir_robot_basic_kf ${catkin_LIBRARIES} ${PROJECT_NAME} )
+
+add_dependencies(test_vigir_robot_basic_kf ${catkin_EXPORTED_TARGETS})
 
 #############
 ## Install ##
