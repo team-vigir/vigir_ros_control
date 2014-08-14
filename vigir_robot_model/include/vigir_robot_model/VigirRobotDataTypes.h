@@ -75,6 +75,14 @@ typedef struct Pose
     Quatd    orientation;
 } Pose;
 
+typedef struct Twist
+{
+    Twist() : linear(0.0,0.0,0.0),angular(0.0,0.0,0.0){}
+
+    Vector3d linear;
+    Vector3d angular;
+} Twist;
+
 typedef struct PoseZYX
 {
     PoseZYX() : position(0.0,0.0,0.0),orientation(0.0,0.0,0.0){}
