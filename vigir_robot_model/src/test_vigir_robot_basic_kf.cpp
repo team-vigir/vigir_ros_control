@@ -95,7 +95,7 @@ int main(int argc, char ** argv)
     ros::init(argc,argv,"");
 
     int num_joints = 28;
-    int steps      = 50; // simulate 5 seconds of data
+    int steps      = 5000; // simulate 5 seconds of data
     double dt      = 0.001;
     double elapsed = dt*(steps-1);
 
@@ -209,6 +209,7 @@ int main(int argc, char ** argv)
         estimated_velocities[i] = estimated.joint_velocities_;
     }
 
+    std::cout << "\nWrite out plot files in python ..." << std::endl;
     for (int i = 0; i < num_joints; ++i)
     {   // For each joint create a python file to plot the data
         std::stringstream ss;
@@ -229,21 +230,26 @@ int main(int argc, char ** argv)
 
         // plot the data
         out << std::endl;
-        out << "fig, ax =plt.subplot(2,1,1)" << std::endl;
-        out << "ax.plot(t,q_act,'g-',label=\"q_act\")" << std::endl;
-        out << "ax.plot(t,q_sensed,'r:',label=\"q_sensed\")" << std::endl;
-        out << "ax.plot(t,q_estimated,'b;',label=\"q_est\")" << std::endl;
+        out << "plt.subplot(2,1,1)" << std::endl;
+        out << "plt.plot(t,q_act,'g-',label=\"q_act\")" << std::endl;
+        out << "plt.plot(t,q_sensed,'r:',label=\"q_sensed\")" << std::endl;
+        out << "plt.plot(t,q_estimated,'b:',label=\"q_est\")" << std::endl;
         out << "plt.title(\"Estimation of Joint " << ss.str() <<"\")" << std::endl;
         out << "plt.ylabel(\"position\")" << std::endl;
+        out << "plt.legend(loc='upper right', shadow=True)" << std::endl;
+
         out << "plt.subplot(2,1,2)" << std::endl;
-        out << "plt.plot(t,dq_act,'k-')" << std::endl;
+        out << "plt.plot(t,dq_act,'g-',label=\"dq_act\")" << std::endl;
+        out << "plt.plot(t,dq_sensed,'r:',label=\"dq_sensed\")" << std::endl;
+        out << "plt.plot(t,dq_estimated,'b:',label=\"dq_est\")" << std::endl;
         out << "plt.title(\"Estimation of Joint " << ss.str() <<"\")" << std::endl;
         out << "plt.ylabel(\"velocity\")" << std::endl;
         out << "plt.xlabel(\"time (s)\")" << std::endl;
+        out << "plt.legend(loc='upper right', shadow=True)" << std::endl;
         out << std::endl;
         out << "plt.show()" << std::endl;
         out.close();
     }
-    std::cout << "Done!" << std::endl << std::endl << std::endl << std::endl;
+    std::cout << "\nDone!" << std::endl << std::endl << std::endl << std::endl;
     return 0;
 }
