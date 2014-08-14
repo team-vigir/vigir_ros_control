@@ -1,5 +1,5 @@
 
-#include <vigir_robot_model/VigirRobotBasicKF.h>
+#include <vigir_robot_model/VigirRobotBasic2StateKF.h>
 #include <vigir_robot_model/VigirRobotState.h>
 #include <fstream>
 #include <flor_utilities/timing.h>
@@ -42,7 +42,8 @@ void calculate_test_data(vigir_control::VigirRobotJointData& actual,
         double angle = freq[i]*time + offset[i];
         actual.joint_positions_[i]      = sin(angle)*mag[i];
         actual.joint_velocities_[i]     = cos(angle)*freq[i]*mag[i];
-        control.joint_accelerations_[i] = -sin(angle)*freq[i]*freq[i]*mag[i];
+        actual.joint_accelerations_[i]  = -sin(angle)*freq[i]*freq[i]*mag[i];
+        control.joint_accelerations_[i] = actual.joint_accelerations_[i];
     }
     for (int i=half;i<actual.joint_positions_.size(); i++)
     {
@@ -50,10 +51,11 @@ void calculate_test_data(vigir_control::VigirRobotJointData& actual,
         double angle2 = freq[i-half]*time + offset[i-half];
         actual.joint_positions_[i]      = sin(angle1)*mag[i];
         actual.joint_velocities_[i]     = cos(angle1)*freq[i]*mag[i];
-        control.joint_accelerations_[i] = -sin(angle1)*freq[i]*freq[i]*mag[i];
+        actual.joint_accelerations_[i] = -sin(angle1)*freq[i]*freq[i]*mag[i];
         actual.joint_positions_[i]     += sin(angle2)*mag[i-half];
         actual.joint_velocities_[i]    += cos(angle2)*freq[i-half]*mag[i-half];
-        control.joint_accelerations_[i]+= -sin(angle2)*freq[i-half]*freq[i-half]*mag[i-half];
+        actual.joint_accelerations_[i]+= -sin(angle2)*freq[i-half]*freq[i-half]*mag[i-half];
+        control.joint_accelerations_[i] = actual.joint_accelerations_[i];
     }
 }
 
@@ -134,7 +136,7 @@ int main(int argc, char ** argv)
 
 
     // Define our basic Kalman filter with constant innovation gain
-    vigir_control::VigirRobotBasicKF basic_kf("basic KF", num_joints);
+    vigir_control::VigirRobotBasic2StateKF basic_2_state_kf("basic KF", num_joints);
 
     std::cout << "Initialize the K gains..." << std::endl;
     vigir_control::VectorNd K00 = vigir_control::VectorNd::Constant(num_joints, 0.2702);
@@ -143,7 +145,7 @@ int main(int argc, char ** argv)
     vigir_control::VectorNd K11 = vigir_control::VectorNd::Constant(num_joints, 0.2702);
 
     std::cout << "Set the K gains..." << std::endl;
-    basic_kf.setKFInnovationGains(K00,K01,K10,K11);
+    basic_2_state_kf.setKFInnovationGains(K00,K01,K10,K11);
 
     // Define vectors to store data for plotting
     std::cout << "Define vectors to store data" << std::endl;
@@ -153,6 +155,9 @@ int main(int argc, char ** argv)
     std::vector<vigir_control::VectorNd> sensed_velocities;
     std::vector<vigir_control::VectorNd> estimated_positions;
     std::vector<vigir_control::VectorNd> estimated_velocities;
+    std::vector<vigir_control::VectorNd> actual_accelerations;
+    std::vector<vigir_control::VectorNd> sensed_accelerations;
+    std::vector<vigir_control::VectorNd> estimated_accelerations;
 
     // Initialize vector to hold data for plotting results
     std::cout << "Initialize vectors"  << std::endl;
@@ -162,6 +167,9 @@ int main(int argc, char ** argv)
     sensed_velocities.resize(steps,   sensed.joint_velocities_);
     estimated_positions.resize(steps, estimated.joint_positions_);
     estimated_velocities.resize(steps,estimated.joint_velocities_);
+    actual_accelerations.resize(steps,   actual.joint_accelerations_);
+    sensed_accelerations.resize(steps,   sensed.joint_accelerations_);
+    estimated_accelerations.resize(steps,estimated.joint_accelerations_);
 
 
     Timing prediction_timing_("BasicKF:: prediction",true,false);
@@ -185,18 +193,20 @@ int main(int argc, char ** argv)
 
         //printf("\n Predict %d",i);fflush(stdout);
         {DO_TIMING(prediction_timing_)
-            basic_kf.predict_filter(estimated.joint_positions_,
-                                    estimated.joint_velocities_,
-                                    control.joint_accelerations_,
-                                    dt);
+            basic_2_state_kf.predict_filter(estimated.joint_positions_,
+                                            estimated.joint_velocities_,
+                                            estimated.joint_accelerations_,
+                                            control.joint_accelerations_,
+                                            dt);
         }
 
         ///printf("\n Correct %d",i);fflush(stdout);
         {DO_TIMING(correction_timing_)
-            basic_kf.correct_filter(estimated.joint_positions_,
-                                    estimated.joint_velocities_,
-                                    sensed.joint_positions_,
-                                    sensed.joint_velocities_);
+            basic_2_state_kf.correct_filter(estimated.joint_positions_,
+                                            estimated.joint_velocities_,
+                                            estimated.joint_accelerations_,
+                                            sensed.joint_positions_,
+                                            sensed.joint_velocities_);
         }
         //printf("\n Loop %d",i);fflush(stdout);
 
@@ -207,6 +217,9 @@ int main(int argc, char ** argv)
         sensed_velocities[i]    = sensed.joint_velocities_;
         estimated_positions[i]  = estimated.joint_positions_;
         estimated_velocities[i] = estimated.joint_velocities_;
+        actual_accelerations[i]    = actual.joint_accelerations_;
+        sensed_accelerations[i]    = sensed.joint_accelerations_;
+        estimated_accelerations[i] = estimated.joint_accelerations_;
     }
 
     std::cout << "\nWrite out plot files in python ..." << std::endl;
@@ -222,15 +235,18 @@ int main(int argc, char ** argv)
         out << "t=np.linspace(0, " << elapsed << ", " << steps<< ")" << std::endl << std::endl;
         // Store data in python file
         store_data(out, "q_act", actual_positions,  i);
-        store_data(out, "dq_act",actual_velocities, i);
         store_data(out, "q_sensed", sensed_positions,  i);
-        store_data(out, "dq_sensed",sensed_velocities, i);
         store_data(out, "q_estimated", estimated_positions,  i);
+        store_data(out, "dq_act",actual_velocities, i);
+        store_data(out, "dq_sensed",sensed_velocities, i);
         store_data(out, "dq_estimated",estimated_velocities, i);
+        store_data(out, "ddq_act",      sensed_accelerations, i);
+        store_data(out, "ddq_sensed",   sensed_accelerations, i);
+        store_data(out, "ddq_estimated",estimated_accelerations, i);
 
         // plot the data
         out << std::endl;
-        out << "plt.subplot(2,1,1)" << std::endl;
+        out << "plt.subplot(3,1,1)" << std::endl;
         out << "plt.plot(t,q_act,'g-',label=\"q_act\")" << std::endl;
         out << "plt.plot(t,q_sensed,'r:',label=\"q_sensed\")" << std::endl;
         out << "plt.plot(t,q_estimated,'b:',label=\"q_est\")" << std::endl;
@@ -238,14 +254,21 @@ int main(int argc, char ** argv)
         out << "plt.ylabel(\"position\")" << std::endl;
         out << "plt.legend(loc='upper right', shadow=True)" << std::endl;
 
-        out << "plt.subplot(2,1,2)" << std::endl;
+        out << "plt.subplot(3,1,2)" << std::endl;
         out << "plt.plot(t,dq_act,'g-',label=\"dq_act\")" << std::endl;
         out << "plt.plot(t,dq_sensed,'r:',label=\"dq_sensed\")" << std::endl;
         out << "plt.plot(t,dq_estimated,'b:',label=\"dq_est\")" << std::endl;
-        out << "plt.title(\"Estimation of Joint " << ss.str() <<"\")" << std::endl;
         out << "plt.ylabel(\"velocity\")" << std::endl;
-        out << "plt.xlabel(\"time (s)\")" << std::endl;
         out << "plt.legend(loc='upper right', shadow=True)" << std::endl;
+
+        out << "plt.subplot(3,1,3)" << std::endl;
+        out << "plt.plot(t,ddq_act,'g-',label=\"ddq_act\")" << std::endl;
+        out << "plt.plot(t,ddq_sensed,'r:',label=\"ddq_sensed\")" << std::endl;
+        out << "plt.plot(t,ddq_estimated,'b:',label=\"ddq_est\")" << std::endl;
+        out << "plt.ylabel(\"velocity\")" << std::endl;
+        out << "plt.legend(loc='upper right', shadow=True)" << std::endl;
+
+        out << "plt.xlabel(\"time (s)\")" << std::endl;
         out << std::endl;
         out << "plt.show()" << std::endl;
         out.close();

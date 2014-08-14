@@ -28,68 +28,61 @@
 #ifndef __VIGIR_ROBOT_KALMAN_FILTER_BASE_H__
 #define __VIGIR_ROBOT_KALMAN_FILTER_BASE_H__
 
-#include <vector>
-#include <map>
 #include <stdint.h>
-#include <vigir_robot_model/VigirRobotFilter.h>
+#include <vigir_robot_model/VigirRobotDataTypes.h>
 
 namespace vigir_control {
 
 /**
  * This structure defines the base class for basic
- * 2-state Kalman filtering using generic control types.
+ * Kalman filtering using generic control types.
  *
- *  qv=[q,qdot] with acceleration as input  uv=[0;qddot]
- *    v(k) ~ 0 mean , Q = E[v*v'] process noise model
+ * The class assumes a vector of independent kalman filters are
+ *  applied in parallel (e.g. joint state estimation).
+ *
+ * The filter assumes that position, velocity, and acceleration
+ * are relevant; the particulars of the system model are determined
+ * by the implementation files.
  *
  * Prediction
- *  qv(k+1|k) = F qv(k) + G*u(k) + v(k)
+ *  xv(k+1|k) = F xv(k) + G*u(k) + v(k)
+ *    v(k) ~ 0 mean , Q = E[v*v'] process noise model
  *
- *   F = [ 1  dt]    G = [ 0]  Q = noise covariance E[v*v']
- *       [ 0   1]        [dt]
- *
- *  Sensing y(k) = [ q, qdot]
- *   y(k) = H*x(k) + eta(k)
+ *  Sensing y(k) = H*xv(k) + eta(k)
  *     eta(k) = 0 mean, W = E[eta*eta'] sensor noise covariance
- *   H = [1 0]
- *       [0 1]
  *
- *  W sensor noise should relate to actual noise
  *  Q process noise keeps filter from converging to much
  *      and size relative to W weights prediction vs. sensor
+ *  W sensor noise should relate to actual noise
+ *   W and Q represent trade offs between how fast the filter converges,
+ *     and susceptibility to noise, and directly influence lag and bandwidth,
  *
  * Update
- *  qv(k+1|k+1) = qv(k+1|k) + K*nu(k+1)
+ *  xv(k+1|k+1) = xv(k+1|k) + K*nu(k+1)
  *    where nu = y(k+1) - H*qv(k+1|k)
+ *    The innovation gains K are determined by the specific filter model in implementation.
  */
-  struct VigirRobotKalmanFilterBase : public VigirRobotFilter
+  struct VigirRobotKalmanFilterBase
   {
 
     VigirRobotKalmanFilterBase(const std::string& name,
                                const uint8_t& elements)
-                  : VigirRobotFilter(name,elements),
-                    K00_(vigir_control::VectorNd::Constant(elements, 1.0)),
-                    K01_(vigir_control::VectorNd::Constant(elements, 0.0)),
-                    K10_(vigir_control::VectorNd::Constant(elements, 0.0)),
-                    K11_(vigir_control::VectorNd::Constant(elements, 1.0)) {}
+                  : filter_name_(name), n_elements_(elements),
+                    timestamp_(0L)  {}
     virtual ~VigirRobotKalmanFilterBase() {};
 
     // Apply prediction step to filter
-    virtual bool predict_filter(VectorNd& q, VectorNd& dq, const VectorNd& u, const double& dt)=0;
+    virtual bool predict_filter(VectorNd& q, VectorNd& dq, VectorNd& ddq, const VectorNd& u, const double& dt)=0;
 
 
     // Apply correction step to filter based on sensed data
-    virtual bool correct_filter(VectorNd& q, VectorNd& dq, const VectorNd& q_sensed, const VectorNd& dq_sensed)=0;
+    virtual bool correct_filter(VectorNd& q, VectorNd& dq, VectorNd& ddq, const VectorNd& q_sensed, const VectorNd& dq_sensed)=0;
 
-    bool setKFInnovationGains(const VectorNd& K00, const VectorNd& K01, const VectorNd& K10,const VectorNd& K11);
+    std::string  filter_name_;
+    int8_t       n_elements_;
+    uint64_t     timestamp_;
 
   protected:
-
-    // Define vectors to store the innovation gains associated with K matrix
-    VectorNd K00_;
-    VectorNd K01_;
-    VectorNd K10_;
-    VectorNd K11_;
 
 };
 
