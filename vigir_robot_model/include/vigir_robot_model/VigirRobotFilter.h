@@ -43,7 +43,7 @@ namespace vigir_control {
 
     VigirRobotFilter(const std::string& name,
                      const uint8_t& elements)
-        : filter_name_(name), n_elements_(elements){}
+        : filter_name_(name), n_elements_(elements), timestamp_(0L) {}
     virtual ~VigirRobotFilter() {};
 
     std::string  filter_name_;
