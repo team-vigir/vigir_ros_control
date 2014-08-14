@@ -57,17 +57,15 @@ include/${PROJECT_NAME}/VigirRobotDataTypes.h
 include/${PROJECT_NAME}/VigirRobotState.h
 include/${PROJECT_NAME}/VigirRobotModel.h
 include/${PROJECT_NAME}/VigirRobotRBDLModel.h
-include/${PROJECT_NAME}/VigirRobotFilter.h
 include/${PROJECT_NAME}/VigirRobotKalmanFilterBase.h
-include/${PROJECT_NAME}/VigirRobotBasicKF.h
+include/${PROJECT_NAME}/VigirRobotBasic2StateKF.h
 )
 
 SET(SOURCE
 src/VigirRobotState.cpp
 src/VigirRobotModel.cpp
 src/VigirRobotRBDLModel.cpp
-src/VigirRobotKalmanFilterBase.cpp
-src/VigirRobotBasicKF.cpp
+src/VigirRobotBasic2StateKF.cpp
 )
 ###################################
 ## catkin specific configuration ##

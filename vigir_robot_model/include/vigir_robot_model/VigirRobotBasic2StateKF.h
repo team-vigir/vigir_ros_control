@@ -25,12 +25,9 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 */
-#ifndef __VIGIR_ROBOT_BASIC_KALMAN_FILTER_H__
-#define __VIGIR_ROBOT_BASIC_KALMAN_FILTER_H__
+#ifndef __VIGIR_ROBOT_BASIC_2_STATE_KALMAN_FILTER_H__
+#define __VIGIR_ROBOT_BASIC_2_STATE_KALMAN_FILTER_H__
 
-#include <vector>
-#include <map>
-#include <stdint.h>
 #include <vigir_robot_model/VigirRobotKalmanFilterBase.h>
 
 namespace vigir_control {
@@ -65,14 +62,14 @@ namespace vigir_control {
  * In this Basic form, we use a constant K matrix to apply the innovation
  * and do not track the prediction covariance.
  */
-  struct VigirRobotBasicKF : public VigirRobotKalmanFilterBase
+  struct VigirRobotBasic2StateKF : public VigirRobotKalmanFilterBase
   {
 
-    VigirRobotBasicKF(const std::string& name, const uint8_t& elements);
-    virtual ~VigirRobotBasicKF(){};
+    VigirRobotBasic2StateKF(const std::string& name, const uint8_t& elements);
+    virtual ~VigirRobotBasic2StateKF(){};
 
     // Apply prediction step to filter
-    bool predict_filter(VectorNd& q, VectorNd& dq, const VectorNd& u, const double& dt)
+    bool predict_filter(VectorNd& q, VectorNd& dq, VectorNd& ddq, const VectorNd& u, const double& dt)
     {
         assert(q.size()  == n_elements_);
         assert(dq.size() == n_elements_);
@@ -80,11 +77,14 @@ namespace vigir_control {
 
         q  += dt*dq;
         dq += dt* u;
+        ddq = u;    // 2 state filter does not estimate acceleration, just use control input
     }
 
 
     // Apply correction step to filter based on sensed data
-    bool correct_filter(VectorNd& q, VectorNd& dq, const VectorNd& q_sensed, const VectorNd& dq_sensed);
+    bool correct_filter(VectorNd& q, VectorNd& dq, VectorNd& ddq, const VectorNd& q_sensed, const VectorNd& dq_sensed);
+
+    bool setKFInnovationGains(const VectorNd& K00, const VectorNd& K01, const VectorNd& K10,const VectorNd& K11);
 
   protected:
     // Vectors to hold innovation calculation
@@ -94,6 +94,12 @@ namespace vigir_control {
     // Vectors to hold correction calculation
     VectorNd delta_q_ ;
     VectorNd delta_dq_;
+
+    // Vectors to hold innovation gains
+    VectorNd K00_;
+    VectorNd K01_;
+    VectorNd K10_;
+    VectorNd K11_;
 
 };
 
