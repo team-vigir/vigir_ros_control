@@ -80,7 +80,7 @@ src/VigirRobotPoseFilter.cpp
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES Vigir_robot_model
+  LIBRARIES vigir_robot_model
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
