@@ -28,7 +28,7 @@
 #ifndef __VIGIR_ROBOT_BASIC_2_STATE_KALMAN_FILTER_H__
 #define __VIGIR_ROBOT_BASIC_2_STATE_KALMAN_FILTER_H__
 
-#include <vigir_robot_model/VigirRobotKalmanFilterBase.h>
+#include <vigir_robot_model/VigirRobotFilterBase.h>
 
 namespace vigir_control {
 
@@ -62,7 +62,7 @@ namespace vigir_control {
  * In this Basic form, we use a constant K matrix to apply the innovation
  * and do not track the prediction covariance.
  */
-  struct VigirRobotBasic2StateKF : public VigirRobotKalmanFilterBase
+  struct VigirRobotBasic2StateKF : public VigirRobotFilterBase
   {
 
     VigirRobotBasic2StateKF(const std::string& name, const uint8_t& elements);

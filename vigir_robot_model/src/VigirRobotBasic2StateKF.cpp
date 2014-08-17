@@ -34,7 +34,7 @@ namespace vigir_control {
 
 VigirRobotBasic2StateKF::VigirRobotBasic2StateKF(const std::string& name,
                                      const uint8_t& elements)
-              : VigirRobotKalmanFilterBase(name,elements),
+              : VigirRobotFilterBase(name,elements),
                 nu_q_(elements), // allocate memory
                 nu_dq_(elements),
                 delta_q_(elements),

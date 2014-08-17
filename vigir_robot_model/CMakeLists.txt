@@ -57,7 +57,8 @@ include/${PROJECT_NAME}/VigirRobotDataTypes.h
 include/${PROJECT_NAME}/VigirRobotState.h
 include/${PROJECT_NAME}/VigirRobotModel.h
 include/${PROJECT_NAME}/VigirRobotRBDLModel.h
-include/${PROJECT_NAME}/VigirRobotKalmanFilterBase.h
+include/${PROJECT_NAME}/VigirRobotFilterBase.h
+include/${PROJECT_NAME}/VigirRobotSimpleFilter.h
 include/${PROJECT_NAME}/VigirRobotBasic2StateKF.h
 include/${PROJECT_NAME}/VigirRobotPoseFilterBase.h
 include/${PROJECT_NAME}/VigirRobotPoseFilter.h

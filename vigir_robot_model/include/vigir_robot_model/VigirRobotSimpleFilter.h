@@ -25,62 +25,43 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 */
-#ifndef __VIGIR_ROBOT_KALMAN_FILTER_BASE_H__
-#define __VIGIR_ROBOT_KALMAN_FILTER_BASE_H__
+#ifndef __VIGIR_ROBOT_SIMPLE_FILTER_H__
+#define __VIGIR_ROBOT_SIMPLE_FILTER_H__
 
 #include <stdint.h>
-#include <vigir_robot_model/VigirRobotDataTypes.h>
+#include <vigir_robot_model/VigirRobotFilterBase.h>
 
 namespace vigir_control {
 
 /**
- * This structure defines the base class for basic
- * Kalman filtering using generic control types.
+ * This structure defines a simple pass through filter.
+ * The prediction step is empty, and the correct step equates the state
+ * with the latest measurement.
  *
- * The class assumes a vector of independent kalman filters are
- *  applied in parallel (e.g. joint state estimation).
- *
- * The filter assumes that position, velocity, and acceleration
- * are relevant; the particulars of the system model are determined
- * by the implementation files.
- *
- * Prediction
- *  xv(k+1|k) = F xv(k) + G*u(k) + v(k)
- *    v(k) ~ 0 mean , Q = E[v*v'] process noise model
- *
- *  Sensing y(k) = H*xv(k) + eta(k)
- *     eta(k) = 0 mean, W = E[eta*eta'] sensor noise covariance
- *
- *  Q process noise keeps filter from converging to much
- *      and size relative to W weights prediction vs. sensor
- *  W sensor noise should relate to actual noise
- *   W and Q represent trade offs between how fast the filter converges,
- *     and susceptibility to noise, and directly influence lag and bandwidth,
- *
- * Update
- *  xv(k+1|k+1) = xv(k+1|k) + K*nu(k+1)
- *    where nu = y(k+1) - H*qv(k+1|k)
- *    The innovation gains K are determined by the specific filter model in implementation.
  */
-  struct VigirRobotKalmanFilterBase
+  struct VigirRobotSimpleFilter
   {
 
-    VigirRobotKalmanFilterBase(const std::string& name,
-                               const uint8_t& elements)
-                  : filter_name_(name), n_elements_(elements),
-                    timestamp_(0L)  {}
-    virtual ~VigirRobotKalmanFilterBase() {};
+    VigirRobotSimpleFilter(const std::string& name,
+                           const uint8_t& elements)
+        : VigirRobotFilterBase(name, elements)  {}
+    virtual ~VigirRobotSimpleFilter() {};
 
     // Apply prediction step to filter
-    virtual bool predict_filter(VectorNd& q, VectorNd& dq, VectorNd& ddq, const VectorNd& u, const double& dt)=0;
+    bool predict_filter(VectorNd& q, VectorNd& dq, VectorNd& ddq, const VectorNd& u, const double& dt) {};
 
 
     // Apply correction step to filter based on sensed data
-    virtual bool correct_filter(VectorNd& q, VectorNd& dq, VectorNd& ddq, const VectorNd& q_sensed, const VectorNd& dq_sensed)=0;
+    bool correct_filter(VectorNd& q, VectorNd& dq, VectorNd& ddq, const VectorNd& q_sensed, const VectorNd& dq_sensed)
+    {
+        assert(q.size() == q_sensed.size());
+        assert(dq.size() == dq_sensed.size());
 
-    std::string  filter_name_;
-    int8_t       n_elements_;
-    uint64_t     timestamp_;
+         q =  q_sensed;
+        dq = dq_sensed;
+
+    }
+
 
   protected:
 
