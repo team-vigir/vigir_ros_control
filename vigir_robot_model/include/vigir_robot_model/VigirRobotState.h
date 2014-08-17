@@ -67,6 +67,7 @@ namespace vigir_control {
 
        /* All robot body data stored in single vector;
         * individual appendage chains are extracted using joint maps.
+        *  Joint alignment is specified by user provided joint list.
         */
         VigirRobotJointData             robot_joints_;
 
@@ -79,7 +80,6 @@ namespace vigir_control {
             : current_robot_state_(n_joints),
               filtered_robot_state_(n_joints){}
 
-        // Data aligned according to URDF model specifications
         VigirRobotStateData             current_robot_state_;
         VigirRobotStateData             filtered_robot_state_;
 
