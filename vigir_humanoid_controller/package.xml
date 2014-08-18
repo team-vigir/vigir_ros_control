@@ -54,7 +54,6 @@
   <build_depend>urdf</build_depend>
   <build_depend>vigir_robot_model</build_depend>
   <build_depend>eigen</build_depend>
-  <build_depend>eigen</build_depend>
   <build_depend>hardware_interface</build_depend>
   <build_depend>controller_manager</build_depend>
 

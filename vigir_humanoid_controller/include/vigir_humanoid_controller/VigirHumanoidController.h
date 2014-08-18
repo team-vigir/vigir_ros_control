@@ -28,9 +28,15 @@
 #ifndef __VIGIR_HUMANOID_CONTROLLER_H__
 #define __VIGIR_HUMANOID_CONTROLLER_H__
 
+#include <ros/ros.h>
+#include <ros/callback_queue.h>
+#include <hardware_interface/robot_hw.h>
+#include <hardware_interface/joint_command_interface.h>
+#include <hardware_interface/joint_state_interface.h>
+#include <joint_limits_interface/joint_limits_interface.h>
+
 #include <vigir_humanoid_controller/VigirHumanoidInterface.h>
 
-#include <hardware_interface/robot_hw.h>
 
 namespace vigir_control {
 
@@ -41,17 +47,17 @@ namespace vigir_control {
  * This class defines the RobotHW interface used by the
  * ROS controllers.
  */
-  class VigirHumanoidController : : public hardware_interface::RobotHW
+  class VigirHumanoidController : public hardware_interface::RobotHW
   {
 
   public:
     VigirHumanoidController(const std::string& name);
-    virtual ~VigirHumanoidController();
+    virtual ~VigirHumanoidController() {};
 
     // Initialization functions
-    uint32_t initialize();
+    int32_t initialize();
 
-    void cleanup();
+    int32_t cleanup();
 
 
     // Interface to the robot data provided to the ROS controllers
@@ -64,11 +70,27 @@ namespace vigir_control {
 
 
 
+    enum ControllerInitializationFailures{
+        ROBOT_INITIALIZED_OK = 0,
+        ROBOT_MODEL_FAILED_TO_INITIALIZE,
+        ROBOT_INTERFACE_FAILED_TO_INITIALIZE,
+        ROBOT_BEHAVIORS_FAILED_TO_INITIALIZE,
+        ROBOT_CONTROLLERS_FAILED_TO_INITIALIZE,
+        ROBOT_PUBLISHERS_FAILED_TO_INITIALIZE
+    };
+    enum ControllerCleanupFailures{
+        ROBOT_CLEANUP_OK = 0,
+        ROBOT_MODEL_FAILED_TO_CLEANUP_PROPERLY,
+        ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY   ,
+        ROBOT_BEHAVIORS_FAILED_TO_CLEANUP_PROPERLY,
+        ROBOT_CONTROLLERS_FAILED_TO_CLEANUP_PROPERLY,
+        ROBOT_PUBLISHERS_FAILED_TO_CLEANUP_PROPERLY
+    };
+
 
   protected:
 
     // Generic initialization functions
-    int32_t init_robot_model();
     int32_t init_robot_behaviors();
     int32_t init_robot_controllers();
     int32_t init_robot_publishers();
@@ -80,7 +102,8 @@ namespace vigir_control {
     int32_t cleanup_robot_publishers();
 
     // Implementation specific functions
-    virtual int32_t init_robot_interface() = 0;
+    virtual int32_t init_robot_model()        = 0;
+    virtual int32_t init_robot_interface()    = 0;
     virtual int32_t cleanup_robot_interface() = 0;
 
     // Define generic callbacks to ROS subscriber interfaces
@@ -95,8 +118,6 @@ namespace vigir_control {
     // current state
     // current behaviors
     // current footsteps
-
-    std::map<std::string, ros::Publisher> joint_cmd_pubs_;
 
     std::string                           name_;
     // ROS stuff
@@ -123,23 +144,6 @@ namespace vigir_control {
     boost::shared_ptr<vigir_control::VigirRobotStateData>      commanded_robot_state_;
     boost::shared_ptr<vigir_control::VigirRobotBehaviorData>   current_robot_behavior_;
     boost::shared_ptr<vigir_control::VigirRobotBehaviorData>   commanded_robot_behavior_;
-
-    enum ControllerInitializationFailures{
-        ROBOT_INITIALIZED_OK = 0,
-        ROBOT_MODEL_FAILED_TO_INITIALIZE,
-        ROBOT_INTERFACE_FAILED_TO_INITIALIZE,
-        ROBOT_BEHAVIORS_FAILED_TO_INITIALIZE,
-        ROBOT_CONTROLLERS_FAILED_TO_INITIALIZE,
-        ROBOT_PUBLISHERS_FAILED_TO_INITIALIZE
-    };
-    enum ControllerCleanupFailures{
-        ROBOT_CLEANUP_OK = 0,
-        ROBOT_MODEL_FAILED_TO_CLEANUP_PROPERLY,
-        ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY   ,
-        ROBOT_BEHAVIORS_FAILED_TO_CLEANUP_PROPERLY,
-        ROBOT_CONTROLLERS_FAILED_TO_CLEANUP_PROPERLY,
-        ROBOT_PUBLISHERS_FAILED_TO_CLEANUP_PROPERLY
-    };
 
     void error_status(const std::string& msg, int32_t rc=-1);
 };

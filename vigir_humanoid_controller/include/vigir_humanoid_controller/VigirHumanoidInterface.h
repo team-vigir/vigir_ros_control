@@ -38,7 +38,7 @@
 
 namespace vigir_control {
 
-class VigirRobotBehaviorData;
+class VigirRobotBehaviorData; // temporary dummy class definition
 
 /**
  * This structure defines the interface for a humanoid robot and
@@ -53,13 +53,13 @@ class VigirRobotBehaviorData;
  * This is NOT the RobotHW interface used by the controller.
  *    See VigirHumanoidController for the RobotHW interface.
  */
-  class VigirRobotHumanoidInterface
+  class VigirHumanoidInterface
   {
   public:
 
-    VigirRobotHumanoidInterface(const std::string& name)
+    VigirHumanoidInterface(const std::string& name)
         : name_(name) { }
-    virtual ~VigirRobotHumanoidInterface() {}
+    virtual ~VigirHumanoidInterface() {}
 
 
     // Implementation specific functions that provide access to robot
@@ -69,6 +69,8 @@ class VigirRobotBehaviorData;
     //    as these may be called at any time from the robot interface
     //    and accessed by the
 
+    virtual int32_t initialize_models() = 0;
+    virtual int32_t initialize_interface() = 0;
     virtual void update_state_data()=0;     // from robot
     virtual void send_controller_data() =0; // to robot
     virtual void read_state_data(vigir_control::VigirRobotStateData& )=0;       // to  controllers

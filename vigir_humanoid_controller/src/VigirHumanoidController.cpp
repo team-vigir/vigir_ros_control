@@ -42,8 +42,8 @@ void VigirHumanoidController::error_status(const std::string& msg, int32_t rc)
 {
     if (rc < 0)
     {
-        ROS_ERROR(msg.c_str());
-        ROS_WARN(msg.c_str());  // try to get on screen and in log file
+        ROS_ERROR("%s",msg.c_str());
+        ROS_WARN("%s",msg.c_str());  // try to get on screen and in log file
         // @todo - publish status to OCS
 
     }
@@ -135,6 +135,7 @@ int32_t VigirHumanoidController::initialize()
 
 int32_t VigirHumanoidController::cleanup()
 {
+    int32_t rc;
     // Generic cleanup functions
     try{
         rc = cleanup_robot_publishers();
@@ -220,42 +221,42 @@ int32_t VigirHumanoidController::cleanup()
 int32_t VigirHumanoidController::init_robot_model()
 {
     ROS_ERROR(" Need to initialize robot model");
-    return ROBOT_MODEL_OK;
+    return ROBOT_INITIALIZED_OK;
 }
 
 int32_t VigirHumanoidController::init_robot_behaviors()
 {
     ROS_ERROR(" Need to init_robot_behaviors");
-    return ROBOT_BEHAVIORS_OK;
+    return ROBOT_INITIALIZED_OK;
 }
 int32_t VigirHumanoidController::init_robot_controllers()
 {
     ROS_ERROR(" Need to init_robot_controllers");
-    return ROBOT_CONTROLLERS_OK;
+    return ROBOT_INITIALIZED_OK;
 }
 int32_t VigirHumanoidController::init_robot_publishers()
 {
     ROS_ERROR(" Need to init_robot_publishers");
-    return ROBOT_PUBLISHERS_OK;
+    return ROBOT_INITIALIZED_OK;
 }
 
 // Generic cleanup functions
-int32_t cleanup_robot_model()
+int32_t VigirHumanoidController::cleanup_robot_model()
 {
     ROS_ERROR(" Need to cleanup_robot_model");
     return ROBOT_CLEANUP_OK;
 }
-int32_t cleanup_robot_behaviors()
+int32_t VigirHumanoidController::cleanup_robot_behaviors()
 {
     ROS_ERROR(" Need to cleanup_robot_behaviors");
     return ROBOT_CLEANUP_OK;
 }
-int32_t cleanup_robot_controllers()
+int32_t VigirHumanoidController::cleanup_robot_controllers()
 {
     ROS_ERROR(" Need to cleanup_robot_controllers");
     return ROBOT_CLEANUP_OK;
 }
-int32_t cleanup_robot_publishers()
+int32_t VigirHumanoidController::cleanup_robot_publishers()
 {
     ROS_ERROR(" Need to cleanup_robot_publishers");
     return ROBOT_CLEANUP_OK;
