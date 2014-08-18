@@ -5,9 +5,26 @@
 #include<vigir_robot_model/VigirRobotBasic2StateKF.h>
 #include<vigir_robot_model/VigirRobotPoseFilter.h>
 
+template < typename T >
+inline std::ostream& operator << (std::ostream& os, const std::vector<T>& v)
+{
+    os << "[";
+    for (typename std::vector<T>::const_iterator ii = v.begin(); ii != v.end(); ++ii)
+    {
+        os << " " << *ii;
+    }
+    os << " ]";
+    return os;
+}
 
 namespace vigir_control
 {
+
+class VigirRobotBehaviorData  // temporary dummy class definition
+{
+public:
+    VigirRobotBehaviorData() {};
+};
 
 class TestHumanoidInterface : public VigirHumanoidInterface
 {
@@ -27,26 +44,86 @@ class TestHumanoidInterface : public VigirHumanoidInterface
         // Implementation specific types
         robot_model_.reset(new VigirRobotRBDLModel());
 
-        // Load joint list from parameters
+        ros::NodeHandle nh;
+        ros::NodeHandle nhp("~");
 
         // Load robot model from parameters
+        std::cout << "Reading xml file from parameter server" << std::endl;
+        std::string urdf_xml, full_urdf_xml,xml_result;
+        urdf_xml = std::string("robot_description");
+        if (!nhp.searchParam(urdf_xml,full_urdf_xml))
+        {
+            std::cerr << "Failed to find robot_description on parameter server!" << std::endl;
+            return 1;
+        }
+
+        if (!nhp.getParam(full_urdf_xml, xml_result))
+        {
+            std::cerr << "Failed to load the robot urdf from parameter server for test!" << std::endl;
+            return 1;
+        }
+        //std::cout << " URDF:\n" << xml_result << std::endl;
+
+        // Load joint list from parameters
+        if (!nhp.searchParam("controlled_joints",full_urdf_xml))
+        {
+            std::cerr << "Failed to find controlled joints list on parameter server!" << std::endl;
+            return 1;
+        }
+
+        std::vector<std::string> controlled_joints;
+        if (!nhp.getParam(full_urdf_xml, controlled_joints))
+        {
+            std::cerr << "Failed to load the controlled joint list for test!" << std::endl;
+            return 1;
+        }
+        std::cout << " Controlled joints:\n" << controlled_joints << std::endl;
 
         // Load model from URDF
+        int32_t rc;
+        if (rc = robot_model_->initializeRobotJoints(controlled_joints,
+                                                   "pelvis",
+                                                   "l_foot", "r_foot",
+                                                   "l_hand", "r_hand"))
+        {
+            std::cerr << "Robot model initialization failed" << std::endl;
+            return rc;
+        }
 
-        // Setup joints
+        if (uint32_t rc = robot_model_->loadRobotModel(xml_result, 1.0,true))
+        {
+            printf("Failed to load the robot model (rc=%d)- abort!\n",rc);
+            return 1;
+        }
+        else
+        {
+            printf("Successfully loaded the robot URDF model!\n");
+        }
+
+        // Setup state vectors based on joint list size
+        current_robot_state_.reset(   new VigirRobotStateData(robot_model_->n_joints_));     ; // structure to store latest robot state data
+        filtered_robot_state_.reset(  new VigirRobotStateData(robot_model_->n_joints_)); // structure to store filtered robot state data
+        controlled_robot_state_.reset(new VigirRobotStateData(robot_model_->n_joints_)); // structure to store robot control commands
+
+        current_robot_behavior_.reset(new VigirRobotBehaviorData());
+        desired_robot_behavior_.reset(new VigirRobotBehaviorData());
 
         joint_filter_.reset(new VigirRobotBasic2StateKF(name_+"/joint_filter",robot_model_->n_joints_));
         pose_filter_.reset(new VigirRobotPoseFilter(name_+"/pose_filter"));
 
-        // state vectors
-        ROS_ERROR("Finish initialization with state structures");
         return VigirHumanoidController::ROBOT_INITIALIZED_OK;
     }
 
     int32_t initialize_interface()
     {
-        ROS_ERROR("Need to finish intializing the robot interface");
+        ROS_ERROR("Need to finish initializing the robot interface");
         return VigirHumanoidController::ROBOT_INITIALIZED_OK;
+    }
+
+    int32_t shutdown_interface()
+    {
+        ROS_ERROR("Need to finish shutting down the robot interface");
+        return VigirHumanoidController::ROBOT_CLEANUP_OK;
     }
 
     void update_state_data()     // from robot
@@ -134,13 +211,36 @@ class TestHumanoidController : public VigirHumanoidController
 
     int32_t init_robot_interface()
     {
-        ROS_WARN("Dummy init_robot_interface");
-        return ROBOT_INITIALIZED_OK;
+        if (robot_interface_)
+        {
+            return robot_interface_->initialize_interface();
+        }
+        else
+        {
+            return ROBOT_INTERFACE_FAILED_TO_INITIALIZE;
+        }
     }
 
     int32_t cleanup_robot_interface()
     {
         ROS_WARN("Dummy cleanup_robot_interface");
+        if (robot_interface_)
+        {
+            try {
+                int32_t rc = robot_interface_->shutdown_interface();
+                if (rc)
+                {
+                    error_status("Failed to shutdown interface properly",rc);
+                    return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
+
+                }
+            }
+            catch(...)
+            {
+                return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
+
+            }
+        }
 
         return ROBOT_CLEANUP_OK;
     }

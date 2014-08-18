@@ -71,6 +71,8 @@ class VigirRobotBehaviorData; // temporary dummy class definition
 
     virtual int32_t initialize_models() = 0;
     virtual int32_t initialize_interface() = 0;
+    virtual int32_t shutdown_interface() = 0;
+
     virtual void update_state_data()=0;     // from robot
     virtual void send_controller_data() =0; // to robot
     virtual void read_state_data(vigir_control::VigirRobotStateData& )=0;       // to  controllers
