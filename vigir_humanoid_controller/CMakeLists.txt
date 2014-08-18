@@ -54,10 +54,12 @@ include_directories(include ${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 SET(HEADERS
 include/${PROJECT_NAME}/VigirHumanoidInterface.h
+include/${PROJECT_NAME}/VigirHumanoidHWInterface.h
 include/${PROJECT_NAME}/VigirHumanoidController.h
 )
 
 SET(SOURCE
+src/VigirHumanoidHWInterface.cpp
 src/VigirHumanoidController.cpp
 )
 ###################################

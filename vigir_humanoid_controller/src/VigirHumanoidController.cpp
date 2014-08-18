@@ -38,229 +38,30 @@ VigirHumanoidController::VigirHumanoidController(const std::string& name)
     ROS_INFO("Initialize VigirHumanoidController for <%s>",name_.c_str());
 }
 
-void VigirHumanoidController::error_status(const std::string& msg, int32_t rc)
+int32_t VigirHumanoidController::run()
 {
-    if (rc < 0)
-    {
-        ROS_ERROR("%s",msg.c_str());
-        ROS_WARN("%s",msg.c_str());  // try to get on screen and in log file
-        // @todo - publish status to OCS
+    ros::Time current_time;
+    ros::Duration elapsed_time;
+    ros::Time last_time = ros::Time::now();
 
-    }
-    else
+    while (ros::ok() )//&& robot_interface_->run())
     {
-        // print return code with message
-        ROS_ERROR((msg+" (rc=%d)").c_str(),rc);
-        ROS_WARN( (msg+" (rc=%d)").c_str(),rc);  // try to get on screen and in log file
-        // @todo - publish status to OCS
+        current_time = ros::Time::now();
+        elapsed_time = current_time - last_time;
+        last_time = current_time;
+
+        //ROS_INFO("before read");
+        robot_interface_->read(current_time, elapsed_time);
+        //ROS_INFO("after read");
+
+        //ROS_INFO("before cm.update");
+        cm_->update(current_time, elapsed_time);
+        //ROS_INFO("after cm.update");
+
+        //ROS_INFO("before write");
+        robot_interface_->write(current_time, elapsed_time);
+        //ROS_INFO("after write");
+
     }
 }
-
-// Initialization functions
-int32_t VigirHumanoidController::initialize()
-{
-    int32_t rc;
-    try{ // initialize the robot model from parameters
-        rc = init_robot_model();
-        if (rc)
-        {
-            error_status("Robot model failed to initialize",rc);
-            return ROBOT_MODEL_FAILED_TO_INITIALIZE;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot model failed to initialize (exception)",-1);
-        return ROBOT_MODEL_FAILED_TO_INITIALIZE;
-    }
-
-    try{ // Initialize the robot specific interface (defined in implementation)
-        rc = init_robot_interface();
-        if (rc)
-        {
-            error_status("Robot interface failed to initialize",rc);
-            return ROBOT_INTERFACE_FAILED_TO_INITIALIZE;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot interface failed to initialize (exception)",-1);
-        return ROBOT_INTERFACE_FAILED_TO_INITIALIZE;
-    }
-
-    try{
-        rc = init_robot_behaviors();
-        if (rc)
-        {
-            error_status("Robot behaviors failed to initialize",rc);
-            return ROBOT_BEHAVIORS_FAILED_TO_INITIALIZE;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot behaviors failed to initialize (exception)",-1);
-        return ROBOT_BEHAVIORS_FAILED_TO_INITIALIZE;
-    }
-
-    try{
-        rc = init_robot_controllers();
-        if (rc)
-        {
-            error_status("Robot controllers failed to initialize",rc);
-            return ROBOT_CONTROLLERS_FAILED_TO_INITIALIZE;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot controllers failed to initialize (exception)", -1);
-        return ROBOT_CONTROLLERS_FAILED_TO_INITIALIZE;
-    }
-
-    try{
-        rc = init_robot_publishers();
-        if (rc)
-        {
-            error_status("Robot controller publishers failed to initialize",rc);
-            return ROBOT_PUBLISHERS_FAILED_TO_INITIALIZE;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot controller publishers failed to initialize (exception)",-1);
-        return ROBOT_PUBLISHERS_FAILED_TO_INITIALIZE;
-    }
-
-    return ROBOT_INITIALIZED_OK;
-}
-
-int32_t VigirHumanoidController::cleanup()
-{
-    int32_t rc;
-    // Generic cleanup functions
-    try{
-        rc = cleanup_robot_publishers();
-
-        if (rc)
-        {
-            error_status("Robot publishers failed to cleanup properly",rc);
-            return ROBOT_PUBLISHERS_FAILED_TO_CLEANUP_PROPERLY;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot  publishers failed to cleanup properly (exception)",-1);
-        return ROBOT_PUBLISHERS_FAILED_TO_CLEANUP_PROPERLY;
-    }
-
-    try{
-        rc = cleanup_robot_controllers();
-
-        if (rc)
-        {
-            error_status("Robot controllers failed to cleanup properly",rc);
-            return ROBOT_CONTROLLERS_FAILED_TO_CLEANUP_PROPERLY;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot  controllers failed to cleanup properly (exception)");
-        return ROBOT_CONTROLLERS_FAILED_TO_CLEANUP_PROPERLY;
-    }
-
-    try{
-        rc =  cleanup_robot_behaviors();
-        return ROBOT_BEHAVIORS_FAILED_TO_CLEANUP_PROPERLY;
-
-        if (rc)
-        {
-            error_status("Robot controllers failed to cleanup properly",rc);
-            return ROBOT_CONTROLLERS_FAILED_TO_CLEANUP_PROPERLY;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot  controllers failed to cleanup properly (exception)");
-        return ROBOT_CONTROLLERS_FAILED_TO_CLEANUP_PROPERLY;
-    }
-
-    try{
-        rc =   cleanup_robot_interface();
-
-        if (rc)
-        {
-            error_status("Robot interface failed to cleanup properly",rc);
-            return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot interface failed to cleanup properly (exception)");
-        return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
-    }
-
-    try{
-        rc =   cleanup_robot_model();
-        if (rc)
-        {
-            error_status("Robot model failed to cleanup properly",rc);
-            return ROBOT_MODEL_FAILED_TO_CLEANUP_PROPERLY;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot model failed to cleanup properly (exception)");
-        return ROBOT_MODEL_FAILED_TO_CLEANUP_PROPERLY;
-    }
-
-    return ROBOT_CLEANUP_OK;
-
-}
-
-
-// Generic initialization functions
-int32_t VigirHumanoidController::init_robot_model()
-{
-    ROS_ERROR(" Need to initialize robot model");
-    return ROBOT_INITIALIZED_OK;
-}
-
-int32_t VigirHumanoidController::init_robot_behaviors()
-{
-    ROS_ERROR(" Need to init_robot_behaviors");
-    return ROBOT_INITIALIZED_OK;
-}
-int32_t VigirHumanoidController::init_robot_controllers()
-{
-    ROS_ERROR(" Need to init_robot_controllers");
-    return ROBOT_INITIALIZED_OK;
-}
-int32_t VigirHumanoidController::init_robot_publishers()
-{
-    ROS_ERROR(" Need to init_robot_publishers");
-    return ROBOT_INITIALIZED_OK;
-}
-
-// Generic cleanup functions
-int32_t VigirHumanoidController::cleanup_robot_model()
-{
-    ROS_ERROR(" Need to cleanup_robot_model");
-    return ROBOT_CLEANUP_OK;
-}
-int32_t VigirHumanoidController::cleanup_robot_behaviors()
-{
-    ROS_ERROR(" Need to cleanup_robot_behaviors");
-    return ROBOT_CLEANUP_OK;
-}
-int32_t VigirHumanoidController::cleanup_robot_controllers()
-{
-    ROS_ERROR(" Need to cleanup_robot_controllers");
-    return ROBOT_CLEANUP_OK;
-}
-int32_t VigirHumanoidController::cleanup_robot_publishers()
-{
-    ROS_ERROR(" Need to cleanup_robot_publishers");
-    return ROBOT_CLEANUP_OK;
-}
-
-
 } /* namespace flor_control */

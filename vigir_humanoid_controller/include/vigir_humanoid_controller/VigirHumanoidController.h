@@ -30,12 +30,16 @@
 
 #include <ros/ros.h>
 #include <ros/callback_queue.h>
+
+#include <controller_manager/controller_manager.h>
+
 #include <hardware_interface/robot_hw.h>
 #include <hardware_interface/joint_command_interface.h>
 #include <hardware_interface/joint_state_interface.h>
+
 #include <joint_limits_interface/joint_limits_interface.h>
 
-#include <vigir_humanoid_controller/VigirHumanoidInterface.h>
+#include <vigir_humanoid_controller/VigirHumanoidHWInterface.h>
 
 
 namespace vigir_control {
@@ -44,8 +48,14 @@ namespace vigir_control {
  * This class defines the controller interface for a generic
  * humanoid robot controller.
  *
- * This class defines the RobotHW interface used by the
- * ROS controllers.
+ * This class is responsible for managing the external connections to the world,
+ * and the robot specific implementation is ultimately responsible for imposing a
+ * particular threading model on the process.
+ *
+ *
+ * Joint control is handled by the ros_control framwork. This class defines
+ * the RobotHW interface used by the ROS controllers.
+ *
  */
   class VigirHumanoidController : public hardware_interface::RobotHW
   {
@@ -55,97 +65,35 @@ namespace vigir_control {
     virtual ~VigirHumanoidController() {};
 
     // Initialization functions
-    int32_t initialize();
+    virtual int32_t initialize() = 0;
 
-    int32_t cleanup();
+    virtual int32_t cleanup()    = 0;
 
-
-    // Interface to the robot data provided to the ROS controllers
-    // NOTE: The robot specific implementation is responsible for
-    //    providing data protection in multithreaded environments
-    //    as these may be called at any time from the asynchronous
-    //    spinner.
-    virtual void read(ros::Time time, ros::Duration period) = 0;
-    virtual void write(ros::Time time, ros::Duration period) = 0;
-
-
-
-    enum ControllerInitializationFailures{
-        ROBOT_INITIALIZED_OK = 0,
-        ROBOT_MODEL_FAILED_TO_INITIALIZE,
-        ROBOT_INTERFACE_FAILED_TO_INITIALIZE,
-        ROBOT_BEHAVIORS_FAILED_TO_INITIALIZE,
-        ROBOT_CONTROLLERS_FAILED_TO_INITIALIZE,
-        ROBOT_PUBLISHERS_FAILED_TO_INITIALIZE
-    };
-    enum ControllerCleanupFailures{
-        ROBOT_CLEANUP_OK = 0,
-        ROBOT_MODEL_FAILED_TO_CLEANUP_PROPERLY,
-        ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY   ,
-        ROBOT_BEHAVIORS_FAILED_TO_CLEANUP_PROPERLY,
-        ROBOT_CONTROLLERS_FAILED_TO_CLEANUP_PROPERLY,
-        ROBOT_PUBLISHERS_FAILED_TO_CLEANUP_PROPERLY
-    };
+    // Main run loop of the controller -
+    // this function does not exit until ROS is shutdown or the shutdown command is given
+    int32_t run();
 
 
   protected:
 
-    // Generic initialization functions
-    int32_t init_robot_behaviors();
-    int32_t init_robot_controllers();
-    int32_t init_robot_publishers();
-
-    // Generic cleanup functions
-    int32_t cleanup_robot_model();
-    int32_t cleanup_robot_behaviors();
-    int32_t cleanup_robot_controllers();
-    int32_t cleanup_robot_publishers();
-
-    // Implementation specific functions
-    virtual int32_t init_robot_model()        = 0;
-    virtual int32_t init_robot_interface()    = 0;
-    virtual int32_t cleanup_robot_interface() = 0;
-
-    // Define generic callbacks to ROS subscriber interfaces
-    //  (other than controller interfaces)
-    // setDesiredBehaviorCB
-    // updateFootstepPlanCB
-    // setDevicePowerCB - power on/off to hands/sensors
-    // resetRobotInternalPoseBD <future>
-
-    // Define generic publishers
-    // current pose
-    // current state
-    // current behaviors
-    // current footsteps
-
     std::string                           name_;
-    // ROS stuff
-    ros::NodeHandle                       nh_;
-    boost::shared_ptr<ros::AsyncSpinner>  subscriber_spinner_;
-    ros::CallbackQueue                    subscriber_queue_;
+// ROS stuff
+//    boost::shared_ptr<ros::NodeHandle>    beh_nh_;        // Handle behavior interface
+//    boost::shared_ptr<ros::NodeHandle>    controller_nh_; // Handle controller interface
+//    boost::shared_ptr<ros::NodeHandle>    pub_nh_;        // Handle controller interface
+//    ros::NodeHandle                       nhp_;           // Private node handle
 
-    boost::shared_ptr<vigir_control::VigirHumanoidInterface>  robot_interface_;
+//    boost::shared_ptr<ros::AsyncSpinner>  behavior_spinner_;
+//    boost::shared_ptr<ros::AsyncSpinner>  controller_spinner_;
+//    boost::shared_ptr<ros::AsyncSpinner>  publisher_spinner_;
+//    ros::CallbackQueue                    behavior_queue_;
+//    ros::CallbackQueue                    controller_queue_;
+//    ros::CallbackQueue                    publisher_queue_;
 
-    // ROS control interfaces
-    hardware_interface::JointStateInterface     joint_state_interface_;
-    hardware_interface::PositionJointInterface  position_joint_interface_;
-    hardware_interface::VelocityJointInterface  velocity_joint_interface_;
-    hardware_interface::EffortJointInterface    effort_joint_interface_;
+    boost::shared_ptr<controller_manager::ControllerManager >   cm_;
+    boost::shared_ptr<vigir_control::VigirHumanoidHWInterface>  robot_interface_;
 
-    // Following data structures are used directly by controllers
-    // For singled thread applications, these can be same as the
-    // relevant interface data structures;
-    // For multithread applications, these are likely different memory
-    // locations to provid data protection.
-    // These values should be determined by the specific implementation
-    // in the init_robot_interface function.
-    boost::shared_ptr<vigir_control::VigirRobotStateData>      current_robot_state_;    // structure to store robot state used by controllers
-    boost::shared_ptr<vigir_control::VigirRobotStateData>      commanded_robot_state_;
-    boost::shared_ptr<vigir_control::VigirRobotBehaviorData>   current_robot_behavior_;
-    boost::shared_ptr<vigir_control::VigirRobotBehaviorData>   commanded_robot_behavior_;
 
-    void error_status(const std::string& msg, int32_t rc=-1);
 };
 
 } // end of vigir_control namespace

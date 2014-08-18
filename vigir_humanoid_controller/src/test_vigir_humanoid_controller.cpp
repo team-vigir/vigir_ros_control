@@ -30,8 +30,8 @@ class TestHumanoidInterface : public VigirHumanoidInterface
 {
   public:
 
-    TestHumanoidInterface(const std::string& name) :
-        VigirHumanoidInterface(name) {
+    TestHumanoidInterface(const std::string& name, boost::shared_ptr<ros::NodeHandle>& pub_nh) :
+        VigirHumanoidInterface(name, pub_nh) {
         ROS_INFO("Construct the HumanoidInterface");
     }
 
@@ -117,13 +117,19 @@ class TestHumanoidInterface : public VigirHumanoidInterface
     int32_t initialize_interface()
     {
         ROS_ERROR("Need to finish initializing the robot interface");
-        return VigirHumanoidController::ROBOT_INITIALIZED_OK;
+        return ROBOT_INTERFACE_OK;
     }
 
-    int32_t shutdown_interface()
+    int32_t cleanup_interface()
     {
         ROS_ERROR("Need to finish shutting down the robot interface");
-        return VigirHumanoidController::ROBOT_CLEANUP_OK;
+        return ROBOT_INTERFACE_OK;
+    }
+
+    int32_t cleanup_models()
+    {
+        ROS_ERROR("Need to finish shutting down the robot interface");
+        return ROBOT_INTERFACE_OK;
     }
 
     void update_state_data()     // from robot
@@ -219,6 +225,29 @@ class TestHumanoidController : public VigirHumanoidController
         {
             return ROBOT_INTERFACE_FAILED_TO_INITIALIZE;
         }
+    }
+    int32_t cleanup_robot_model()
+    {
+        ROS_WARN("Dummy cleanup_robot_interface");
+        if (robot_interface_)
+        {
+            try {
+                int32_t rc = robot_interface_->shutdown_interface();
+                if (rc)
+                {
+                    error_status("Failed to shutdown interface properly",rc);
+                    return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
+
+                }
+            }
+            catch(...)
+            {
+                return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
+
+            }
+        }
+
+        return ROBOT_CLEANUP_OK;
     }
 
     int32_t cleanup_robot_interface()

@@ -44,21 +44,17 @@ class VigirRobotBehaviorData; // temporary dummy class definition
  * This structure defines the interface for a humanoid robot and
  * serves as the base for the actual robot interface.
  *
- * This class (and its robot specific derivatives) provide the
+ * This structure (and its robot specific derivatives) provide the
  * interface to the robot and its data.
- *
- * The class serves as the hardware interface for the
- * ROS controllers.
  *
  * This is NOT the RobotHW interface used by the controller.
  *    See VigirHumanoidController for the RobotHW interface.
  */
-  class VigirHumanoidInterface
+  struct VigirHumanoidInterface
   {
-  public:
 
-    VigirHumanoidInterface(const std::string& name)
-        : name_(name) { }
+    VigirHumanoidInterface(const std::string& name, boost::shared_ptr<ros::NodeHandle>& pub_nh)
+        : name_(name),pub_nh_(pub_nh) { }
     virtual ~VigirHumanoidInterface() {}
 
 
@@ -71,23 +67,23 @@ class VigirRobotBehaviorData; // temporary dummy class definition
 
     virtual int32_t initialize_models() = 0;
     virtual int32_t initialize_interface() = 0;
-    virtual int32_t shutdown_interface() = 0;
+    virtual int32_t cleanup_models() = 0;
+    virtual int32_t cleanup_interface() = 0;
 
-    virtual void update_state_data()=0;     // from robot
-    virtual void send_controller_data() =0; // to robot
-    virtual void read_state_data(vigir_control::VigirRobotStateData& )=0;       // to  controllers
-    virtual void write_controller_data(const vigir_control::VigirRobotStateData& )=0; // from controllers
+    // These functions assume that data is protected in multithreaded environments before call
+    virtual void update_state_data()    = 0; // from robot
+    virtual void publish_state_data()   = 0; // to ROS
+    virtual void send_controller_data() = 0; // to robot
 
-    virtual void update_behavior_data() = 0;// from robot
-    virtual void send_behavior_data()   = 0;// to   robot
-    virtual void read_behavior_data(VigirRobotBehaviorData&)   = 0;// to   controllers
-    virtual void write_behavior_data(const VigirRobotBehaviorData& )  = 0;  // from controllers
+    virtual void update_behavior_data()  = 0; // from robot
+    virtual void publish_behavior_data() = 0; // to ROS
+    virtual void send_behavior_data()    = 0; // to robot
 
-  protected:
-    std::string name_;
+    std::string                           name_;
+
+    boost::shared_ptr<ros::NodeHandle>    pub_nh_;        // Node handle for common data publishing
 
     // The following classes are defined by the implementation
-    boost::shared_ptr<vigir_control::VigirRobotModel>          robot_model_; // Robot model type chosen by implementation
     boost::shared_ptr<vigir_control::VigirRobotFilterBase>     joint_filter_; // filter type chosen by implementation
     boost::shared_ptr<vigir_control::VigirRobotPoseFilterBase> pose_filter_;  // filter type chosen by implementation
 
@@ -100,6 +96,14 @@ class VigirRobotBehaviorData; // temporary dummy class definition
 
     boost::shared_ptr<vigir_control::VigirRobotBehaviorData>   current_robot_behavior_;
     boost::shared_ptr<vigir_control::VigirRobotBehaviorData>   desired_robot_behavior_;
+
+    enum InterfaceStatus{
+        ROBOT_INTERFACE_OK = 0,
+        ROBOT_INTERFACE_MODEL_FAILED_TO_INITIALIZE = 100,
+        ROBOT_INTERFACE_API_FAILED_TO_INITIALIZE,
+        ROBOT_INTERFACE_MODEL_FAILED_TO_CLEANUP_PROPERLY,
+        ROBOT_INTERFACE_INTERFACE_FAILED_TO_CLEANUP_PROPERLY
+    };
 
 };
 
