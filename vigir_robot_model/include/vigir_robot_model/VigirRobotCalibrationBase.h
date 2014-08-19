@@ -25,43 +25,34 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 */
-#ifndef __VIGIR_ROBOT_SIMPLE_FILTER_H__
-#define __VIGIR_ROBOT_SIMPLE_FILTER_H__
+#ifndef __VIGIR_ROBOT_CALIBRATION_BASE_H__
+#define __VIGIR_ROBOT_CALIBRATION_BASE_H__
 
 #include <stdint.h>
-#include <vigir_robot_model/VigirRobotFilterBase.h>
+#include <vigir_robot_model/VigirRobotDataTypes.h>
 
 namespace vigir_control {
 
 /**
- * This structure defines a simple pass through filter.
- * The prediction step is empty, and the correct step equates the state
- * with the latest measurement.
+ * This structure defines the base class for calibration of variables.
+ *
+ * The class assumes a vector of calibration calculations are applied in parallel
+ *   (e.g. joint angle updates).
  *
  */
-  struct VigirRobotSimpleFilter : public VigirRobotFilterBase
+  struct VigirRobotCalibrationBase
   {
 
-    VigirRobotSimpleFilter(const std::string& name,
-                           const uint8_t& elements)
-        : VigirRobotFilterBase(name, elements)  {}
-    virtual ~VigirRobotSimpleFilter() {};
-
-    // Apply prediction step to filter
-    bool predict_filter(VectorNd& q, VectorNd& dq, VectorNd& ddq, const VectorNd& u, const double& dt) {};
-
+    VigirRobotCalibrationBase(const std::string& name,
+                               const uint8_t& elements)
+                  : name_(name), n_elements_(elements) {}
+    virtual ~VigirRobotCalibrationBase() {};
 
     // Apply correction step to filter based on sensed data
-    bool correct_filter(VectorNd& q, VectorNd& dq, VectorNd& ddq, const VectorNd& q_sensed, const VectorNd& dq_sensed)
-    {
-        assert(q.size() == q_sensed.size());
-        assert(dq.size() == dq_sensed.size());
+    virtual bool apply_calibration(VectorNd& q_sensed, VectorNd& dq_sensed, const VectorNd& q_raw, const VectorNd& dq_raw)=0;
 
-         q =  q_sensed;
-        dq = dq_sensed;
-
-    }
-
+    std::string  name_;
+    int8_t       n_elements_;
 
   protected:
 

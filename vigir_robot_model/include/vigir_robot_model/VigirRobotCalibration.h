@@ -25,45 +25,58 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 */
-#ifndef __VIGIR_ROBOT_SIMPLE_FILTER_H__
-#define __VIGIR_ROBOT_SIMPLE_FILTER_H__
+#ifndef __VIGIR_ROBOT_CALIBRATION_H__
+#define __VIGIR_ROBOT_CALIBRATION_H__
 
 #include <stdint.h>
-#include <vigir_robot_model/VigirRobotFilterBase.h>
+#include <vigir_robot_model/VigirRobotCalibrationBase.h>
 
 namespace vigir_control {
 
 /**
- * This structure defines a simple pass through filter.
- * The prediction step is empty, and the correct step equates the state
- * with the latest measurement.
+ * This structure defines a simple linear calculation for calibration of variables.
  *
  */
-  struct VigirRobotSimpleFilter : public VigirRobotFilterBase
+struct VigirRobotCalibration : public VigirRobotCalibrationBase
+{
+
+  VigirRobotCalibration(const std::string& name,
+                             const uint8_t& elements)
+                : VigirRobotCalibrationBase(name,elements),
+                  gearing_(elements), offset_(elements)
   {
+      gearing_.fill(1.0);
+      offset_.fill(0.0);
+  }
 
-    VigirRobotSimpleFilter(const std::string& name,
-                           const uint8_t& elements)
-        : VigirRobotFilterBase(name, elements)  {}
-    virtual ~VigirRobotSimpleFilter() {};
+  ~VigirRobotCalibration() {};
 
-    // Apply prediction step to filter
-    bool predict_filter(VectorNd& q, VectorNd& dq, VectorNd& ddq, const VectorNd& u, const double& dt) {};
+  // Apply calibration based on raw sensed data
+  //    this function implicitly assumes that sensed and raw vectors are
+  //    defined with the same sizes
+  bool apply_calibration(VectorNd& q_sensed, VectorNd& dq_sensed, const VectorNd& q_raw, const VectorNd& dq_raw)
+  {
+      q_sensed   = gearing_.cwiseProduct(q_raw);
+      q_sensed  += offset_;
 
+      dq_sensed  = gearing_.cwiseProduct(dq_raw);
+  }
 
-    // Apply correction step to filter based on sensed data
-    bool correct_filter(VectorNd& q, VectorNd& dq, VectorNd& ddq, const VectorNd& q_sensed, const VectorNd& dq_sensed)
-    {
-        assert(q.size() == q_sensed.size());
-        assert(dq.size() == dq_sensed.size());
+  bool setCalibrationParameters(const VectorNd& gearing, const VectorNd& offset)
+  {
+      if ((gearing.size() != gearing_.size()) ||
+              (offset.size() != offset_.size()))
+      { // verify that the data sizes are consistent
+          return false;
+      }
 
-         q =  q_sensed;
-        dq = dq_sensed;
+      gearing_ = gearing;
+      offset_  = offset;
+  }
 
-    }
-
-
-  protected:
+protected:
+  VectorNd gearing_ ;
+  VectorNd offset_;
 
 };
 

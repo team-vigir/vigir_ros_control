@@ -62,6 +62,8 @@ include/${PROJECT_NAME}/VigirRobotSimpleFilter.h
 include/${PROJECT_NAME}/VigirRobotBasic2StateKF.h
 include/${PROJECT_NAME}/VigirRobotPoseFilterBase.h
 include/${PROJECT_NAME}/VigirRobotPoseFilter.h
+include/${PROJECT_NAME}/VigirRobotCalibrationBase.h
+include/${PROJECT_NAME}/VigirRobotCalibration.h
 )
 
 SET(SOURCE
