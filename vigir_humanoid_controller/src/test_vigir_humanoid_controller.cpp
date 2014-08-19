@@ -20,11 +20,6 @@ inline std::ostream& operator << (std::ostream& os, const std::vector<T>& v)
 namespace vigir_control
 {
 
-class VigirRobotBehaviorData  // temporary dummy class definition
-{
-public:
-    VigirRobotBehaviorData() {};
-};
 
 class TestHumanoidInterface : public VigirHumanoidInterface
 {
@@ -41,26 +36,6 @@ class TestHumanoidInterface : public VigirHumanoidInterface
         ROS_ERROR("Destroy the HumanoidInterface");
     }
 
-    int32_t initialize_states(const int32_t& n_joints)
-    {
-
-        // Setup state vectors based on joint list size
-        current_robot_state_.reset(   new VigirRobotStateData(n_joints));     ; // structure to store latest robot state data
-        filtered_robot_state_.reset(  new VigirRobotStateData(n_joints)); // structure to store filtered robot state data
-        controlled_robot_state_.reset(new VigirRobotStateData(n_joints)); // structure to store robot control commands
-
-        current_robot_behavior_.reset(new VigirRobotBehaviorData());
-        desired_robot_behavior_.reset(new VigirRobotBehaviorData());
-
-        // Setup implementation specific filters for state data
-        joint_filter_.reset(new VigirRobotBasic2StateKF(name_+"/joint_filter",n_joints));
-        pose_filter_.reset(new VigirRobotPoseFilter(name_+"/pose_filter"));
-
-
-        ROS_ERROR("Need to retrieve parameters and set filter gains");
-
-        return ROBOT_INTERFACE_OK;
-    }
 
     int32_t initialize_interface()
     {
@@ -71,12 +46,6 @@ class TestHumanoidInterface : public VigirHumanoidInterface
     int32_t cleanup_interface()
     {
         ROS_ERROR("Need to finish shutting down the robot interface");
-        return ROBOT_INTERFACE_OK;
-    }
-
-    int32_t cleanup_states()
-    {
-        ROS_ERROR("Need to clean up any state data?");
         return ROBOT_INTERFACE_OK;
     }
 
@@ -196,6 +165,29 @@ class TestHumanoidHWInterface : public VigirHumanoidHWInterface
 
         return ROBOT_INITIALIZED_OK;
     }
+
+    int32_t init_robot_filters()
+    {
+        boost::shared_ptr<vigir_control::VigirRobotFilterBase>     joint_filter; // filter type chosen by implementation
+        boost::shared_ptr<vigir_control::VigirRobotPoseFilterBase> pose_filter;  // filter type chosen by implementation
+
+        joint_filter.reset(new vigir_control::VigirRobotBasic2StateKF(name_+"/joint_filter",robot_model_->n_joints_));
+        pose_filter.reset( new vigir_control::VigirRobotPoseFilter(name_+"/pose_filter"));
+
+        robot_interface_->initialize_filters(joint_filter, pose_filter);
+        ROS_ERROR("Need to finish initializing the robot filters with paramters");
+
+        return ROBOT_INITIALIZED_OK;
+    }
+
+    int32_t init_robot_calibration()
+    {
+        ROS_ERROR("Need to finish initializing the robot calibration");
+        robot_interface_->robot_calibration_.reset(new VigirRobotCalibrationBase());
+
+        return ROBOT_INITIALIZED_OK;
+    }
+
 
     int32_t init_robot_interface()
     {

@@ -121,11 +121,14 @@ namespace vigir_control {
 
     // Implementation specific functions
     virtual int32_t init_robot_model()        = 0;
+    virtual int32_t init_robot_filters()      = 0;
+    virtual int32_t init_robot_calibration()  = 0;
     virtual int32_t init_robot_interface()    = 0;
-    virtual int32_t cleanup_robot_model()     = 0;
+
     virtual int32_t cleanup_robot_interface() = 0;
 
     // The robot specific implementation is responsible for providing data protection
+    // between robot API and joint controllers/ROS callbacks
     virtual void read_state_data( )       = 0; // to  controllers
     virtual void write_controller_data( ) = 0; // from controllers
     virtual void read_behavior_data( )    = 0; // to   controllers

@@ -59,6 +59,7 @@ include/${PROJECT_NAME}/VigirHumanoidController.h
 )
 
 SET(SOURCE
+src/VigirHumanoidInterface.cpp
 src/VigirHumanoidHWInterface.cpp
 src/VigirHumanoidController.cpp
 )

@@ -206,19 +206,6 @@ int32_t VigirHumanoidHWInterface::cleanup()
         return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
     }
 
-    try{
-        rc =   cleanup_robot_model();
-        if (rc)
-        {
-            error_status("Robot model failed to cleanup properly",rc);
-            return ROBOT_MODEL_FAILED_TO_CLEANUP_PROPERLY;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot model failed to cleanup properly (exception)");
-        return ROBOT_MODEL_FAILED_TO_CLEANUP_PROPERLY;
-    }
 
     return ROBOT_CLEANUP_OK;
 

@@ -30,6 +30,7 @@
 
 #include <string>
 #include <boost/shared_ptr.hpp>
+#include <ros/ros.h>
 
 #include <vigir_robot_model/VigirRobotModel.h>
 #include <vigir_robot_model/VigirRobotState.h>
@@ -38,25 +39,35 @@
 
 namespace vigir_control {
 
-class VigirRobotBehaviorData; // temporary dummy class definition
+class VigirRobotBehaviorData  // temporary dummy class definition
+{
+public:
+    VigirRobotBehaviorData() {};
+};
+
+class VigirRobotCalibrationBase // temporary dummy class definition
+{
+public:
+    VigirRobotCalibrationBase() {};
+};
 
 /**
  * This structure defines the interface for a humanoid robot and
  * serves as the base for the actual robot interface.
  *
- * This structure (and its robot specific derivatives) provide the
- * interface to the robot and its data.
+ * This structure (and its robot specific derived classes) provide the
+ * interface to the robot and its data via the robot's unique API.
  *
  * This is NOT the RobotHW interface used by the controller.
- *    See VigirHumanoidController for the RobotHW interface.
+ *    See VigirHumanoidHWInterface for the ros_control RobotHW interface.
  */
   struct VigirHumanoidInterface
   {
 
     VigirHumanoidInterface(const std::string& name,
                            boost::shared_ptr<ros::NodeHandle>& pub_nh,
-                           boost::shared_ptr<ros::NodeHandle>& private_nh)
-        : name_(name),pub_nh_(pub_nh), private_nh_(private_nh) { }
+                           boost::shared_ptr<ros::NodeHandle>& private_nh);
+
     virtual ~VigirHumanoidInterface() {}
 
 
@@ -67,9 +78,8 @@ class VigirRobotBehaviorData; // temporary dummy class definition
     //    as these may be called at any time from the robot interface
     //    and accessed by the
 
-    virtual int32_t initialize_states(const int32_t& n_joints) = 0;
+
     virtual int32_t initialize_interface() = 0;
-    virtual int32_t cleanup_states() = 0;
     virtual int32_t cleanup_interface() = 0;
 
     // These functions assume that data is protected in multithreaded environments before call
@@ -81,6 +91,18 @@ class VigirRobotBehaviorData; // temporary dummy class definition
     virtual void publish_behavior_data() = 0; // to ROS
     virtual void send_behavior_data()    = 0; // to robot
 
+    // Generic functions
+
+    // Set up the state vectors given controlled joint size
+    int32_t initialize_states(const int32_t& n_joints);
+
+    // Define and initialize the filters outside interface, then pass pointers for use
+    int32_t initialize_filters(boost::shared_ptr<vigir_control::VigirRobotFilterBase>&,
+                               boost::shared_ptr<vigir_control::VigirRobotPoseFilterBase>&);
+
+    int32_t cleanup_states() { } // place holder for now
+
+    // Data
     std::string                           name_;
 
     boost::shared_ptr<ros::NodeHandle>    pub_nh_;        // Node handle for common data publishing
@@ -93,6 +115,8 @@ class VigirRobotBehaviorData; // temporary dummy class definition
     // NOTE: The robot specific implementation is responsible for
     //    providing data protection in multithreaded environments
     //    as these may be updated and accessed by a number of functions
+    boost::shared_ptr<vigir_control::VigirRobotCalibrationBase> robot_calibration_;
+
     boost::shared_ptr<vigir_control::VigirRobotStateData>      current_robot_state_; // structure to store latest robot state data
     boost::shared_ptr<vigir_control::VigirRobotStateData>      filtered_robot_state_; // structure to store filtered robot state data
     boost::shared_ptr<vigir_control::VigirRobotStateData>      controlled_robot_state_; // structure to store robot control commands
