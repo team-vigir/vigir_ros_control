@@ -77,11 +77,17 @@ namespace vigir_control {
     //    providing data protection in multithreaded environments
     //    as these may be called at any time from the asynchronous
     //    spinner.
-    void read( ros::Time time, ros::Duration period);
+    void read(ros::Time time, ros::Duration period)
+    {
+        read_state_data();
+        read_behavior_data();
+    }
 
-    void write(ros::Time time, ros::Duration period);
-
-
+    void write(ros::Time time, ros::Duration period)
+    {
+        write_behavior_data();
+        write_controller_data();
+    }
 
     enum InitializationFailures{
         ROBOT_INITIALIZED_OK = 0,

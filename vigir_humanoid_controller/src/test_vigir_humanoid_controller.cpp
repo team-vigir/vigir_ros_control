@@ -30,8 +30,10 @@ class TestHumanoidInterface : public VigirHumanoidInterface
 {
   public:
 
-    TestHumanoidInterface(const std::string& name, boost::shared_ptr<ros::NodeHandle>& pub_nh) :
-        VigirHumanoidInterface(name, pub_nh) {
+    TestHumanoidInterface(const std::string& name,
+                          boost::shared_ptr<ros::NodeHandle>& pub_nh,
+                          boost::shared_ptr<ros::NodeHandle>& private_nh) :
+        VigirHumanoidInterface(name, pub_nh, private_nh) {
         ROS_INFO("Construct the HumanoidInterface");
     }
 
@@ -39,25 +41,108 @@ class TestHumanoidInterface : public VigirHumanoidInterface
         ROS_ERROR("Destroy the HumanoidInterface");
     }
 
-    int32_t initialize_models()
+    int32_t initialize_states(const int32_t& n_joints)
+    {
+
+        // Setup state vectors based on joint list size
+        current_robot_state_.reset(   new VigirRobotStateData(n_joints));     ; // structure to store latest robot state data
+        filtered_robot_state_.reset(  new VigirRobotStateData(n_joints)); // structure to store filtered robot state data
+        controlled_robot_state_.reset(new VigirRobotStateData(n_joints)); // structure to store robot control commands
+
+        current_robot_behavior_.reset(new VigirRobotBehaviorData());
+        desired_robot_behavior_.reset(new VigirRobotBehaviorData());
+
+        // Setup implementation specific filters for state data
+        joint_filter_.reset(new VigirRobotBasic2StateKF(name_+"/joint_filter",n_joints));
+        pose_filter_.reset(new VigirRobotPoseFilter(name_+"/pose_filter"));
+
+
+        ROS_ERROR("Need to retrieve parameters and set filter gains");
+
+        return ROBOT_INTERFACE_OK;
+    }
+
+    int32_t initialize_interface()
+    {
+        ROS_ERROR("Need to finish initializing the robot interface");
+        return ROBOT_INTERFACE_OK;
+    }
+
+    int32_t cleanup_interface()
+    {
+        ROS_ERROR("Need to finish shutting down the robot interface");
+        return ROBOT_INTERFACE_OK;
+    }
+
+    int32_t cleanup_states()
+    {
+        ROS_ERROR("Need to clean up any state data?");
+        return ROBOT_INTERFACE_OK;
+    }
+
+    void update_state_data()     // from robot
+    {
+       ROS_INFO("dummy update_state_data()");
+    }
+
+    void publish_state_data()     // from robot
+    {
+       ROS_INFO("dummy publish state data()");
+    }
+
+    void update_behavior_data()
+    {
+        ROS_INFO("dummy update_behavior_data()");
+
+    }
+
+    void publish_behavior_data()     // from robot
+    {
+       ROS_INFO("dummy publish state data()");
+    }
+
+   void send_controller_data()// to robot
+   {
+       ROS_INFO("dummy send_controller_data()");
+   }
+
+   void send_behavior_data()  // to   robot
+   {
+    ROS_INFO("dummy send_behavior_data()");
+   }
+
+};
+
+class TestHumanoidHWInterface : public VigirHumanoidHWInterface
+{
+  public:
+
+    TestHumanoidHWInterface(const std::string& name) :
+        VigirHumanoidHWInterface(name) {
+        ROS_INFO("Construct the HumanoidInterface");
+    }
+
+    ~TestHumanoidHWInterface() {
+        ROS_ERROR("Destroy the HumanoidInterface");
+    }
+
+
+    int32_t init_robot_model()
     {
         // Implementation specific types
         robot_model_.reset(new VigirRobotRBDLModel());
-
-        ros::NodeHandle nh;
-        ros::NodeHandle nhp("~");
 
         // Load robot model from parameters
         std::cout << "Reading xml file from parameter server" << std::endl;
         std::string urdf_xml, full_urdf_xml,xml_result;
         urdf_xml = std::string("robot_description");
-        if (!nhp.searchParam(urdf_xml,full_urdf_xml))
+        if (!private_nh_->searchParam(urdf_xml,full_urdf_xml))
         {
             std::cerr << "Failed to find robot_description on parameter server!" << std::endl;
             return 1;
         }
 
-        if (!nhp.getParam(full_urdf_xml, xml_result))
+        if (!private_nh_->getParam(full_urdf_xml, xml_result))
         {
             std::cerr << "Failed to load the robot urdf from parameter server for test!" << std::endl;
             return 1;
@@ -65,14 +150,14 @@ class TestHumanoidInterface : public VigirHumanoidInterface
         //std::cout << " URDF:\n" << xml_result << std::endl;
 
         // Load joint list from parameters
-        if (!nhp.searchParam("controlled_joints",full_urdf_xml))
+        if (!private_nh_->searchParam("controlled_joints",full_urdf_xml))
         {
             std::cerr << "Failed to find controlled joints list on parameter server!" << std::endl;
             return 1;
         }
 
         std::vector<std::string> controlled_joints;
-        if (!nhp.getParam(full_urdf_xml, controlled_joints))
+        if (!private_nh_->getParam(full_urdf_xml, controlled_joints))
         {
             std::cerr << "Failed to load the controlled joint list for test!" << std::endl;
             return 1;
@@ -83,7 +168,7 @@ class TestHumanoidInterface : public VigirHumanoidInterface
         int32_t rc;
         if (rc = robot_model_->initializeRobotJoints(controlled_joints,
                                                    "pelvis",
-                                                   "l_foot", "r_foot",
+                                                   "l_foot", "r_foot",   // @todo - make these parameter names
                                                    "l_hand", "r_hand"))
         {
             std::cerr << "Robot model initialization failed" << std::endl;
@@ -100,75 +185,61 @@ class TestHumanoidInterface : public VigirHumanoidInterface
             printf("Successfully loaded the robot URDF model!\n");
         }
 
-        // Setup state vectors based on joint list size
-        current_robot_state_.reset(   new VigirRobotStateData(robot_model_->n_joints_));     ; // structure to store latest robot state data
-        filtered_robot_state_.reset(  new VigirRobotStateData(robot_model_->n_joints_)); // structure to store filtered robot state data
-        controlled_robot_state_.reset(new VigirRobotStateData(robot_model_->n_joints_)); // structure to store robot control commands
+        // Set up data to hold controller data
+        this->current_robot_state_.reset(new VigirRobotStateData(robot_model_->n_joints_));
+        this->current_robot_behavior_.reset(new VigirRobotBehaviorData());
 
-        current_robot_behavior_.reset(new VigirRobotBehaviorData());
-        desired_robot_behavior_.reset(new VigirRobotBehaviorData());
+        // Initialize the robot interface
+        robot_interface_.reset(new TestHumanoidInterface(name_,pub_nh_, private_nh_));
+        robot_interface_->initialize_states(robot_model_->n_joints_);
 
-        joint_filter_.reset(new VigirRobotBasic2StateKF(name_+"/joint_filter",robot_model_->n_joints_));
-        pose_filter_.reset(new VigirRobotPoseFilter(name_+"/pose_filter"));
 
-        return VigirHumanoidController::ROBOT_INITIALIZED_OK;
+        return ROBOT_INITIALIZED_OK;
     }
 
-    int32_t initialize_interface()
+    int32_t init_robot_interface()
     {
-        ROS_ERROR("Need to finish initializing the robot interface");
-        return ROBOT_INTERFACE_OK;
+        ROS_ERROR("Need to finish initializing the actual robot API interface");
+        return ROBOT_INITIALIZED_OK;
     }
 
-    int32_t cleanup_interface()
+    int32_t cleanup_robot_interface()
     {
         ROS_ERROR("Need to finish shutting down the robot interface");
-        return ROBOT_INTERFACE_OK;
+        return ROBOT_CLEANUP_OK;
     }
 
-    int32_t cleanup_models()
+    int32_t cleanup_robot_model()
     {
         ROS_ERROR("Need to finish shutting down the robot interface");
-        return ROBOT_INTERFACE_OK;
+        return ROBOT_CLEANUP_OK;
     }
 
-    void update_state_data()     // from robot
+    void read_state_data()     // from robot
     {
-       ROS_INFO("dummy update_state_data()");
+       ROS_INFO("dummy read_state_data()");
+       current_robot_state_ = robot_interface_->filtered_robot_state_;
     }
 
-   void send_controller_data()// to robot
+   void write_controller_data()// to robot
    {
        ROS_INFO("dummy send_controller_data()");
+       robot_interface_->send_controller_data();
    }
-   void read_state_data(vigir_control::VigirRobotStateData& )     // to  controllers
+   void read_behavior_data( )     // to  controllers
    {
-    ROS_INFO("dummy read_state_data()");
+        ROS_INFO("dummy read_behavior_data()");
+        current_robot_behavior_ = robot_interface_->current_robot_behavior_;
    }
-   void write_controller_data(const vigir_control::VigirRobotStateData& ) // from controllers
+   void write_behavior_data( ) // from controllers
    {
-    ROS_INFO("dummy write_controller_data()");
+        ROS_INFO("dummy write_behavior_data()");
+        robot_interface_->send_behavior_data();
    }
 
-   void update_behavior_data()// from robot
-   {
-    ROS_INFO("dummy update_behavior_data()");
-   }
-   void send_behavior_data()  // to   robot
-   {
-    ROS_INFO("dummy send_behavior_data()");
-   }
-   void read_behavior_data(VigirRobotBehaviorData&)         // to   controllers
-   {
-    ROS_INFO("dummy read_behavior_data()");
-   }
-   void write_behavior_data(const VigirRobotBehaviorData& ) // from controllers
-   {
-    ROS_INFO("dummy write_behavior_data()");
-   }
+
 
 };
-
 
 class TestHumanoidController : public VigirHumanoidController
 {
@@ -187,92 +258,20 @@ class TestHumanoidController : public VigirHumanoidController
 
     }
 
-    void read(ros::Time time, ros::Duration period)
-    {
-        ROS_INFO("Read controller input data");
-    }
+    int32_t cleanup() { };
 
-    void write(ros::Time time, ros::Duration period)
+    int32_t initialize(boost::shared_ptr<ros::NodeHandle>& beh_nh,
+                       boost::shared_ptr<ros::NodeHandle>& control_nh,
+                       boost::shared_ptr<ros::NodeHandle>& pub_nh,
+                       boost::shared_ptr<ros::NodeHandle>& private_nh)
     {
-        ROS_INFO("Read controller input data");
+
+        robot_hw_interface_.reset(new TestHumanoidHWInterface(name_));
+        robot_hw_interface_->initialize(beh_nh, control_nh, pub_nh, private_nh);
     }
 
   private:
     // Implementation specific functions
-    int32_t init_robot_model()
-    {
-        ROS_WARN("Test init_robot_model");
-        try {
-            robot_interface_.reset(new vigir_control::TestHumanoidInterface( this->name_ ) );
-            robot_interface_->initialize_models();
-        }
-        catch(...)
-        {
-            return ROBOT_MODEL_FAILED_TO_INITIALIZE;
-        }
-
-        return ROBOT_INITIALIZED_OK;
-
-    }
-
-    int32_t init_robot_interface()
-    {
-        if (robot_interface_)
-        {
-            return robot_interface_->initialize_interface();
-        }
-        else
-        {
-            return ROBOT_INTERFACE_FAILED_TO_INITIALIZE;
-        }
-    }
-    int32_t cleanup_robot_model()
-    {
-        ROS_WARN("Dummy cleanup_robot_interface");
-        if (robot_interface_)
-        {
-            try {
-                int32_t rc = robot_interface_->shutdown_interface();
-                if (rc)
-                {
-                    error_status("Failed to shutdown interface properly",rc);
-                    return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
-
-                }
-            }
-            catch(...)
-            {
-                return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
-
-            }
-        }
-
-        return ROBOT_CLEANUP_OK;
-    }
-
-    int32_t cleanup_robot_interface()
-    {
-        ROS_WARN("Dummy cleanup_robot_interface");
-        if (robot_interface_)
-        {
-            try {
-                int32_t rc = robot_interface_->shutdown_interface();
-                if (rc)
-                {
-                    error_status("Failed to shutdown interface properly",rc);
-                    return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
-
-                }
-            }
-            catch(...)
-            {
-                return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
-
-            }
-        }
-
-        return ROBOT_CLEANUP_OK;
-    }
 
 };
 
@@ -284,13 +283,13 @@ int main(int argc, char ** argv)
 
     std::cout <<"\n\n\nStart robot model test" << std::endl;
 
-    ros::NodeHandle nh;
-    ros::NodeHandle nhp("~");
+    boost::shared_ptr<ros::NodeHandle> main_nh(new ros::NodeHandle());
+    boost::shared_ptr<ros::NodeHandle> nhp(new ros::NodeHandle("~"));
 
     { // Scope to test destructor before final exit
         vigir_control::TestHumanoidController test_controller("Test");
 
-        test_controller.initialize();
+        test_controller.initialize(main_nh,main_nh,main_nh,nhp);
 
         ROS_INFO("Need to do something here to test");
     }

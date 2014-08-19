@@ -51,7 +51,7 @@ int32_t VigirHumanoidController::run()
         last_time = current_time;
 
         //ROS_INFO("before read");
-        robot_interface_->read(current_time, elapsed_time);
+        robot_hw_interface_->read(current_time, elapsed_time);
         //ROS_INFO("after read");
 
         //ROS_INFO("before cm.update");
@@ -59,7 +59,7 @@ int32_t VigirHumanoidController::run()
         //ROS_INFO("after cm.update");
 
         //ROS_INFO("before write");
-        robot_interface_->write(current_time, elapsed_time);
+        robot_hw_interface_->write(current_time, elapsed_time);
         //ROS_INFO("after write");
 
     }

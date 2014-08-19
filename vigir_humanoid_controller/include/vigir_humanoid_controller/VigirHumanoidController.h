@@ -57,7 +57,7 @@ namespace vigir_control {
  * the RobotHW interface used by the ROS controllers.
  *
  */
-  class VigirHumanoidController : public hardware_interface::RobotHW
+  class VigirHumanoidController
   {
 
   public:
@@ -65,7 +65,10 @@ namespace vigir_control {
     virtual ~VigirHumanoidController() {};
 
     // Initialization functions
-    virtual int32_t initialize() = 0;
+    virtual int32_t initialize( boost::shared_ptr<ros::NodeHandle>& beh_nh,
+                                boost::shared_ptr<ros::NodeHandle>& control_nh,
+                                boost::shared_ptr<ros::NodeHandle>& pub_nh,
+                                boost::shared_ptr<ros::NodeHandle>& private_nh) = 0;
 
     virtual int32_t cleanup()    = 0;
 
@@ -91,7 +94,7 @@ namespace vigir_control {
 //    ros::CallbackQueue                    publisher_queue_;
 
     boost::shared_ptr<controller_manager::ControllerManager >   cm_;
-    boost::shared_ptr<vigir_control::VigirHumanoidHWInterface>  robot_interface_;
+    boost::shared_ptr<vigir_control::VigirHumanoidHWInterface>  robot_hw_interface_;
 
 
 };

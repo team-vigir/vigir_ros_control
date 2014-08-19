@@ -53,8 +53,10 @@ class VigirRobotBehaviorData; // temporary dummy class definition
   struct VigirHumanoidInterface
   {
 
-    VigirHumanoidInterface(const std::string& name, boost::shared_ptr<ros::NodeHandle>& pub_nh)
-        : name_(name),pub_nh_(pub_nh) { }
+    VigirHumanoidInterface(const std::string& name,
+                           boost::shared_ptr<ros::NodeHandle>& pub_nh,
+                           boost::shared_ptr<ros::NodeHandle>& private_nh)
+        : name_(name),pub_nh_(pub_nh), private_nh_(private_nh) { }
     virtual ~VigirHumanoidInterface() {}
 
 
@@ -65,9 +67,9 @@ class VigirRobotBehaviorData; // temporary dummy class definition
     //    as these may be called at any time from the robot interface
     //    and accessed by the
 
-    virtual int32_t initialize_models() = 0;
+    virtual int32_t initialize_states(const int32_t& n_joints) = 0;
     virtual int32_t initialize_interface() = 0;
-    virtual int32_t cleanup_models() = 0;
+    virtual int32_t cleanup_states() = 0;
     virtual int32_t cleanup_interface() = 0;
 
     // These functions assume that data is protected in multithreaded environments before call
@@ -82,6 +84,7 @@ class VigirRobotBehaviorData; // temporary dummy class definition
     std::string                           name_;
 
     boost::shared_ptr<ros::NodeHandle>    pub_nh_;        // Node handle for common data publishing
+    boost::shared_ptr<ros::NodeHandle>    private_nh_;    // Private node handle for parameters
 
     // The following classes are defined by the implementation
     boost::shared_ptr<vigir_control::VigirRobotFilterBase>     joint_filter_; // filter type chosen by implementation
@@ -104,6 +107,7 @@ class VigirRobotBehaviorData; // temporary dummy class definition
         ROBOT_INTERFACE_MODEL_FAILED_TO_CLEANUP_PROPERLY,
         ROBOT_INTERFACE_INTERFACE_FAILED_TO_CLEANUP_PROPERLY
     };
+
 
 };
 
