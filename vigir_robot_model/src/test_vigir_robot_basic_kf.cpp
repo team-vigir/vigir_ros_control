@@ -1,4 +1,6 @@
 
+#include <vigir_robot_model/VigirRobotCalibration.h>
+#include <vigir_robot_model/VigirRobotSimpleFilter.h>
 #include <vigir_robot_model/VigirRobotBasic2StateKF.h>
 #include <vigir_robot_model/VigirRobotState.h>
 #include <fstream>
@@ -103,10 +105,13 @@ int main(int argc, char ** argv)
 
     std::cout << "Define test of "  << steps  << " steps at dt="  << dt  << "with " << num_joints << " joints" << std::endl;
     vigir_control::VigirRobotState robot_actual(num_joints); // actual math calc
+    vigir_control::VigirRobotState robot_sensor(num_joints); // sensed values
     vigir_control::VigirRobotState robot_model(num_joints);  // state estimate
 
     vigir_control::VigirRobotJointData& actual    = robot_actual.current_robot_state_.robot_joints_;
     vigir_control::VigirRobotJointData& control   = robot_actual.filtered_robot_state_.robot_joints_;
+    vigir_control::VigirRobotJointData& raw       = robot_sensor.current_robot_state_.robot_joints_;
+    vigir_control::VigirRobotJointData& simple    = robot_sensor.filtered_robot_state_.robot_joints_;
     vigir_control::VigirRobotJointData& sensed    = robot_model.current_robot_state_.robot_joints_;
     vigir_control::VigirRobotJointData& estimated = robot_model.filtered_robot_state_.robot_joints_;
 
@@ -129,9 +134,11 @@ int main(int argc, char ** argv)
     NormalDistribution gaussian_dist_15(0.0, 1.5);
     GaussianGenerator generator_15(rng, gaussian_dist_15);
 
+    // Initialize values
     calculate_test_data(actual, control, 0.0);
-    sense_test_data(sensed,    actual,  generator_05,  generator_01, generator_01);
     sense_test_data(control,   control, generator_001, generator_002,generator_002); // bad process control
+    sense_test_data(raw,        actual, generator_05,  generator_01, generator_01);
+    sense_test_data(sensed,        raw, generator_05,  generator_01, generator_01);
     sense_test_data(estimated, sensed,  generator_15 , generator_15, generator_15); // initial with bad data
 
 
@@ -147,10 +154,16 @@ int main(int argc, char ** argv)
     std::cout << "Set the K gains..." << std::endl;
     basic_2_state_kf.setKFInnovationGains(K00,K01,K10,K11);
 
+    vigir_control::VigirRobotSimpleFilter simple_filter("simple filter", num_joints);
+    vigir_control::VigirRobotCalibration  calibration("calibration", num_joints);
+
+
     // Define vectors to store data for plotting
     std::cout << "Define vectors to store data" << std::endl;
     std::vector<vigir_control::VectorNd> actual_positions;
     std::vector<vigir_control::VectorNd> actual_velocities;
+    std::vector<vigir_control::VectorNd> raw_positions;
+    std::vector<vigir_control::VectorNd> raw_velocities;
     std::vector<vigir_control::VectorNd> sensed_positions;
     std::vector<vigir_control::VectorNd> sensed_velocities;
     std::vector<vigir_control::VectorNd> estimated_positions;
@@ -163,6 +176,8 @@ int main(int argc, char ** argv)
     std::cout << "Initialize vectors"  << std::endl;
     actual_positions.resize(steps,    actual.joint_positions_);
     actual_velocities.resize(steps,   actual.joint_velocities_);
+    raw_positions.resize(steps,       raw.joint_positions_);
+    raw_velocities.resize(steps,      raw.joint_velocities_);
     sensed_positions.resize(steps,    sensed.joint_positions_);
     sensed_velocities.resize(steps,   sensed.joint_velocities_);
     estimated_positions.resize(steps, estimated.joint_positions_);
@@ -172,8 +187,11 @@ int main(int argc, char ** argv)
     estimated_accelerations.resize(steps,estimated.joint_accelerations_);
 
 
+    Timing calibration_timing_("Calibration",true,false);
     Timing prediction_timing_("BasicKF:: prediction",true,false);
     Timing correction_timing_("BasicKF:: correction",true,false);
+    Timing simple_filter_timing_("SimpleFilter:: correction",true,false);
+
     std::cout << "Begin simulation loop ..."  << std::endl;
     for (int i = 1; i < steps; ++i)
     {
@@ -185,13 +203,20 @@ int main(int argc, char ** argv)
 
         // Sense the actual data with noise
         //printf("\n Sense %d",i);fflush(stdout);
-        sense_test_data(sensed,    actual,  generator_005, generator_01, generator_01);
+        sense_test_data(raw,    actual,  generator_005, generator_01, generator_01);
 
         // Corrupt the control used for prediction
         //printf("\n Control %d",i);fflush(stdout);
         sense_test_data(control,   control, generator_001, generator_002, generator_002); // bad process control
 
         //printf("\n Predict %d",i);fflush(stdout);
+        {DO_TIMING(calibration_timing_)
+            calibration.apply_calibration(sensed.joint_positions_,
+                                          sensed.joint_velocities_,
+                                          raw.joint_positions_,
+                                          raw.joint_velocities_);
+        }
+
         {DO_TIMING(prediction_timing_)
             basic_2_state_kf.predict_filter(estimated.joint_positions_,
                                             estimated.joint_velocities_,
@@ -208,11 +233,21 @@ int main(int argc, char ** argv)
                                             sensed.joint_positions_,
                                             sensed.joint_velocities_);
         }
+
+        {DO_TIMING(simple_filter_timing_)
+            simple_filter.correct_filter(simple.joint_positions_,
+                                         simple.joint_velocities_,
+                                         simple.joint_accelerations_,
+                                         sensed.joint_positions_,
+                                         sensed.joint_velocities_);
+        }
         //printf("\n Loop %d",i);fflush(stdout);
 
         // Store data for later plotting
         actual_positions[i]     = actual.joint_positions_;
         actual_velocities[i]    = actual.joint_velocities_;
+        raw_positions[i]        = raw.joint_positions_;
+        raw_velocities[i]       = raw.joint_velocities_;
         sensed_positions[i]     = sensed.joint_positions_;
         sensed_velocities[i]    = sensed.joint_velocities_;
         estimated_positions[i]  = estimated.joint_positions_;
@@ -235,12 +270,14 @@ int main(int argc, char ** argv)
         out << "t=np.linspace(0, " << elapsed << ", " << steps<< ")" << std::endl << std::endl;
         // Store data in python file
         store_data(out, "q_act", actual_positions,  i);
+        store_data(out, "q_raw", raw_positions,  i);
         store_data(out, "q_sensed", sensed_positions,  i);
         store_data(out, "q_estimated", estimated_positions,  i);
         store_data(out, "dq_act",actual_velocities, i);
+        store_data(out, "dq_raw",raw_velocities, i);
         store_data(out, "dq_sensed",sensed_velocities, i);
         store_data(out, "dq_estimated",estimated_velocities, i);
-        store_data(out, "ddq_act",      sensed_accelerations, i);
+        store_data(out, "ddq_act",      actual_accelerations, i);
         store_data(out, "ddq_sensed",   sensed_accelerations, i);
         store_data(out, "ddq_estimated",estimated_accelerations, i);
 
