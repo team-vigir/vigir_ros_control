@@ -61,41 +61,69 @@ namespace vigir_control {
   {
 
   public:
-    VigirHumanoidController(const std::string& name);
-    virtual ~VigirHumanoidController() {};
+    VigirHumanoidController(const std::string& name, const bool& verbose=false);
+    virtual ~VigirHumanoidController()
+    {
+        std::cout << "Destroy VigirHumanoidController ..." << std::endl;
+    };
 
-    // Initialization functions
-    virtual int32_t initialize( boost::shared_ptr<ros::NodeHandle>& beh_nh,
-                                boost::shared_ptr<ros::NodeHandle>& control_nh,
-                                boost::shared_ptr<ros::NodeHandle>& pub_nh,
-                                boost::shared_ptr<ros::NodeHandle>& private_nh) = 0;
+    // Initialization functions which call specific implementations
+    // The node handles and associated callback queues can have the
+    // same or different node handles passed to the init function
+    int32_t initialize( boost::shared_ptr<ros::NodeHandle>& beh_nh,
+                        boost::shared_ptr<ros::NodeHandle>& control_nh,
+                        boost::shared_ptr<ros::NodeHandle>& pub_nh,
+                        boost::shared_ptr<ros::NodeHandle>& private_nh);
 
-    virtual int32_t cleanup()    = 0;
+    int32_t cleanup();
 
     // Main run loop of the controller -
     // this function does not exit until ROS is shutdown or the shutdown command is given
-    int32_t run();
+    // A basic read-update-write loop is defined, but can be overridden for
+    // custom setups.
+    virtual int32_t run();
 
+    // Handle data transfer from/to the robot interface and the
+    // ROS controllers HWinterface
+    // NOTE: The robot specific implementation is responsible for
+    //    providing data protection in multithreaded environments
+    //    as these may be called at any time from the asynchronous
+    //    spinner.
+    virtual void read(ros::Time time, ros::Duration period) = 0;
+    virtual void write(ros::Time time, ros::Duration period) = 0;
 
   protected:
 
+    // generic functions given instantiated types
+    int32_t init_robot_model();
+    int32_t init_robot_controllers();
+    int32_t cleanup_robot_controllers();
+
+    // Implementation specific functions
+    virtual int32_t init_robot_interface()    = 0;
+    virtual int32_t init_robot_publishers()   = 0;
+
+    virtual int32_t cleanup_robot_interface()   = 0;
+    virtual int32_t cleanup_robot_publishers()  = 0;
+
+
     std::string                           name_;
-// ROS stuff
-//    boost::shared_ptr<ros::NodeHandle>    beh_nh_;        // Handle behavior interface
-//    boost::shared_ptr<ros::NodeHandle>    controller_nh_; // Handle controller interface
-//    boost::shared_ptr<ros::NodeHandle>    pub_nh_;        // Handle controller interface
-//    ros::NodeHandle                       nhp_;           // Private node handle
+    bool                                  verbose_;       // dump more data to logs
 
-//    boost::shared_ptr<ros::AsyncSpinner>  behavior_spinner_;
-//    boost::shared_ptr<ros::AsyncSpinner>  controller_spinner_;
-//    boost::shared_ptr<ros::AsyncSpinner>  publisher_spinner_;
-//    ros::CallbackQueue                    behavior_queue_;
-//    ros::CallbackQueue                    controller_queue_;
-//    ros::CallbackQueue                    publisher_queue_;
+    // ROS stuff
+    boost::shared_ptr<ros::NodeHandle>    beh_nh_;        // Handle behavior interface
+    boost::shared_ptr<ros::NodeHandle>    controller_nh_; // Handle controller interface
+    boost::shared_ptr<ros::NodeHandle>    pub_nh_;        // Handle controller interface
+    boost::shared_ptr<ros::NodeHandle>    private_nh_;    // Private node handle
 
-    boost::shared_ptr<controller_manager::ControllerManager >   cm_;
+    // Interface to robot specific implementations
+    boost::shared_ptr<vigir_control::VigirRobotModel>           robot_model_; // Robot model type chosen by implementation
+    boost::shared_ptr<vigir_control::VigirHumanoidInterface>    robot_interface_;
     boost::shared_ptr<vigir_control::VigirHumanoidHWInterface>  robot_hw_interface_;
+    boost::shared_ptr<controller_manager::ControllerManager >   cm_;
 
+    // dump errror to screen and log and potentially publish
+    virtual void error_status(const std::string& msg, int32_t rc=-1);
 
 };
 

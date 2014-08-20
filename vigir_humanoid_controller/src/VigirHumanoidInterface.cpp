@@ -32,37 +32,4 @@
 
 namespace vigir_control {
 
-
-// Pass the ROS node handlers with defined callback queues into the interface
-// for publishing and loading specific data
-VigirHumanoidInterface::VigirHumanoidInterface(const std::string& name,
-                       boost::shared_ptr<ros::NodeHandle>& pub_nh,
-                       boost::shared_ptr<ros::NodeHandle>& private_nh)
-    : name_(name),pub_nh_(pub_nh), private_nh_(private_nh)
-{
-    ROS_INFO("Initialize VigirHumanoidController for <%s>",name_.c_str());
-}
-
-int32_t VigirHumanoidInterface::initialize_states(const int32_t& n_joints)
-{
-
-    // Setup state vectors based on joint list size
-    current_robot_state_.reset(   new VigirRobotStateData(n_joints));     ; // structure to store latest robot state data
-    filtered_robot_state_.reset(  new VigirRobotStateData(n_joints)); // structure to store filtered robot state data
-    controlled_robot_state_.reset(new VigirRobotStateData(n_joints)); // structure to store robot control commands
-
-    current_robot_behavior_.reset(new VigirRobotBehaviorData());
-    desired_robot_behavior_.reset(new VigirRobotBehaviorData());
-
-    return ROBOT_INTERFACE_OK;
-}
-
-// Assign implementation specific filters to the interface
-int32_t VigirHumanoidInterface::initialize_filters(boost::shared_ptr<vigir_control::VigirRobotFilterBase>& joint_filter,
-                                                   boost::shared_ptr<vigir_control::VigirRobotPoseFilterBase>& pose_filter)
-{
-    joint_filter_ = joint_filter;
-    pose_filter_  = pose_filter;
-}
-
 } /* namespace flor_control */

@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <vigir_humanoid_controller/VigirHumanoidHWInterface.h>
+#include <vigir_humanoid_controller/VigirHumanoidStatusCodes.h>
 
 namespace vigir_control {
 
@@ -38,211 +39,55 @@ VigirHumanoidHWInterface::VigirHumanoidHWInterface(const std::string& name)
     ROS_INFO("Initialize VigirHumanoidHWInterface for <%s>",name_.c_str());
 }
 
-void VigirHumanoidHWInterface::error_status(const std::string& msg, int32_t rc)
+int32_t VigirHumanoidHWInterface::init_robot_controllers(const std::vector<std::string>& joint_list,
+                                                         boost::shared_ptr<ros::NodeHandle>& control_nh,
+                                                         boost::shared_ptr<ros::NodeHandle>& private_nh)
 {
-    if (rc < 0)
+    joint_names_ = joint_list;
+    try {
+        joint_state_positions_.resize( joint_names_.size());
+        joint_state_velocities_.resize(joint_names_.size());
+        joint_state_accelerations_.resize(joint_names_.size());
+        joint_state_efforts_.resize(joint_names_.size());
+        joint_command_positions_.resize( joint_names_.size());
+        joint_command_velocities_.resize(joint_names_.size());
+        joint_command_accelerations_.resize(joint_names_.size());
+        joint_command_efforts_.resize(joint_names_.size());
+    }
+    catch(...)
     {
-        ROS_ERROR("%s",msg.c_str());
-        ROS_WARN("%s",msg.c_str());  // try to get on screen and in log file
-        // @todo - publish status to OCS
-
-    }
-    else
-    {
-        // print return code with message
-        ROS_ERROR((msg+" (rc=%d)").c_str(),rc);
-        ROS_WARN( (msg+" (rc=%d)").c_str(),rc);  // try to get on screen and in log file
-        // @todo - publish status to OCS
-    }
-}
-
-// Initialization functions
-int32_t VigirHumanoidHWInterface::initialize(boost::shared_ptr<ros::NodeHandle>& beh_nh,
-                                            boost::shared_ptr<ros::NodeHandle>& control_nh,
-                                            boost::shared_ptr<ros::NodeHandle>& pub_nh,
-                                            boost::shared_ptr<ros::NodeHandle>& private_nh)
-{
-    beh_nh_         = beh_nh ;
-    controller_nh_  = control_nh;
-    pub_nh_         = pub_nh    ;
-    private_nh_     = private_nh;
-
-    int32_t rc;
-    try{ // initialize the robot model from parameters
-        rc = init_robot_model();
-        if (rc)
-        {
-            error_status("Robot model failed to initialize",rc);
-            return ROBOT_MODEL_FAILED_TO_INITIALIZE;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot model failed to initialize (exception)",-1);
-        return ROBOT_MODEL_FAILED_TO_INITIALIZE;
-    }
-
-    try{ // Initialize the robot specific interface (defined in implementation)
-        rc = init_robot_interface();
-        if (rc)
-        {
-            error_status("Robot interface failed to initialize",rc);
-            return ROBOT_INTERFACE_FAILED_TO_INITIALIZE;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot interface failed to initialize (exception)",-1);
-        return ROBOT_INTERFACE_FAILED_TO_INITIALIZE;
-    }
-
-    try{
-        rc = init_robot_behaviors();
-        if (rc)
-        {
-            error_status("Robot behaviors failed to initialize",rc);
-            return ROBOT_BEHAVIORS_FAILED_TO_INITIALIZE;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot behaviors failed to initialize (exception)",-1);
-        return ROBOT_BEHAVIORS_FAILED_TO_INITIALIZE;
-    }
-
-    try{
-        rc = init_robot_controllers();
-        if (rc)
-        {
-            error_status("Robot controllers failed to initialize",rc);
-            return ROBOT_CONTROLLERS_FAILED_TO_INITIALIZE;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot controllers failed to initialize (exception)", -1);
+        std::cerr << "Failed to allocate memory for controllers!" << std::endl;
         return ROBOT_CONTROLLERS_FAILED_TO_INITIALIZE;
     }
 
-    try{
-        rc = init_robot_publishers();
-        if (rc)
-        {
-            error_status("Robot controller publishers failed to initialize",rc);
-            return ROBOT_PUBLISHERS_FAILED_TO_INITIALIZE;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot controller publishers failed to initialize (exception)",-1);
-        return ROBOT_PUBLISHERS_FAILED_TO_INITIALIZE;
-    }
+    for (size_t i = 0; i < joint_names_.size(); ++i){
 
-    return ROBOT_INITIALIZED_OK;
-}
+      hardware_interface::JointStateHandle state_handle(joint_names_[i], &joint_state_positions_[i], &joint_state_velocities_[i], &joint_state_efforts_[i]);
+      joint_state_interface_.registerHandle(state_handle);
 
-int32_t VigirHumanoidHWInterface::cleanup()
-{
-    int32_t rc;
-    // Generic cleanup functions
-    try{
-        rc = cleanup_robot_publishers();
+      hardware_interface::JointHandle pos_handle(joint_state_interface_.getHandle(joint_names_[i]), &joint_command_positions_[i]);
+      position_joint_interface_.registerHandle(pos_handle);
 
-        if (rc)
-        {
-            error_status("Robot publishers failed to cleanup properly",rc);
-            return ROBOT_PUBLISHERS_FAILED_TO_CLEANUP_PROPERLY;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot  publishers failed to cleanup properly (exception)",-1);
-        return ROBOT_PUBLISHERS_FAILED_TO_CLEANUP_PROPERLY;
+      hardware_interface::JointHandle vel_handle(joint_state_interface_.getHandle(joint_names_[i]), &joint_command_velocities_[i]);
+      velocity_joint_interface_.registerHandle(vel_handle);
+
+      hardware_interface::JointHandle effort_handle(joint_state_interface_.getHandle(joint_names_[i]), &joint_command_efforts_[i]);
+      effort_joint_interface_.registerHandle(effort_handle);
+
     }
 
-    try{
-        rc = cleanup_robot_controllers();
+    registerInterface(&joint_state_interface_);
+    registerInterface(&position_joint_interface_);
+    registerInterface(&velocity_joint_interface_);
+    registerInterface(&effort_joint_interface_);
 
-        if (rc)
-        {
-            error_status("Robot controllers failed to cleanup properly",rc);
-            return ROBOT_CONTROLLERS_FAILED_TO_CLEANUP_PROPERLY;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot  controllers failed to cleanup properly (exception)");
-        return ROBOT_CONTROLLERS_FAILED_TO_CLEANUP_PROPERLY;
-    }
-
-    try{
-        rc =  cleanup_robot_behaviors();
-        return ROBOT_BEHAVIORS_FAILED_TO_CLEANUP_PROPERLY;
-
-        if (rc)
-        {
-            error_status("Robot controllers failed to cleanup properly",rc);
-            return ROBOT_CONTROLLERS_FAILED_TO_CLEANUP_PROPERLY;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot  controllers failed to cleanup properly (exception)");
-        return ROBOT_CONTROLLERS_FAILED_TO_CLEANUP_PROPERLY;
-    }
-
-    try{
-        rc =   cleanup_robot_interface();
-
-        if (rc)
-        {
-            error_status("Robot interface failed to cleanup properly",rc);
-            return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
-        }
-    }
-    catch(...) // @todo: catch specific exceptions and report
-    {
-        error_status("Robot interface failed to cleanup properly (exception)");
-        return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
-    }
-
-
-    return ROBOT_CLEANUP_OK;
-
-}
-
-
-// Generic initialization functions
-int32_t VigirHumanoidHWInterface::init_robot_behaviors()
-{
-    ROS_ERROR(" Need to init_robot_behaviors");
-    return ROBOT_INITIALIZED_OK;
-}
-int32_t VigirHumanoidHWInterface::init_robot_controllers()
-{
     ROS_ERROR(" Need to init_robot_controllers");
     return ROBOT_INITIALIZED_OK;
 }
-int32_t VigirHumanoidHWInterface::init_robot_publishers()
-{
-    ROS_ERROR(" Need to init_robot_publishers");
-    return ROBOT_INITIALIZED_OK;
-}
 
-// Generic cleanup functions
-int32_t VigirHumanoidHWInterface::cleanup_robot_behaviors()
-{
-    ROS_ERROR(" Need to cleanup_robot_behaviors");
-    return ROBOT_CLEANUP_OK;
-}
 int32_t VigirHumanoidHWInterface::cleanup_robot_controllers()
 {
     ROS_ERROR(" Need to cleanup_robot_controllers");
-    return ROBOT_CLEANUP_OK;
-}
-int32_t VigirHumanoidHWInterface::cleanup_robot_publishers()
-{
-    ROS_ERROR(" Need to cleanup_robot_publishers");
     return ROBOT_CLEANUP_OK;
 }
 

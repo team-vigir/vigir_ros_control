@@ -36,20 +36,14 @@
 #include <vigir_robot_model/VigirRobotState.h>
 #include <vigir_robot_model/VigirRobotFilterBase.h>
 #include <vigir_robot_model/VigirRobotPoseFilterBase.h>
+#include <vigir_robot_model/VigirRobotCalibrationBase.h>
+#include <vigir_humanoid_controller/VigirHumanoidStatusCodes.h>
+
+#include <vigir_humanoid_controller/VigirRealTimeBuffer.h>
+
 
 namespace vigir_control {
 
-class VigirRobotBehaviorData  // temporary dummy class definition
-{
-public:
-    VigirRobotBehaviorData() {};
-};
-
-class VigirRobotCalibrationBase // temporary dummy class definition
-{
-public:
-    VigirRobotCalibrationBase() {};
-};
 
 /**
  * This structure defines the interface for a humanoid robot and
@@ -64,9 +58,11 @@ public:
   struct VigirHumanoidInterface
   {
 
-    VigirHumanoidInterface(const std::string& name,
-                           boost::shared_ptr<ros::NodeHandle>& pub_nh,
-                           boost::shared_ptr<ros::NodeHandle>& private_nh);
+    VigirHumanoidInterface(const std::string& name, const int32_t& n_joints)
+        : name_(name)
+    {
+        printf("Initialize VigirHumanoidController for <%s> with %d joints",name_.c_str(), n_joints);
+    }
 
     virtual ~VigirHumanoidInterface() {}
 
@@ -84,53 +80,30 @@ public:
 
     // These functions assume that data is protected in multithreaded environments before call
     virtual void update_state_data()    = 0; // from robot
-    virtual void publish_state_data()   = 0; // to ROS
     virtual void send_controller_data() = 0; // to robot
 
     virtual void update_behavior_data()  = 0; // from robot
-    virtual void publish_behavior_data() = 0; // to ROS
     virtual void send_behavior_data()    = 0; // to robot
 
     // Generic functions
 
-    // Set up the state vectors given controlled joint size
-    int32_t initialize_states(const int32_t& n_joints);
-
-    // Define and initialize the filters outside interface, then pass pointers for use
-    int32_t initialize_filters(boost::shared_ptr<vigir_control::VigirRobotFilterBase>&,
-                               boost::shared_ptr<vigir_control::VigirRobotPoseFilterBase>&);
-
-    int32_t cleanup_states() { } // place holder for now
 
     // Data
     std::string                           name_;
-
-    boost::shared_ptr<ros::NodeHandle>    pub_nh_;        // Node handle for common data publishing
-    boost::shared_ptr<ros::NodeHandle>    private_nh_;    // Private node handle for parameters
 
     // The following classes are defined by the implementation
     boost::shared_ptr<vigir_control::VigirRobotFilterBase>     joint_filter_; // filter type chosen by implementation
     boost::shared_ptr<vigir_control::VigirRobotPoseFilterBase> pose_filter_;  // filter type chosen by implementation
 
-    // NOTE: The robot specific implementation is responsible for
-    //    providing data protection in multithreaded environments
-    //    as these may be updated and accessed by a number of functions
+    // NOTE: The robot specific implementation is responsible for providing data protection
+    //       in multithreaded environments  as these may be updated and accessed by a number of functions
     boost::shared_ptr<vigir_control::VigirRobotCalibrationBase> robot_calibration_;
 
-    boost::shared_ptr<vigir_control::VigirRobotStateData>      current_robot_state_; // structure to store latest robot state data
-    boost::shared_ptr<vigir_control::VigirRobotStateData>      filtered_robot_state_; // structure to store filtered robot state data
-    boost::shared_ptr<vigir_control::VigirRobotStateData>      controlled_robot_state_; // structure to store robot control commands
-
-    boost::shared_ptr<vigir_control::VigirRobotBehaviorData>   current_robot_behavior_;
-    boost::shared_ptr<vigir_control::VigirRobotBehaviorData>   desired_robot_behavior_;
-
-    enum InterfaceStatus{
-        ROBOT_INTERFACE_OK = 0,
-        ROBOT_INTERFACE_MODEL_FAILED_TO_INITIALIZE = 100,
-        ROBOT_INTERFACE_API_FAILED_TO_INITIALIZE,
-        ROBOT_INTERFACE_MODEL_FAILED_TO_CLEANUP_PROPERLY,
-        ROBOT_INTERFACE_INTERFACE_FAILED_TO_CLEANUP_PROPERLY
-    };
+    // The implmentation will define two data buffers that can be safely shared across any threads
+    // The specific data structures will vary with robot implementation
+    //   For example:
+    //  VigirRealTimeBuffer<atlas_control::AtlasobotInterfaceData>  robot_state_;     // structure to store latest robot state data
+    //  VigirRealTimeBuffer<atlas_control::AtlasRobotControlData>   robot_control_;   // structure to store filtered robot state data
 
 
 };

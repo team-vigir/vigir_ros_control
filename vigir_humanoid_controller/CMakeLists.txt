@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(vigir_humanoid_controller)
 
-#set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Debug)
 #set(CMAKE_BUILD_TYPE Release)
-set(ROS_BUILD_TYPE RelWithDebInfo)
+#set(ROS_BUILD_TYPE RelWithDebInfo)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
@@ -53,13 +53,14 @@ include_directories(include ${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 # )
 
 SET(HEADERS
+include/${PROJECT_NAME}/VigirRealTimeBuffer.h
+include/${PROJECT_NAME}/VigirHumanoidStatusCodes.h
 include/${PROJECT_NAME}/VigirHumanoidInterface.h
 include/${PROJECT_NAME}/VigirHumanoidHWInterface.h
 include/${PROJECT_NAME}/VigirHumanoidController.h
 )
 
 SET(SOURCE
-src/VigirHumanoidInterface.cpp
 src/VigirHumanoidHWInterface.cpp
 src/VigirHumanoidController.cpp
 )
