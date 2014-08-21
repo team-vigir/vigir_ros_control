@@ -29,17 +29,12 @@
 #define __VIGIR_HUMANOID_CONTROLLER_H__
 
 #include <ros/ros.h>
-#include <ros/callback_queue.h>
 
 #include <controller_manager/controller_manager.h>
 
-#include <hardware_interface/robot_hw.h>
-#include <hardware_interface/joint_command_interface.h>
-#include <hardware_interface/joint_state_interface.h>
-
-#include <joint_limits_interface/joint_limits_interface.h>
-
+#include <vigir_robot_model/VigirRobotModel.h>
 #include <vigir_humanoid_controller/VigirHumanoidHWInterface.h>
+#include <vigir_humanoid_controller/VigirHumanoidInterface.h>
 
 
 namespace vigir_control {

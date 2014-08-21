@@ -29,16 +29,12 @@
 #define __VIGIR_HUMANOID_HW_INTERFACE_H__
 
 #include <ros/ros.h>
-#include <ros/callback_queue.h>
 #include <hardware_interface/robot_hw.h>
 #include <hardware_interface/joint_command_interface.h>
 #include <hardware_interface/joint_state_interface.h>
 #include <joint_limits_interface/joint_limits_interface.h>
 
 //@todo RobotMode (startup) , RobotBehavior, and RobotFootsteps interfaces
-
-#include <vigir_humanoid_controller/VigirHumanoidInterface.h>
-
 
 namespace vigir_control {
 

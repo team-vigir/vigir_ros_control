@@ -28,19 +28,11 @@
 #ifndef __VIGIR_HUMANOID_INTERFACE_H__
 #define __VIGIR_HUMANOID_INTERFACE_H__
 
-#include <string>
 #include <boost/shared_ptr.hpp>
-#include <ros/ros.h>
 
-#include <vigir_robot_model/VigirRobotModel.h>
-#include <vigir_robot_model/VigirRobotState.h>
 #include <vigir_robot_model/VigirRobotFilterBase.h>
 #include <vigir_robot_model/VigirRobotPoseFilterBase.h>
 #include <vigir_robot_model/VigirRobotCalibrationBase.h>
-#include <vigir_humanoid_controller/VigirHumanoidStatusCodes.h>
-
-#include <vigir_humanoid_controller/VigirRealTimeBuffer.h>
-
 
 namespace vigir_control {
 
@@ -78,26 +70,17 @@ namespace vigir_control {
     virtual int32_t initialize_interface() = 0;
     virtual int32_t cleanup_interface() = 0;
 
-    // These functions assume that data is protected in multithreaded environments before call
-    virtual void update_state_data()    = 0; // from robot
-    virtual void send_controller_data() = 0; // to robot
-
-    virtual void update_behavior_data()  = 0; // from robot
-    virtual void send_behavior_data()    = 0; // to robot
-
-    // Generic functions
-
 
     // Data
     std::string                           name_;
 
     // The following classes are defined by the implementation
-    boost::shared_ptr<vigir_control::VigirRobotFilterBase>     joint_filter_; // filter type chosen by implementation
-    boost::shared_ptr<vigir_control::VigirRobotPoseFilterBase> pose_filter_;  // filter type chosen by implementation
+    boost::shared_ptr<vigir_control::VigirRobotFilterBase>      joint_filter_; // filter type chosen by implementation
+    boost::shared_ptr<vigir_control::VigirRobotPoseFilterBase>  pose_filter_;  // filter type chosen by implementation
+    boost::shared_ptr<vigir_control::VigirRobotCalibrationBase> robot_calibration_;
 
     // NOTE: The robot specific implementation is responsible for providing data protection
     //       in multithreaded environments  as these may be updated and accessed by a number of functions
-    boost::shared_ptr<vigir_control::VigirRobotCalibrationBase> robot_calibration_;
 
     // The implmentation will define two data buffers that can be safely shared across any threads
     // The specific data structures will vary with robot implementation
