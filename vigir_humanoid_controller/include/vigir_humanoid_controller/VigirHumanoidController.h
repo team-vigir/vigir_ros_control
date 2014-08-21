@@ -61,7 +61,7 @@ namespace vigir_control {
   {
 
   public:
-    VigirHumanoidController(const std::string& name, const bool& verbose=false);
+      VigirHumanoidController(const std::string& name, const ros::Rate& loop_rate=ros::Rate(500), const bool& verbose=false);
     virtual ~VigirHumanoidController()
     {
         std::cout << "Destroy VigirHumanoidController ..." << std::endl;
@@ -75,6 +75,7 @@ namespace vigir_control {
                         boost::shared_ptr<ros::NodeHandle>& pub_nh,
                         boost::shared_ptr<ros::NodeHandle>& private_nh);
 
+    // This should be called before destroying the controller instance
     int32_t cleanup();
 
     // Main run loop of the controller -
@@ -96,20 +97,21 @@ namespace vigir_control {
 
     // generic functions given instantiated types
     int32_t init_robot_model();
-    int32_t init_robot_controllers();
-    int32_t cleanup_robot_controllers();
 
     // Implementation specific functions
+    virtual int32_t init_robot_controllers()  = 0;
     virtual int32_t init_robot_interface()    = 0;
     virtual int32_t init_robot_publishers()   = 0;
 
+    virtual int32_t cleanup_robot_controllers() = 0;
     virtual int32_t cleanup_robot_interface()   = 0;
     virtual int32_t cleanup_robot_publishers()  = 0;
 
 
     std::string                           name_;
     bool                                  verbose_;       // dump more data to logs
-
+    bool                                  run_flag_;
+    ros::Rate                             desired_loop_rate_;
     // ROS stuff
     boost::shared_ptr<ros::NodeHandle>    beh_nh_;        // Handle behavior interface
     boost::shared_ptr<ros::NodeHandle>    controller_nh_; // Handle controller interface

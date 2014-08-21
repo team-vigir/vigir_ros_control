@@ -101,12 +101,11 @@ class TestHumanoidController : public VigirHumanoidController
   public:
 
     // Construct specific interfaces
-    TestHumanoidController(const std::string& name)
-        : VigirHumanoidController(name)
+    TestHumanoidController(const std::string& name, const ros::Rate& loop_rate = ros::Rate(500))
+        : VigirHumanoidController(name,loop_rate)
     {
         ROS_INFO("Initialize TestHumanoidController");
-        robot_hw_interface_.reset(new VigirHumanoidHWInterface(name_));
-        robot_model_.reset(new VigirRobotRBDLModel());
+        robot_model_.reset(new VigirRobotRBDLModel()); // define model type here
     }
 
     ~TestHumanoidController()
@@ -140,9 +139,36 @@ class TestHumanoidController : public VigirHumanoidController
         return robot_interface_->initialize_interface();
     }
 
+    int32_t init_robot_controllers()
+    {
+        ROS_INFO("  initialize robot controllers from derived Controller");
+
+        // Initialize the robot hardware interface here to allow override
+        robot_hw_interface_.reset(new VigirHumanoidHWInterface(name_));
+
+        // Set up the controller manager and assign a specific call backand controller manager
+        cm_.reset(new controller_manager::ControllerManager(robot_hw_interface_.get(), *controller_nh_.get()));
+
+        // Initialize the controllers
+        int32_t rc = robot_hw_interface_->init_robot_controllers(robot_model_->joint_names_, controller_nh_, private_nh_);
+        if (rc)
+        {
+            ROS_ERROR("Failed to initialize the HW interface for controllers - abort!");
+            return rc;
+        }
+
+
+    }
+
+    int32_t cleanup_robot_controllers()
+    {
+        ROS_INFO("  cleanup robot controllers from derived Controller");
+        return robot_hw_interface_->cleanup_robot_controllers( );
+    }
 
     int32_t cleanup_robot_interface()
     {
+        ROS_INFO("  cleanup robot interface from derived Controller");
         return robot_interface_->cleanup_interface();
     }
 
@@ -158,12 +184,12 @@ class TestHumanoidController : public VigirHumanoidController
 
     void read(ros::Time time, ros::Duration period)
     {
-        ROS_INFO("Read");
+        ROS_INFO("Read - controller");
     }
 
     void write(ros::Time time, ros::Duration period)
     {
-        ROS_INFO("Write");
+        ROS_INFO("Write - controller");
 
     }
 
@@ -230,11 +256,19 @@ int main(int argc, char ** argv)
     boost::shared_ptr<ros::NodeHandle> nhp(new ros::NodeHandle("~"));
 
     { // Scope to test destructor before final exit
-        vigir_control::TestHumanoidController test_controller("Test");
 
-        test_controller.initialize(main_nh,main_nh,main_nh,nhp);
+        // Set up the controller to try and run at 1kHz
+        vigir_control::TestHumanoidController test_controller("Test", 1000);
 
-        ROS_INFO("Need to do something here to test");
+        if (int32_t rc = test_controller.initialize(main_nh,main_nh,main_nh,nhp))
+        {
+            ROS_ERROR("Failed to initialize the controller with rc=%d - abort!", rc);
+            exit(rc);
+        }
+
+        // Run the loop until ROS or other tells the controller to quit
+        test_controller.run();
+
 
         ROS_INFO("Explicitly call cleanup before exit!");
         test_controller.cleanup();

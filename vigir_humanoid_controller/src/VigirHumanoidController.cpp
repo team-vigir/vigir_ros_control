@@ -47,23 +47,42 @@ inline std::ostream& operator << (std::ostream& os, const std::vector<T>& v)
 
 namespace vigir_control {
 
-VigirHumanoidController::VigirHumanoidController(const std::string& name, const bool& verbose)
-    : name_(name), verbose_(verbose)
+VigirHumanoidController::VigirHumanoidController(const std::string& name, const ros::Rate& loop_rate, const bool& verbose)
+    : name_(name), desired_loop_rate_(loop_rate), verbose_(verbose),run_flag_(true)
 {
     ROS_INFO("Initialize VigirHumanoidController for <%s>",name_.c_str());
 }
 
 int32_t VigirHumanoidController::run()
 {
-    ros::Time current_time;
+    ros::Time     current_time;
     ros::Duration elapsed_time;
-    ros::Time last_time = ros::Time::now();
+    ros::Time     last_time = ros::Time::now();
 
-    while (ros::ok() )//&& robot_interface_->run())
+    ROS_INFO("Start controller %s run loop ...",name_.c_str());
+    while (ros::ok() && run_flag_)
     {
+        bool slept = desired_loop_rate_.sleep();
+
         current_time = ros::Time::now();
         elapsed_time = current_time - last_time;
         last_time = current_time;
+
+        if (!slept)
+        {
+            ROS_INFO("Behind the desired rate of %f  - elapsed time = %f (%f)",
+                     desired_loop_rate_.expectedCycleTime().toSec(),
+                     desired_loop_rate_.cycleTime().toSec(),
+                     elapsed_time.toSec());
+        }
+        else
+        {
+
+            ROS_INFO("Achieving the desired rate of %f  - elapsed time = %f (%f)",
+                     desired_loop_rate_.expectedCycleTime().toSec(),
+                     desired_loop_rate_.cycleTime().toSec(),
+                     elapsed_time.toSec());
+        }
 
         //ROS_INFO("before read");
         this->read(current_time, elapsed_time);
@@ -78,6 +97,7 @@ int32_t VigirHumanoidController::run()
         //ROS_INFO("after write");
 
     }
+    ROS_INFO("Stopped controller %s run loop !",name_.c_str());
 }
 
 // Initialization functions
@@ -269,19 +289,5 @@ int32_t VigirHumanoidController::init_robot_model()
     return ROBOT_INITIALIZED_OK;
 }
 
-int32_t VigirHumanoidController::init_robot_controllers()
-{
-    // Set up the controller manager
-    cm_.reset(new controller_manager::ControllerManager(robot_hw_interface_.get(), *controller_nh_.get()));
-
-    // Initialize the controllers
-    return robot_hw_interface_->init_robot_controllers(robot_model_->joint_names_, controller_nh_, private_nh_);
-
-}
-
-int32_t VigirHumanoidController::cleanup_robot_controllers()
-{
-    return robot_hw_interface_->cleanup_robot_controllers( );
-}
 
 } /* namespace flor_control */

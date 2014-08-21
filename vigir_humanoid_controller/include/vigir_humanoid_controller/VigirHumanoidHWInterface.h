@@ -90,6 +90,11 @@ namespace vigir_control {
     // Following data structures are used directly by controllers
     // The data structures must be populated during a read() function in a
     // thread safe manner
+    // I'd prefer to use VectorNd, but I am not sure if local_vector = data_vector
+    // would every reallocate and change memory locations after registering.
+    // I would not expect it to if the underlying sizes are the same, but I'm not
+    // certain, so I'm going to play it safe for now.
+
     std::vector<std::string>    joint_names_;
     std::vector<double >        joint_state_positions_;
     std::vector<double >        joint_state_velocities_;
@@ -102,7 +107,6 @@ namespace vigir_control {
 
     //boost::shared_ptr<vigir_control::VigirRobotStateData>      robot_state_;    // structure to store robot state used by controllers
     //boost::shared_ptr<vigir_control::VigirRobotBehaviorData>   robot_behavior_;
-
     //boost::shared_ptr<vigir_control::VigirRobotControlData>    robot_control_;
 
 };

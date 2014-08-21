@@ -39,16 +39,21 @@ VigirHumanoidHWInterface::VigirHumanoidHWInterface(const std::string& name)
     ROS_INFO("Initialize VigirHumanoidHWInterface for <%s>",name_.c_str());
 }
 
+// Set up the data for ros_controllers
 int32_t VigirHumanoidHWInterface::init_robot_controllers(const std::vector<std::string>& joint_list,
                                                          boost::shared_ptr<ros::NodeHandle>& control_nh,
                                                          boost::shared_ptr<ros::NodeHandle>& private_nh)
 {
+    // Store the list of controlled joints
     joint_names_ = joint_list;
     try {
+        // State inputs
         joint_state_positions_.resize( joint_names_.size());
         joint_state_velocities_.resize(joint_names_.size());
         joint_state_accelerations_.resize(joint_names_.size());
         joint_state_efforts_.resize(joint_names_.size());
+
+        // Control outputs
         joint_command_positions_.resize( joint_names_.size());
         joint_command_velocities_.resize(joint_names_.size());
         joint_command_accelerations_.resize(joint_names_.size());
