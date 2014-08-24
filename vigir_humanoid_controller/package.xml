@@ -61,6 +61,7 @@
   <run_depend>roscpp</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
+  <run_depend>urdf</run_depend>
   <run_depend>vigir_robot_model</run_depend>
   <run_depend>vigir_joint_interfaces</run_depend>
   <run_depend>eigen</run_depend>

@@ -92,7 +92,7 @@ int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr< std:
       hardware_interface::JointHandle effort_handle(joint_state_interface_.getHandle(joint_names_->at(i)), &joint_command_efforts_[i]);
       effort_joint_interface_.registerHandle(effort_handle);
 
-      hardware_interface::PosVelAccJointHandle pos_vel_acc_handle (joint_state_interface_.getHandle(joint_names_->at(i))),
+      hardware_interface::PosVelAccJointHandle pos_vel_acc_handle (joint_state_interface_.getHandle(joint_names_->at(i)),
                                                                    &joint_state_positions_[i], &joint_state_velocities_[i], &joint_state_accelerations_[i]);
       pos_vel_acc_joint_interface_.registerHandle(pos_vel_acc_handle);
 
