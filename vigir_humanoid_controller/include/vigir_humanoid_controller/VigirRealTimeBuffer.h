@@ -44,6 +44,8 @@ class VigirRealTimeBuffer
     VigirRealTimeBuffer()
       : lock_counter_(0), new_data_available_(false)
     {
+
+        printf("Construct RealTimeBuffer by default\n");
         // allocate memory
         sleep_ts_.tv_sec  = 0;
         sleep_ts_.tv_nsec = 20000; // 20 micro seconds
@@ -79,7 +81,9 @@ class VigirRealTimeBuffer
         write_data_buffer_ = new T();
 
         // Copy the data from old RTB to new RTB
+        printf("Construct RealTimeBuffer from another buffer");
         writeBuffer(source.getConstReference());
+        writeBuffer(source.getConstReference()); // write twice to initialize both buffers
     }
 
     // Data constructor
@@ -93,6 +97,8 @@ class VigirRealTimeBuffer
         write_data_buffer_ = new T();
 
         // Copy the data from old RTB to new RTB
+        printf("Construct RealTimeBufferfrom a copy of source");
+        writeBuffer(source);
         writeBuffer(source);
     }
 
@@ -132,7 +138,7 @@ class VigirRealTimeBuffer
         }
         if (lock_counter_ > 1)
         {   // Debug status
-            std::cout << "lock counter = " << lock_counter_ << std::endl;
+            std::cout << "RTB lock counter = " << lock_counter_ << std::endl;
         }
         data = *read_data_buffer_;
         bool new_data = new_data_available_;
@@ -153,13 +159,15 @@ class VigirRealTimeBuffer
       // get upgradable access
       boost::upgrade_lock<boost::shared_mutex> lock(data_mutex_);
 
-      // get exclusive access
+      // get exclusive access to block the shared readers
       boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
-      // Swap the read and write buffer pointers while uniquely locked to block shared readers
-      swap_ = read_data_buffer_;
+
+      new_data_available_ = true; // flag new data is available while locked
+
+      // Swap the read and write buffer pointers while uniquely locked
+      swap_               = read_data_buffer_;
       read_data_buffer_   = write_data_buffer_;
       write_data_buffer_  = swap_;
-      new_data_available_ = true;
 
     }
 
@@ -168,15 +176,14 @@ class VigirRealTimeBuffer
 
       // Copy the data to writeable buffer
       *write_data_buffer_ = data;
-      std::cout << " data set in write" << std::endl;
       setReadBuffer();
   }
 
 
+  mutable bool  new_data_available_;
 
  private:
 
-  bool  new_data_available_;
   T* read_data_buffer_;
   T* write_data_buffer_;
   T* swap_;

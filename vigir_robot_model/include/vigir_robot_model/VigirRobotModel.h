@@ -31,6 +31,8 @@
 #include <vector>
 #include <map>
 #include <stdint.h>
+#include <boost/shared_ptr.hpp>
+
 #include <vigir_robot_model/VigirRobotDataTypes.h>
 
 namespace vigir_control {
@@ -51,43 +53,43 @@ namespace vigir_control {
     VigirRobotModel();
     virtual ~VigirRobotModel();
 
-    std::string                     head_base_name_;
-    std::string                     rhand_link_name_;
-    std::string                     lhand_link_name_;
-    std::string                     root_link_name_;
-    std::string                     rfoot_link_name_;
-    std::string                     lfoot_link_name_;
+    std::string                                      head_base_name_;
+    std::string                                      rhand_link_name_;
+    std::string                                      lhand_link_name_;
+    std::string                                      root_link_name_;
+    std::string                                      rfoot_link_name_;
+    std::string                                      lfoot_link_name_;
 
-    int8_t                          r_foot_id_;
-    int8_t                          l_foot_id_;
-    int8_t                          r_hand_id_;
-    int8_t                          l_hand_id_;
+    int8_t                                           r_foot_id_;
+    int8_t                                           l_foot_id_;
+    int8_t                                           r_hand_id_;
+    int8_t                                           l_hand_id_;
 
     // Create map from joint name to vector index
-    std::vector<std::string>        joint_names_;
-    std::map<std::string, int8_t>   joint_map_;
-    int32_t                         n_joints_;
+    boost::shared_ptr<std::vector<std::string>  >   joint_names_;
+    std::map<std::string, int8_t>                   joint_map_;
+    int32_t                                         n_joints_;
 
-    std::vector<int8_t>             left_arm_joint_chain_;
-    std::vector<int8_t>             left_leg_joint_chain_;
-    std::vector<int8_t>             right_arm_joint_chain_;
-    std::vector<int8_t>             right_leg_joint_chain_;
-    std::vector<int8_t>             torso_joint_chain_;
-    std::vector<int8_t>             head_joint_chain_;
+    std::vector<int8_t>                             left_arm_joint_chain_;
+    std::vector<int8_t>                             left_leg_joint_chain_;
+    std::vector<int8_t>                             right_arm_joint_chain_;
+    std::vector<int8_t>                             right_leg_joint_chain_;
+    std::vector<int8_t>                             torso_joint_chain_;
+    std::vector<int8_t>                             head_joint_chain_;
 
-    uint64_t                        timestamp_;   // time of latest kinematic update
-    double                          mass_;
-    Vector3d                        CoM_pelvis_;  // in pelvis frame
+    uint64_t                                        timestamp_;   // time of latest kinematic update
+    double                                          mass_;
+    Vector3d                                        CoM_pelvis_;  // in pelvis frame
 
-    Transform                       r_foot_transform_; // in pelvis frame
-    Transform                       l_foot_transform_;
-    Transform                       r_hand_transform_;
-    Transform                       l_hand_transform_;
-    bool                            b_positions_up_to_date_;
-    bool                            b_kinematics_up_to_date_;
-    bool                            b_dynamics_up_to_date_;
-    bool                            b_CoM_up_to_date_;
-    bool                            b_transforms_up_to_date_;
+    Transform                                       r_foot_transform_; // in pelvis frame
+    Transform                                       l_foot_transform_;
+    Transform                                       r_hand_transform_;
+    Transform                                       l_hand_transform_;
+    bool                                            b_positions_up_to_date_;
+    bool                                            b_kinematics_up_to_date_;
+    bool                                            b_dynamics_up_to_date_;
+    bool                                            b_CoM_up_to_date_;
+    bool                                            b_transforms_up_to_date_;
 
     uint32_t initializeRobotJoints(const std::vector<std::string>& controlled_joints,
                                    const std::string& root_link_name,

@@ -64,7 +64,8 @@ VigirRobotModel::VigirRobotModel()
      // We will only process certain joints for modeling and control
      // For example we may ignore a small spinning LIDAR or finger joints
      // the robot stability calculations.
-     n_joints_ = controlled_joints.size();
+     n_joints_    = controlled_joints.size();
+     joint_names_.reset(new std::vector<std::string>(controlled_joints));
 
      printf(" Root(%s) Hands(%s, %s) Feet(%s, %s) n_joints=%d\n",
             root_link_name_.c_str(),

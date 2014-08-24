@@ -31,6 +31,18 @@
 #include <vigir_humanoid_controller/VigirHumanoidHWInterface.h>
 #include <vigir_humanoid_controller/VigirHumanoidStatusCodes.h>
 
+template < typename T >
+inline std::ostream& operator << (std::ostream& os, const std::vector<T>& v)
+{
+    os << "[";
+    for (typename std::vector<T>::const_iterator ii = v.begin(); ii != v.end(); ++ii)
+    {
+        os << " " << *ii;
+    }
+    os << " ]";
+    return os;
+}
+
 namespace vigir_control {
 
 VigirHumanoidHWInterface::VigirHumanoidHWInterface(const std::string& name)
@@ -40,7 +52,7 @@ VigirHumanoidHWInterface::VigirHumanoidHWInterface(const std::string& name)
 }
 
 // Set up the data for ros_controllers
-int32_t VigirHumanoidHWInterface::init_robot_controllers(const std::vector<std::string>& joint_list,
+int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr< std::vector<std::string> >& joint_list,
                                                          boost::shared_ptr<ros::NodeHandle>& control_nh,
                                                          boost::shared_ptr<ros::NodeHandle>& private_nh)
 {
@@ -48,16 +60,17 @@ int32_t VigirHumanoidHWInterface::init_robot_controllers(const std::vector<std::
     joint_names_ = joint_list;
     try {
         // State inputs
-        joint_state_positions_.resize( joint_names_.size());
-        joint_state_velocities_.resize(joint_names_.size());
-        joint_state_accelerations_.resize(joint_names_.size());
-        joint_state_efforts_.resize(joint_names_.size());
+        std::cout << "Initialize HW interface for " << joint_names_->size() << " joints!" << std::endl;
+        joint_state_positions_.resize( joint_names_->size());
+        joint_state_velocities_.resize(joint_names_->size());
+        joint_state_accelerations_.resize(joint_names_->size());
+        joint_state_efforts_.resize(joint_names_->size());
 
         // Control outputs
-        joint_command_positions_.resize( joint_names_.size());
-        joint_command_velocities_.resize(joint_names_.size());
-        joint_command_accelerations_.resize(joint_names_.size());
-        joint_command_efforts_.resize(joint_names_.size());
+        joint_command_positions_.resize( joint_names_->size());
+        joint_command_velocities_.resize(joint_names_->size());
+        joint_command_accelerations_.resize(joint_names_->size());
+        joint_command_efforts_.resize(joint_names_->size());
     }
     catch(...)
     {
@@ -65,18 +78,18 @@ int32_t VigirHumanoidHWInterface::init_robot_controllers(const std::vector<std::
         return ROBOT_CONTROLLERS_FAILED_TO_INITIALIZE;
     }
 
-    for (size_t i = 0; i < joint_names_.size(); ++i){
+    for (size_t i = 0; i < joint_names_->size(); ++i){
 
-      hardware_interface::JointStateHandle state_handle(joint_names_[i], &joint_state_positions_[i], &joint_state_velocities_[i], &joint_state_efforts_[i]);
+      hardware_interface::JointStateHandle state_handle(joint_names_->at(i), &joint_state_positions_[i], &joint_state_velocities_[i], &joint_state_efforts_[i]);
       joint_state_interface_.registerHandle(state_handle);
 
-      hardware_interface::JointHandle pos_handle(joint_state_interface_.getHandle(joint_names_[i]), &joint_command_positions_[i]);
+      hardware_interface::JointHandle pos_handle(joint_state_interface_.getHandle(joint_names_->at(i)), &joint_command_positions_[i]);
       position_joint_interface_.registerHandle(pos_handle);
 
-      hardware_interface::JointHandle vel_handle(joint_state_interface_.getHandle(joint_names_[i]), &joint_command_velocities_[i]);
+      hardware_interface::JointHandle vel_handle(joint_state_interface_.getHandle(joint_names_->at(i)), &joint_command_velocities_[i]);
       velocity_joint_interface_.registerHandle(vel_handle);
 
-      hardware_interface::JointHandle effort_handle(joint_state_interface_.getHandle(joint_names_[i]), &joint_command_efforts_[i]);
+      hardware_interface::JointHandle effort_handle(joint_state_interface_.getHandle(joint_names_->at(i)), &joint_command_efforts_[i]);
       effort_joint_interface_.registerHandle(effort_handle);
 
     }

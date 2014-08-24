@@ -63,27 +63,14 @@ namespace vigir_control {
 
 
     // Generic initialization functions
-    virtual int32_t init_robot_controllers(const std::vector<std::string>& joint_list,
+    virtual int32_t init_robot_controllers(boost::shared_ptr<std::vector<std::string> > & joint_list,
                                            boost::shared_ptr<ros::NodeHandle>& control_nh,
                                            boost::shared_ptr<ros::NodeHandle>& private_nh);
 
     // Generic cleanup functions
     virtual int32_t cleanup_robot_controllers();
 
-  protected:
-    std::string                                 name_;
-
-    // ROS control interfaces
-    hardware_interface::JointStateInterface     joint_state_interface_;
-    hardware_interface::PositionJointInterface  position_joint_interface_;
-    hardware_interface::VelocityJointInterface  velocity_joint_interface_;
-    hardware_interface::EffortJointInterface    effort_joint_interface_;
-
-    //@todo RobotMode (startup) , RobotBehavior, and RobotFootsteps interfaces
-
-
-
-    // Following data structures are used directly by controllers
+    // Following public data structures are used directly by controllers
     // The data structures must be populated during a read() function in a
     // thread safe manner
     // I'd prefer to use VectorNd, but I am not sure if local_vector = data_vector
@@ -91,20 +78,26 @@ namespace vigir_control {
     // I would not expect it to if the underlying sizes are the same, but I'm not
     // certain, so I'm going to play it safe for now.
 
-    std::vector<std::string>    joint_names_;
-    std::vector<double >        joint_state_positions_;
-    std::vector<double >        joint_state_velocities_;
-    std::vector<double >        joint_state_accelerations_;
-    std::vector<double >        joint_state_efforts_;
-    std::vector<double >        joint_command_positions_;
-    std::vector<double >        joint_command_velocities_;
-    std::vector<double >        joint_command_accelerations_;
-    std::vector<double >        joint_command_efforts_;
+    boost::shared_ptr< std::vector<std::string> >         joint_names_;
+    std::vector<double >                                  joint_state_positions_;
+    std::vector<double >                                  joint_state_velocities_;
+    std::vector<double >                                  joint_state_accelerations_;
+    std::vector<double >                                  joint_state_efforts_;
+    std::vector<double >                                  joint_command_positions_;
+    std::vector<double >                                  joint_command_velocities_;
+    std::vector<double >                                  joint_command_accelerations_;
+    std::vector<double >                                  joint_command_efforts_;
 
-    //boost::shared_ptr<vigir_control::VigirRobotStateData>      robot_state_;    // structure to store robot state used by controllers
-    //boost::shared_ptr<vigir_control::VigirRobotBehaviorData>   robot_behavior_;
-    //boost::shared_ptr<vigir_control::VigirRobotControlData>    robot_control_;
+  protected:
+    std::string                                           name_;
 
+    // ROS control interfaces
+    hardware_interface::JointStateInterface               joint_state_interface_;
+    hardware_interface::PositionJointInterface            position_joint_interface_;
+    hardware_interface::VelocityJointInterface            velocity_joint_interface_;
+    hardware_interface::EffortJointInterface              effort_joint_interface_;
+
+    //@todo RobotMode (startup) , RobotBehavior, and RobotFootsteps interfaces
 };
 
 } // end of vigir_control namespace
