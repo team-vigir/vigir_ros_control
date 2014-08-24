@@ -75,14 +75,14 @@ int32_t VigirHumanoidController::run()
                      desired_loop_rate_.cycleTime().toSec(),
                      elapsed_time.toSec());
         }
-        else
-        {
+//        else
+//        {
 
-            ROS_INFO("Achieving the desired rate of %f  - elapsed time = %f (%f)",
-                     desired_loop_rate_.expectedCycleTime().toSec(),
-                     desired_loop_rate_.cycleTime().toSec(),
-                     elapsed_time.toSec());
-        }
+//            ROS_INFO("Achieving the desired rate of %f  - elapsed time = %f (%f)",
+//                     desired_loop_rate_.expectedCycleTime().toSec(),
+//                     desired_loop_rate_.cycleTime().toSec(),
+//                     elapsed_time.toSec());
+//        }
 
         //ROS_INFO("before read");
         this->read(current_time, elapsed_time);

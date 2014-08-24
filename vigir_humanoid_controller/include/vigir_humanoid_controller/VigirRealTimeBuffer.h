@@ -44,44 +44,36 @@ class VigirRealTimeBuffer
     VigirRealTimeBuffer()
       : lock_counter_(0), new_data_available_(false)
     {
-
-        printf("Construct RealTimeBuffer by default\n");
-        // allocate memory
+        // Define sleep for polling read lock
         sleep_ts_.tv_sec  = 0;
         sleep_ts_.tv_nsec = 20000; // 20 micro seconds
+
+        // allocate memory
         read_data_buffer_  = new T();
         write_data_buffer_ = new T();
         swap_              = NULL;
     }
 
     ~VigirRealTimeBuffer()
-    {
-        if (read_data_buffer_)
-        {
+    { // Free up the memory
           delete read_data_buffer_;
-          read_data_buffer_ = NULL;
-        }
-        if (write_data_buffer_)
-        {
-            std::cout << "destroy write  RTB" << std::endl;
-
           delete write_data_buffer_;
-            write_data_buffer_ = NULL;
-        }
     }
 
     // Copy constructor
     VigirRealTimeBuffer(VigirRealTimeBuffer &source)
         : lock_counter_(0), new_data_available_(false)
     {
+        // Define sleep for polling read lock
         sleep_ts_.tv_sec  = 0;
         sleep_ts_.tv_nsec = 20000; // 20 micro seconds
+
         // allocate memory
-        read_data_buffer_ = new T();
+        read_data_buffer_  = new T();
         write_data_buffer_ = new T();
+        swap_              = NULL;
 
         // Copy the data from old RTB to new RTB
-        printf("Construct RealTimeBuffer from another buffer");
         writeBuffer(source.getConstReference());
         writeBuffer(source.getConstReference()); // write twice to initialize both buffers
     }
@@ -90,16 +82,18 @@ class VigirRealTimeBuffer
     VigirRealTimeBuffer(const T &source)
         : lock_counter_(0), new_data_available_(false)
     {
+        // Define sleep for polling read lock
         sleep_ts_.tv_sec  = 0;
         sleep_ts_.tv_nsec = 20000; // 20 micro seconds
-        // allocate memory
-        read_data_buffer_ = new T();
-        write_data_buffer_ = new T();
 
-        // Copy the data from old RTB to new RTB
-        printf("Construct RealTimeBufferfrom a copy of source");
+        // allocate memory
+        read_data_buffer_  = new T();
+        write_data_buffer_ = new T();
+        swap_              = NULL;
+
+        // Initialize buffer from the data source
         writeBuffer(source);
-        writeBuffer(source);
+        writeBuffer(source); // write twice to initialize both buffers
     }
 
     /*!
@@ -130,20 +124,28 @@ class VigirRealTimeBuffer
     {
 
         // Check if the data is currently being written to (is locked)
-
         while(!data_mutex_.try_lock_shared())
         {
-            ++lock_counter_; // monitoring
+            ++lock_counter_; // debug monitoring
             nanosleep(&sleep_ts_, &remaining_ts_);
         }
+
+        // --------- debug ----------
         if (lock_counter_ > 1)
-        {   // Debug status
+        {   // Debug status to we ever get blocked for more than 1 cycle
             std::cout << "RTB lock counter = " << lock_counter_ << std::endl;
         }
+        // -------------------------------------------
+
+
+        // Copy the data from the read buffer
         data = *read_data_buffer_;
         bool new_data = new_data_available_;
         new_data_available_ = false;
-        data_mutex_.unlock_shared();
+        data_mutex_.unlock_shared(); // free the lock now that we've copied data
+
+        lock_counter_ = 0;           // debug lock counter that will print warning if we are blocked for more than 20 us
+
         return new_data;
     }
 
@@ -190,9 +192,11 @@ class VigirRealTimeBuffer
 
   timespec sleep_ts_;
   timespec remaining_ts_;
-  uint lock_counter_;
   // Set as mutable for read buffer
   mutable boost::shared_mutex data_mutex_;
+
+  // Debug monitoring to see if read buffer is every blocked more than once
+  uint lock_counter_;
 
 }; // class
 
