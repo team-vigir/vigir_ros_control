@@ -101,12 +101,10 @@ int32_t VigirHumanoidController::run()
 }
 
 // Initialization functions
-int32_t VigirHumanoidController::initialize(boost::shared_ptr<ros::NodeHandle>& beh_nh,
-                                            boost::shared_ptr<ros::NodeHandle>& control_nh,
+int32_t VigirHumanoidController::initialize(boost::shared_ptr<ros::NodeHandle>& control_nh,
                                             boost::shared_ptr<ros::NodeHandle>& pub_nh,
                                             boost::shared_ptr<ros::NodeHandle>& private_nh)
 {
-    beh_nh_         = beh_nh ;
     controller_nh_  = control_nh;
     pub_nh_         = pub_nh    ;
     private_nh_     = private_nh;

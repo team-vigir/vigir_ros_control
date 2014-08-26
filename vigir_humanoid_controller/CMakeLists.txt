@@ -5,6 +5,9 @@ set(CMAKE_BUILD_TYPE Debug)
 #set(CMAKE_BUILD_TYPE Release)
 #set(ROS_BUILD_TYPE RelWithDebInfo)
 
+# Using std::atomic
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x")
+
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(catkin REQUIRED COMPONENTS cmake_modules)
@@ -54,6 +57,7 @@ include_directories(include ${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 SET(HEADERS
 include/${PROJECT_NAME}/VigirRealTimeBuffer.h
+include/${PROJECT_NAME}/VigirRealTimePublisher.h
 include/${PROJECT_NAME}/VigirHumanoidStatusCodes.h
 include/${PROJECT_NAME}/VigirHumanoidInterface.h
 include/${PROJECT_NAME}/VigirHumanoidHWInterface.h

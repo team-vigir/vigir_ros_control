@@ -65,8 +65,7 @@ namespace vigir_control {
     // Initialization functions which call specific implementations
     // The node handles and associated callback queues can have the
     // same or different node handles passed to the init function
-    int32_t initialize( boost::shared_ptr<ros::NodeHandle>& beh_nh,
-                        boost::shared_ptr<ros::NodeHandle>& control_nh,
+    int32_t initialize( boost::shared_ptr<ros::NodeHandle>& control_nh,
                         boost::shared_ptr<ros::NodeHandle>& pub_nh,
                         boost::shared_ptr<ros::NodeHandle>& private_nh);
 
@@ -107,8 +106,8 @@ namespace vigir_control {
     bool                                  verbose_;       // dump more data to logs
     bool                                  run_flag_;
     ros::Rate                             desired_loop_rate_;
+
     // ROS stuff
-    boost::shared_ptr<ros::NodeHandle>    beh_nh_;        // Handle behavior interface
     boost::shared_ptr<ros::NodeHandle>    controller_nh_; // Handle controller interface
     boost::shared_ptr<ros::NodeHandle>    pub_nh_;        // Handle controller interface
     boost::shared_ptr<ros::NodeHandle>    private_nh_;    // Private node handle

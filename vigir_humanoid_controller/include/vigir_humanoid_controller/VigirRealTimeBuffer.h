@@ -31,6 +31,7 @@
 #define __VIGIR_REALTIME_BUFFER_H__
 
 #include <time.h>
+#include <atomic>
 
 namespace vigir_control
 {
@@ -42,7 +43,7 @@ class VigirRealTimeBuffer
 
     // Default constructor
     VigirRealTimeBuffer()
-      : lock_counter_(0), new_data_available_(false)
+      : lock_counter_(0), data_count_(std::numeric_limits<uint32_t>::max() )
     {
         // Define sleep for polling read lock
         sleep_ts_.tv_sec  = 0;
@@ -62,7 +63,7 @@ class VigirRealTimeBuffer
 
     // Copy constructor
     VigirRealTimeBuffer(VigirRealTimeBuffer &source)
-        : lock_counter_(0), new_data_available_(false)
+        : lock_counter_(0), data_count_(std::numeric_limits<uint32_t>::max() )
     {
         // Define sleep for polling read lock
         sleep_ts_.tv_sec  = 0;
@@ -80,7 +81,7 @@ class VigirRealTimeBuffer
 
     // Data constructor
     VigirRealTimeBuffer(const T &source)
-        : lock_counter_(0), new_data_available_(false)
+        : lock_counter_(0), data_count_(std::numeric_limits<uint32_t>::max() )
     {
         // Define sleep for polling read lock
         sleep_ts_.tv_sec  = 0;
@@ -120,7 +121,7 @@ class VigirRealTimeBuffer
         return *this;
     }
 
-    bool readBuffer(T& data)
+    uint32_t readBuffer(T& data)
     {
 
         // Check if the data is currently being written to (is locked)
@@ -140,15 +141,17 @@ class VigirRealTimeBuffer
 
         // Copy the data from the read buffer
         data = *read_data_buffer_;
-        bool new_data = new_data_available_;
-        new_data_available_ = false;
+        uint32_t   count = data_count_;
+        lock_counter_ = 0;           // debug lock counter that will print warning if we are blocked for more than 20 us
         data_mutex_.unlock_shared(); // free the lock now that we've copied data
 
-        lock_counter_ = 0;           // debug lock counter that will print warning if we are blocked for more than 20 us
+        return count; // return data count associated with this data
 
-        return new_data;
     }
 
+
+    // return the count of the data transfer to help readers track when new data is available
+    uint32_t dataCount() { return data_count_.load();}
 
     // Provide accessor functions to allow interacting with write buffer
     const T& getConstReference(){return *write_data_buffer_;}
@@ -163,8 +166,7 @@ class VigirRealTimeBuffer
 
       // get exclusive access to block the shared readers
       boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
-
-      new_data_available_ = true; // flag new data is available while locked
+      data_count_++; // increment counter to show that data is changed
 
       // Swap the read and write buffer pointers while uniquely locked
       swap_               = read_data_buffer_;
@@ -182,7 +184,7 @@ class VigirRealTimeBuffer
   }
 
 
-  mutable bool  new_data_available_;
+  volatile std::atomic_uint data_count_;
 
  private:
 
@@ -193,7 +195,7 @@ class VigirRealTimeBuffer
   timespec sleep_ts_;
   timespec remaining_ts_;
   // Set as mutable for read buffer
-  mutable boost::shared_mutex data_mutex_;
+  boost::shared_mutex data_mutex_;
 
   // Debug monitoring to see if read buffer is every blocked more than once
   uint lock_counter_;

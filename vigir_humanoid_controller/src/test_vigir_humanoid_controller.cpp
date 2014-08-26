@@ -10,6 +10,9 @@
 #include <vigir_robot_model/VigirRobotState.h>
 #include <vigir_humanoid_controller/VigirHumanoidStatusCodes.h>
 
+#include <std_msgs/String.h>
+#include <vigir_humanoid_controller/VigirRealTimePublisher.h>
+
 namespace vigir_control
 {
 
@@ -253,17 +256,99 @@ int main(int argc, char ** argv)
 
     //exit(-1);
 
-    std::cout <<"\n\n\nStart robot model test" << std::endl;
+    std::cout <<"\n\n\nStart real time publisher test" << std::endl;
 
     boost::shared_ptr<ros::NodeHandle> main_nh(new ros::NodeHandle());
     boost::shared_ptr<ros::NodeHandle> nhp(new ros::NodeHandle("~"));
 
+
+    // Test RealTimePublisher
+    class VigirRobotInterfaceDataTopic : public vigir_control::VigirRealTimeTopicBase<vigir_control::VigirRobotInterfaceData>
+    {
+
+    public:
+        VigirRobotInterfaceDataTopic(const std::string& topic, ros::NodeHandle& nh,
+                                     const ros::Rate& rate = ros::Rate(0), const bool& on_change = false,
+                                     uint32_t queue_size = 10, const bool& latch = false)
+            : vigir_control::VigirRealTimeTopicBase<vigir_control::VigirRobotInterfaceData>(topic, rate, on_change)//, // must call base class constructor separately
+//              vigir_control::VigirRealTimeTopic<std_msgs::String>(topic, nh, rate , on_change ,queue_size, latch)
+        {
+            ROS_INFO("      Advertising real-time topic <%s>",topic_name_.c_str());
+            publisher_ = nh.advertise<std_msgs::String>(topic_name_,queue_size, latch);
+        }
+
+        ~VigirRobotInterfaceDataTopic() {}
+
+        void publish(const vigir_control::VigirRobotInterfaceData& data, const ros::Time& current_time)
+        {
+            try {
+                if (current_time > next_publish_time_)
+                {
+                    //vigir_control::VigirRobotInterfaceData vigir_data = boost::any_cast<vigir_control::VigirRobotInterfaceData>(data);
+                    std_msgs::String msg;
+                    msg.data = "> Test "+topic_name_ +" " + boost::lexical_cast<std::string>(current_time.toNSec()) +" " + boost::lexical_cast<std::string>(data.current_robot_state_.last_update_time_);
+                    publisher_.publish(msg);
+                    next_publish_time_ = current_time + publish_rate_.expectedCycleTime();
+                    std::cout << topic_name_ << " " << current_time << "  next=" << next_publish_time_ << std::endl;
+                }
+             }
+            catch(...)
+            {
+                ROS_ERROR("Bad conversion for VigirRobotInterfaceData");
+                return;
+            }
+        }
+
+
+    };
+
+    boost::shared_ptr< vigir_control::VigirRealTimeBuffer<vigir_control::VigirRobotInterfaceData> > interface_data;
+    interface_data.reset(new vigir_control::VigirRealTimeBuffer<vigir_control::VigirRobotInterfaceData>(vigir_control::VigirRobotInterfaceData(10)));
+
+    vigir_control::VigirRealTimePublisher<vigir_control::VigirRobotInterfaceData> rt_pub("Test publisher", interface_data);
+    boost::shared_ptr<vigir_control::VigirRealTimeTopicBase<vigir_control::VigirRobotInterfaceData> > topic1( new VigirRobotInterfaceDataTopic("test1",*main_nh.get(),ros::Rate(10),true,100));
+    boost::shared_ptr<vigir_control::VigirRealTimeTopicBase<vigir_control::VigirRobotInterfaceData> > topic2( new VigirRobotInterfaceDataTopic("test2",*main_nh.get(),ros::Rate( 1),true,100));
+    rt_pub.addTopic(topic1);
+    rt_pub.addTopic(topic2);
+
+    ros::spinOnce();
+    int count = 0;
+    vigir_control::VigirRobotInterfaceData data;
+
+    boost::shared_ptr<boost::thread>  publisher_worker_thread_;
+    publisher_worker_thread_.reset( new boost::thread(boost::bind(&vigir_control::VigirRealTimePublisher<vigir_control::VigirRobotInterfaceData>::publishLoop, &rt_pub)));
+
+    while(ros::ok() && count < 150000)
+    {
+        // Get current data from real time thread
+        interface_data->getWriteablePtr()->current_robot_state_.last_update_time_ = ros::Time::now().toNSec();
+        interface_data->setReadBuffer();
+
+        //interface_data->readBuffer(data);
+        //
+        //// Publish all topics
+        //rt_pub.publish(data,ros::Time::now());
+
+        // Loop
+        usleep(50);
+        ++count;
+        ros::spinOnce();
+    }
+
+    ROS_INFO("Shutdown the publisher thread ...");
+    rt_pub.shutdown();
+    publisher_worker_thread_->join();
+    ROS_INFO("Done!");
+
+
+
+    std::cout <<"\n\n\nStart robot model test" << std::endl;
     { // Scope to test destructor before final exit
 
         // Set up the controller to try and run at 1kHz
         vigir_control::TestHumanoidController test_controller("Test", 1000);
 
-        if (int32_t rc = test_controller.initialize(main_nh,main_nh,main_nh,nhp))
+        if (int32_t rc = test_controller.initialize(main_nh,main_nh,nhp))
         {
             ROS_ERROR("Failed to initialize the controller with rc=%d - abort!", rc);
             exit(rc);
