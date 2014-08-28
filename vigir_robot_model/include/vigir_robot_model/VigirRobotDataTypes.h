@@ -50,11 +50,26 @@ typedef Eigen::Vector3d             Vector3d;
 typedef Eigen::Vector2d             Vector2d;
 typedef Eigen::Quaternion<double>   Quatd;
 
+#define quat_equals( q1, q2) ((q1.x() == q2.x()) && (q1.y() == q2.y()) && (q1.z() == q2.z()) && (q1.w() == q2.w()))
+
+
 typedef struct Wrench
 {
     Wrench() : force(0.0, 0.0, 0.0), torque(0.0, 0.0, 0.0) {}
     Vector3d    force;
     Vector3d    torque;
+
+    bool operator== (const Wrench& rhs)
+    {
+        return ((force == rhs.force) && (torque == rhs.torque));
+    }
+
+    bool operator!= (const Wrench& rhs)
+    {
+        return ((force != rhs.force) || (torque != rhs.torque));
+
+    }
+
 } Wrench;
 
 typedef struct IMU
@@ -65,6 +80,16 @@ typedef struct IMU
     Vector3d angular_velocity;
     Vector3d linear_acceleration;
 
+    bool operator== (const IMU& rhs)
+    {
+        return (quat_equals(orientation, rhs.orientation) && (angular_velocity == rhs.angular_velocity)  && (linear_acceleration == rhs.linear_acceleration));
+    }
+
+    bool operator!= (const IMU& rhs)
+    {
+        return (!quat_equals(orientation,rhs.orientation) || (angular_velocity != rhs.angular_velocity)  || (linear_acceleration != rhs.linear_acceleration));
+
+    }
 } IMU;
 
 typedef struct Pose
@@ -73,6 +98,18 @@ typedef struct Pose
 
     Vector3d position;
     Quatd    orientation;
+
+    bool operator== (const Pose& rhs)
+    {
+        return ((position == rhs.position) && quat_equals(orientation,rhs.orientation));
+    }
+
+    bool operator!= (const Pose& rhs)
+    {
+        return ((position != rhs.position) || !quat_equals(orientation,rhs.orientation));
+
+    }
+
 } Pose;
 
 typedef struct Twist
@@ -81,6 +118,18 @@ typedef struct Twist
 
     Vector3d linear;
     Vector3d angular;
+
+    bool operator== (const Twist& rhs)
+    {
+        return ((linear == rhs.linear) && (angular == rhs.angular));
+    }
+
+    bool operator!= (const Twist& rhs)
+    {
+        return ((linear != rhs.linear) || (angular != rhs.angular));
+
+    }
+
 } Twist;
 
 typedef struct PoseZYX
@@ -89,6 +138,18 @@ typedef struct PoseZYX
 
     Vector3d position;
     Vector3d orientation;
+
+    bool operator== (const PoseZYX& rhs)
+    {
+        return ((position == rhs.position) && (orientation == rhs.orientation));
+    }
+
+    bool operator!= (const PoseZYX& rhs)
+    {
+        return ((position != rhs.position) || (orientation != rhs.orientation));
+
+    }
+
 } PoseZYX;
 
 typedef struct Transform
@@ -101,6 +162,17 @@ typedef struct Transform
     Vector3d operator *(const Vector3d& rhs) const
     {
         return rotation*rhs + translation;
+    }
+
+    bool operator== (const Transform& rhs)
+    {
+        return ((translation == rhs.translation) && (rotation == rhs.rotation));
+    }
+
+    bool operator!= (const Transform& rhs)
+    {
+        return ((translation != rhs.translation) || (rotation != rhs.rotation));
+
     }
 
 } Transform;

@@ -104,16 +104,19 @@ int main(int argc, char ** argv)
     double elapsed = dt*(steps-1);
 
     std::cout << "Define test of "  << steps  << " steps at dt="  << dt  << "with " << num_joints << " joints" << std::endl;
-    vigir_control::VigirRobotState robot_actual(num_joints); // actual math calc
-    vigir_control::VigirRobotState robot_sensor(num_joints); // sensed values
-    vigir_control::VigirRobotState robot_model(num_joints);  // state estimate
+    vigir_control::VigirRobotStateData robot_actual(num_joints); // actual math calc
+    vigir_control::VigirRobotStateData robot_sensed(num_joints); // sensed values
+    vigir_control::VigirRobotStateData robot_control(num_joints);// control data
+    vigir_control::VigirRobotStateData robot_raw(num_joints);    // raw data
+    vigir_control::VigirRobotStateData robot_simple(num_joints);  // simple filter
+    vigir_control::VigirRobotStateData robot_estimated(num_joints);  // state estimate
 
-    vigir_control::VigirRobotJointData& actual    = robot_actual.current_robot_state_.robot_joints_;
-    vigir_control::VigirRobotJointData& control   = robot_actual.filtered_robot_state_.robot_joints_;
-    vigir_control::VigirRobotJointData& raw       = robot_sensor.current_robot_state_.robot_joints_;
-    vigir_control::VigirRobotJointData& simple    = robot_sensor.filtered_robot_state_.robot_joints_;
-    vigir_control::VigirRobotJointData& sensed    = robot_model.current_robot_state_.robot_joints_;
-    vigir_control::VigirRobotJointData& estimated = robot_model.filtered_robot_state_.robot_joints_;
+    vigir_control::VigirRobotJointData& actual    = robot_actual.robot_joints_;
+    vigir_control::VigirRobotJointData& sensed    = robot_sensed.robot_joints_;
+    vigir_control::VigirRobotJointData& control   = robot_control.robot_joints_;
+    vigir_control::VigirRobotJointData& raw       = robot_raw.robot_joints_;
+    vigir_control::VigirRobotJointData& simple    = robot_simple.robot_joints_;
+    vigir_control::VigirRobotJointData& estimated = robot_estimated.robot_joints_;
 
     /* Choose Normal Distribution and create generator*/
     NormalDistribution gaussian_dist_05(0.0, 0.5);

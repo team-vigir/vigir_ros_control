@@ -32,6 +32,8 @@
 #include <stdint.h>
 #include <vigir_robot_model/VigirRobotDataTypes.h>
 
+#include <iostream>
+
 namespace vigir_control {
 
     /**
@@ -45,6 +47,62 @@ namespace vigir_control {
         VectorNd                        joint_velocities_;
         VectorNd                        joint_accelerations_;
         VectorNd                        joint_efforts_;
+
+        // Fast copy for same size vectors
+        VigirRobotJointData& operator= (const VigirRobotJointData& rhs)
+        {
+            if (joint_positions_.size() == rhs.joint_positions_.size())
+            {
+                // Memcopy first block with fixed data sizes
+                memcpy((uint8_t*)  this->joint_positions_.data(),
+                       (uint8_t*)    rhs.joint_positions_.data(),
+                       (sizeof(double) * joint_positions_.size()));
+
+                memcpy((uint8_t*)  this->joint_velocities_.data(),
+                       (uint8_t*)    rhs.joint_velocities_.data(),
+                       (sizeof(double) * joint_velocities_.size()));
+
+                memcpy((uint8_t*)  this->joint_accelerations_.data(),
+                       (uint8_t*)    rhs.joint_accelerations_.data(),
+                       (sizeof(double) * joint_accelerations_.size()));
+
+                memcpy((uint8_t*)  this->joint_efforts_.data(),
+                       (uint8_t*)    rhs.joint_efforts_.data(),
+                       (sizeof(double) * joint_efforts_.size()));
+            }
+            else
+            {
+                joint_positions_       = rhs.joint_positions_;
+                joint_velocities_      = rhs.joint_velocities_;
+                joint_accelerations_   = rhs.joint_accelerations_;
+                joint_efforts_         = rhs.joint_efforts_;
+            }
+
+            return *this;
+        }
+
+        bool operator== (const VigirRobotJointData& rhs)
+        {
+            if (joint_positions_.size() != rhs.joint_positions_.size()) return false;
+
+            return ((joint_positions_     == rhs.joint_positions_) &&
+                    (joint_velocities_    == rhs.joint_velocities_) &&
+                    (joint_accelerations_ == rhs.joint_accelerations_) &&
+                    (joint_efforts_       == rhs.joint_efforts_));
+
+        }
+
+        bool operator!= (const VigirRobotJointData& rhs)
+        {
+            if (joint_positions_.size() != rhs.joint_positions_.size()) return true;
+
+            return ((joint_positions_     != rhs.joint_positions_) ||
+                    (joint_velocities_    != rhs.joint_velocities_) ||
+                    (joint_accelerations_ != rhs.joint_accelerations_) ||
+                    (joint_efforts_       != rhs.joint_efforts_));
+
+        }
+
     } VigirRobotJointData;
 
     /* This structure holds all of the contiuous robot state data */
@@ -52,7 +110,7 @@ namespace vigir_control {
     {
 
         VigirRobotStateData(const int32_t& n_joints = 0)
-            : robot_joints_(n_joints) {}
+            : last_update_time_(0L), robot_joints_(n_joints) {}
 
         // Internal representations of sensor data
         uint64_t                        last_update_time_;
@@ -71,19 +129,34 @@ namespace vigir_control {
         */
         VigirRobotJointData             robot_joints_;
 
+        bool operator== (const VigirRobotStateData& rhs)
+        {
+            if (robot_joints_.joint_positions_.size() != rhs.robot_joints_.joint_positions_.size()) return false;
+
+            return ((robot_joints_    == rhs.robot_joints_) &&
+                    (pelvis_pose_     == rhs.pelvis_pose_) &&
+                    (pelvis_velocity_ == rhs.pelvis_velocity_) &&
+                    (r_foot_wrench_   == rhs.r_foot_wrench_) &&
+                    (r_hand_wrench_   == r_hand_wrench_ ) &&
+                    (l_hand_wrench_   == l_hand_wrench_ ) &&
+                    (imu_data_        == imu_data_      ) );
+
+        }
+
+        bool operator!= (const VigirRobotStateData& rhs)
+        {
+            if (robot_joints_.joint_positions_.size() != rhs.robot_joints_.joint_positions_.size()) return true;
+
+            return ((robot_joints_    != rhs.robot_joints_) ||
+                    (pelvis_pose_     != rhs.pelvis_pose_) ||
+                    (pelvis_velocity_ != rhs.pelvis_velocity_) ||
+                    (r_foot_wrench_   != rhs.r_foot_wrench_) ||
+                    (r_hand_wrench_   != r_hand_wrench_ ) ||
+                    (l_hand_wrench_   != l_hand_wrench_ ) ||
+                    (imu_data_        != imu_data_      ) );
+        }
+
     } VigirRobotStateData;
-
-    /* This structure holds all of the contiuous robot state data */
-    typedef struct VigirRobotState
-    {
-        VigirRobotState(const int32_t& n_joints = 0)
-            : current_robot_state_(n_joints),
-              filtered_robot_state_(n_joints){}
-
-        VigirRobotStateData             current_robot_state_;
-        VigirRobotStateData             filtered_robot_state_;
-
-    } VigirRobotState;
 
 }
 

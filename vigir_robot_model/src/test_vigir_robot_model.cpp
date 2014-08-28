@@ -106,8 +106,70 @@ int main(int argc, char ** argv)
     Timing com_calc_timing_            ("VigirRobotRBDLModel:: CoM Calc",true,false);
     Timing update_kinematics_timing_   ("VigirRobotRBDLModel:: Update kinematics",true,false);
     Timing calc_ee_transforms_timing_   ("VigirRobotRBDLModel:: Calc Transforms",true,false);
-    vigir_control::VigirRobotState robot_state(robot_model.n_joints_);
-    vigir_control::VectorNd torques = robot_state.current_robot_state_.robot_joints_.joint_positions_;
+    vigir_control::VigirRobotStateData robot_current(robot_model.n_joints_);
+    vigir_control::VigirRobotStateData robot_filter(robot_model.n_joints_);
+    vigir_control::VigirRobotStateData robot_test;
+
+    robot_current.robot_joints_.joint_positions_[1] = 123.456;
+    robot_current.robot_joints_.joint_accelerations_[1] = 123.456;
+
+    std::cout << "Test assignment ...";
+    robot_filter = robot_current;
+    if (robot_filter == robot_current)
+    {
+        std::cout << "They are equal!" << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed!" << std::endl;
+        exit(-1);
+    }
+    std::cout << "Test not equal ...";
+    if (robot_filter != robot_current)
+    {
+        std::cout << "Failed!" << std::endl;
+        exit(-1);
+    }
+    else
+    {
+        std::cout << "They are still equal!" << std::endl;
+    }
+
+
+    std::cout << "Test different ...";
+    if (robot_test == robot_current)
+    {
+        std::cout << "Failed!" << std::endl;
+        exit(-1);
+    }
+    else
+    {
+        std::cout << "They are correctly not equal!" << std::endl;
+    }
+    std::cout << "Test not equal ...";
+    if (robot_test != robot_current)
+    {
+        std::cout << "They are correctly not equal!" << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed!" << std::endl;
+        exit(-1);
+    }
+
+    std::cout << "Test assignment ...";
+    robot_test = robot_current;
+    if (robot_test == robot_current)
+    {
+        std::cout << "They are equal!" << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed!" << std::endl;
+        exit(-1);
+    }
+
+    vigir_control::VectorNd torques = robot_current.robot_joints_.joint_positions_;
     vigir_control::PoseZYX pelvis_pose;
     vigir_control::Vector3d CoM;
     double mass;
@@ -125,9 +187,9 @@ int main(int argc, char ** argv)
 
     {DO_TIMING(update_kinematics_timing_)
         robot_model.updateJointState(1234,
-                                     robot_state.current_robot_state_.robot_joints_.joint_positions_,
-                                     robot_state.current_robot_state_.robot_joints_.joint_velocities_,
-                                     robot_state.current_robot_state_.robot_joints_.joint_accelerations_);
+                                     robot_current.robot_joints_.joint_positions_,
+                                     robot_current.robot_joints_.joint_velocities_,
+                                     robot_current.robot_joints_.joint_accelerations_);
         robot_model.updateKinematics( );
     }
     {DO_TIMING(calc_torque_timing_)
@@ -153,15 +215,15 @@ int main(int argc, char ** argv)
     pelvis_pose.orientation[1] =  0.2;
     pelvis_pose.orientation[2] =  0.0;
 
-    robot_state.current_robot_state_.robot_joints_.joint_positions_[1] = 0.5;
+    robot_current.robot_joints_.joint_positions_[1] = 0.5;
 
     robot_model.updateBasePose(pelvis_pose);
     //std::cout << "Update joint states " << std::endl;
     {DO_TIMING(update_kinematics_timing_)
         robot_model.updateJointState(1234,
-                                     robot_state.current_robot_state_.robot_joints_.joint_positions_,
-                                     robot_state.current_robot_state_.robot_joints_.joint_velocities_,
-                                     robot_state.current_robot_state_.robot_joints_.joint_accelerations_);
+                                     robot_current.robot_joints_.joint_positions_,
+                                     robot_current.robot_joints_.joint_velocities_,
+                                     robot_current.robot_joints_.joint_accelerations_);
         robot_model.updateKinematics( );
     }
     {DO_TIMING(calc_torque_timing_)

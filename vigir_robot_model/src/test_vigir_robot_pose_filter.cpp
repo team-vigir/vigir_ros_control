@@ -26,7 +26,7 @@ int main(int argc, char ** argv)
 
     std::cout << "Define test of "  << steps  << " steps at dt="  << dt  << "with " << num_joints << " joints" << std::endl;
     vigir_control::VigirRobotPoseFilter pose_filter("SimpleFilter");
-    vigir_control::VigirRobotState      robot_model(num_joints);  // state estimate
+    vigir_control::VigirRobotStateData  robot_state(num_joints);  // state estimate
 
     /* Choose Normal Distribution and create generator*/
     NormalDistribution gaussian_dist_05(0.0, 0.5);
