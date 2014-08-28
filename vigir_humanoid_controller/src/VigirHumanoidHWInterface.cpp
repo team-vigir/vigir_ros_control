@@ -46,7 +46,7 @@ inline std::ostream& operator << (std::ostream& os, const std::vector<T>& v)
 namespace vigir_control {
 
 VigirHumanoidHWInterface::VigirHumanoidHWInterface(const std::string& name)
-    : name_(name)
+    : name_(name),last_update_time_(0L)
 {
     ROS_INFO("Initialize VigirHumanoidHWInterface for <%s>",name_.c_str());
 }

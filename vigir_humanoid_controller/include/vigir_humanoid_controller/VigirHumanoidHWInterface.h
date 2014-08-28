@@ -79,6 +79,7 @@ namespace vigir_control {
     // I would not expect it to if the underlying sizes are the same, but I'm not
     // certain, so I'm going to play it safe for now.
 
+    uint64_t                                              last_update_time_;
     boost::shared_ptr< std::vector<std::string> >         joint_names_;
     std::vector<double >                                  joint_state_positions_;
     std::vector<double >                                  joint_state_velocities_;
