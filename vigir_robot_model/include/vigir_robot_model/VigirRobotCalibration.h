@@ -74,6 +74,18 @@ struct VigirRobotCalibration : public VigirRobotCalibrationBase
       offset_  = offset;
   }
 
+
+  bool adjust_offset(VectorNd& diff_offset)
+  {
+      if (diff_offset.size() != offset_.size())
+      { // verify that the data sizes are consistent
+          return false;
+      }
+
+      offset_  += diff_offset;
+
+  }
+
 protected:
   VectorNd gearing_ ;
   VectorNd offset_;
