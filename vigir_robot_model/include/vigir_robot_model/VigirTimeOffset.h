@@ -42,14 +42,8 @@ namespace vigir_control {
     VigirTimeOffset() {}
     virtual ~VigirTimeOffset() {}
 
-    // Apply correction to given time given PPS
-    virtual bool correct_time(const ros::Time& internal_time)
-    {
-
-    }
-
-    ros::Time    system_time_at_sync_;
-    ros::Time    time_offset_;
+    ros::Time    system_time_at_sync_; //!< Base time at startup
+    ros::Time    time_offset_;         //!< Time offset from base
 
   protected:
 

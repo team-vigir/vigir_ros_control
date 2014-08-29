@@ -116,7 +116,7 @@ namespace vigir_control {
         uint64_t                        last_update_time_;
 
         Pose                            pelvis_pose_;
-        Vector3d                        pelvis_velocity_;
+        Twist                           pelvis_twist_;
         Wrench                          r_foot_wrench_;
         Wrench                          l_foot_wrench_;
         Wrench                          r_hand_wrench_;
@@ -135,7 +135,7 @@ namespace vigir_control {
 
             return ((robot_joints_    == rhs.robot_joints_) &&
                     (pelvis_pose_     == rhs.pelvis_pose_) &&
-                    (pelvis_velocity_ == rhs.pelvis_velocity_) &&
+                    (pelvis_twist_    == rhs.pelvis_twist_) &&
                     (r_foot_wrench_   == rhs.r_foot_wrench_) &&
                     (r_hand_wrench_   == r_hand_wrench_ ) &&
                     (l_hand_wrench_   == l_hand_wrench_ ) &&
@@ -149,7 +149,7 @@ namespace vigir_control {
 
             return ((robot_joints_    != rhs.robot_joints_) ||
                     (pelvis_pose_     != rhs.pelvis_pose_) ||
-                    (pelvis_velocity_ != rhs.pelvis_velocity_) ||
+                    (pelvis_twist_    != rhs.pelvis_twist_) ||
                     (r_foot_wrench_   != rhs.r_foot_wrench_) ||
                     (r_hand_wrench_   != r_hand_wrench_ ) ||
                     (l_hand_wrench_   != l_hand_wrench_ ) ||
