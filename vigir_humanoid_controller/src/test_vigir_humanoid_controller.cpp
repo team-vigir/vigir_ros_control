@@ -58,8 +58,8 @@ class TestHumanoidInterface : public VigirHumanoidInterface
     // Construct the interface and initialize the state joint sizes
     TestHumanoidInterface(const std::string& name, const int32_t& n_joints) :
         VigirHumanoidInterface(name, n_joints),
-        robot_state_(vigir_control::VigirRobotInterfaceData(n_joints)),
-        robot_control_(vigir_control::VigirRobotControlData(n_joints))
+        robot_state_(vigir_control::VigirRobotInterfaceData(n_joints), "InterfaceData"),
+        robot_control_(vigir_control::VigirRobotControlData(n_joints), "ControlData")
     {
         ROS_INFO("Construct the HumanoidInterface");
     }
@@ -181,12 +181,27 @@ class TestHumanoidController : public VigirHumanoidController
     int32_t init_robot_publishers()
     {
         ROS_INFO("init controller pub");
+        return ROBOT_INITIALIZED_OK;
     }
 
     int32_t cleanup_robot_publishers()
     {
         ROS_INFO("cleanup controller pub");
+        return ROBOT_CLEANUP_OK;
     }
+
+    int32_t init_robot_subscribers()
+    {
+        ROS_INFO("init controller pub");
+        return ROBOT_INITIALIZED_OK;
+    }
+
+    int32_t cleanup_robot_subscribers()
+    {
+        ROS_INFO("cleanup controller pub");
+        return ROBOT_CLEANUP_OK;
+    }
+
 
     void read(ros::Time time, ros::Duration period)
     {
@@ -211,7 +226,7 @@ int main(int argc, char ** argv)
     data_test.last_update_time_ = 20L;
 
     std::cout << "Start RTB test " << std::endl;
-    vigir_control::VigirRealTimeBuffer<vigir_control::VigirRobotStateData> state_data(data_test);
+    vigir_control::VigirRealTimeBuffer<vigir_control::VigirRobotStateData> state_data(data_test, "RobotStateData");
 
     vigir_control::VigirRobotStateData read;
     state_data.readBuffer(read);
@@ -303,7 +318,7 @@ int main(int argc, char ** argv)
     };
 
     boost::shared_ptr< vigir_control::VigirRealTimeBuffer<vigir_control::VigirRobotInterfaceData> > interface_data;
-    interface_data.reset(new vigir_control::VigirRealTimeBuffer<vigir_control::VigirRobotInterfaceData>(vigir_control::VigirRobotInterfaceData(10)));
+    interface_data.reset(new vigir_control::VigirRealTimeBuffer<vigir_control::VigirRobotInterfaceData>(vigir_control::VigirRobotInterfaceData(10),"InterfaceData"));
 
     vigir_control::VigirRealTimePublisher<vigir_control::VigirRobotInterfaceData> rt_pub("Test publisher", interface_data);
     boost::shared_ptr<vigir_control::VigirRealTimeTopicBase<vigir_control::VigirRobotInterfaceData> > topic1( new VigirRobotInterfaceDataTopic("test1",*main_nh.get(),ros::Rate(10),true,100));
@@ -348,7 +363,7 @@ int main(int argc, char ** argv)
         // Set up the controller to try and run at 1kHz
         vigir_control::TestHumanoidController test_controller("Test", 1000);
 
-        if (int32_t rc = test_controller.initialize(main_nh,main_nh,nhp))
+        if (int32_t rc = test_controller.initialize(main_nh,main_nh,main_nh,nhp))
         {
             ROS_ERROR("Failed to initialize the controller with rc=%d - abort!", rc);
             exit(rc);

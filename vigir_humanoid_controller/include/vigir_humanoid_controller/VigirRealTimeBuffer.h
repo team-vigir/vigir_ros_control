@@ -42,12 +42,12 @@ class VigirRealTimeBuffer
  public:
 
     // Default constructor
-    VigirRealTimeBuffer()
-      : lock_counter_(0), data_count_(std::numeric_limits<uint32_t>::max() )
+    VigirRealTimeBuffer(const std::string& name="default")
+      : name_(name), lock_counter_(0), data_count_(std::numeric_limits<uint32_t>::max() )
     {
         // Define sleep for polling read lock
-        sleep_ts_.tv_sec  = 0;
-        sleep_ts_.tv_nsec = 20000; // 20 micro seconds
+        //sleep_ts_.tv_sec  = 0;
+        //sleep_ts_.tv_nsec = 1000; // 1 micro seconds
 
         // allocate memory
         read_data_buffer_  = new T();
@@ -62,12 +62,12 @@ class VigirRealTimeBuffer
     }
 
     // Copy constructor
-    VigirRealTimeBuffer(VigirRealTimeBuffer &source)
-        : lock_counter_(0), data_count_(std::numeric_limits<uint32_t>::max() )
+    VigirRealTimeBuffer(VigirRealTimeBuffer &source,const std::string& name)
+        : name_(name), lock_counter_(0), data_count_(std::numeric_limits<uint32_t>::max() )
     {
         // Define sleep for polling read lock
-        sleep_ts_.tv_sec  = 0;
-        sleep_ts_.tv_nsec = 20000; // 20 micro seconds
+        //sleep_ts_.tv_sec  = 0;
+        //sleep_ts_.tv_nsec = 1000; // 1 micro seconds
 
         // allocate memory
         read_data_buffer_  = new T();
@@ -80,12 +80,12 @@ class VigirRealTimeBuffer
     }
 
     // Data constructor
-    VigirRealTimeBuffer(const T &source)
-        : lock_counter_(0), data_count_(std::numeric_limits<uint32_t>::max() )
+    VigirRealTimeBuffer(const T &source, const std::string& name)
+        : name_(name), lock_counter_(0), data_count_(std::numeric_limits<uint32_t>::max() )
     {
         // Define sleep for polling read lock
-        sleep_ts_.tv_sec  = 0;
-        sleep_ts_.tv_nsec = 20000; // 20 micro seconds
+        //sleep_ts_.tv_sec  = 0;
+        //sleep_ts_.tv_nsec = 1000; // 1 micro seconds
 
         // allocate memory
         read_data_buffer_  = new T();
@@ -128,13 +128,13 @@ class VigirRealTimeBuffer
         while(!data_mutex_.try_lock_shared())
         {
             ++lock_counter_; // debug monitoring
-            nanosleep(&sleep_ts_, &remaining_ts_);
+            //nanosleep(&sleep_ts_, &remaining_ts_);
         }
 
         // --------- debug ----------
-        if (lock_counter_ > 1)
+        if (lock_counter_ > 2)
         {   // Debug status to we ever get blocked for more than 1 cycle
-            std::cout << "RTB lock counter = " << lock_counter_ << std::endl;
+            std::cout << "RTB " << name_ << " lock counter = " << lock_counter_ << std::endl;
         }
         // -------------------------------------------
 
@@ -188,12 +188,16 @@ class VigirRealTimeBuffer
 
  private:
 
-  T* read_data_buffer_;
-  T* write_data_buffer_;
-  T* swap_;
+  T*            read_data_buffer_;
+  T*            write_data_buffer_;
+  T*            swap_;
 
-  timespec sleep_ts_;
-  timespec remaining_ts_;
+  std::string   name_;
+
+  // Using polling for now
+  //timespec sleep_ts_;
+  //timespec remaining_ts_;
+
   // Set as mutable for read buffer
   boost::shared_mutex data_mutex_;
 

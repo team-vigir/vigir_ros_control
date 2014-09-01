@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(vigir_humanoid_controller)
 
-set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE Debug)
 #set(CMAKE_BUILD_TYPE Release)
-#set(ROS_BUILD_TYPE RelWithDebInfo)
+set(ROS_BUILD_TYPE RelWithDebInfo)
 
 # Using std::atomic
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x")
@@ -16,7 +16,7 @@ find_package(Eigen REQUIRED)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs eigen_stl_containers eigen eigen_conversions hardware_interface controller_manager vigir_robot_model vigir_joint_interfaces)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs eigen_stl_containers eigen eigen_conversions hardware_interface controller_manager flor_utilities vigir_robot_model vigir_joint_interfaces)
 
 #set the default path for built executables to the "bin" directory
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

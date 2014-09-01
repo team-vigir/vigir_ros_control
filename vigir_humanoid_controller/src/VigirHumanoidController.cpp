@@ -103,10 +103,12 @@ int32_t VigirHumanoidController::run()
 // Initialization functions
 int32_t VigirHumanoidController::initialize(boost::shared_ptr<ros::NodeHandle>& control_nh,
                                             boost::shared_ptr<ros::NodeHandle>& pub_nh,
+                                            boost::shared_ptr<ros::NodeHandle>& sub_nh,
                                             boost::shared_ptr<ros::NodeHandle>& private_nh)
 {
     controller_nh_  = control_nh;
     pub_nh_         = pub_nh    ;
+    sub_nh_         = sub_nh    ;
     private_nh_     = private_nh;
 
     int32_t rc;
@@ -156,50 +158,102 @@ int32_t VigirHumanoidController::initialize(boost::shared_ptr<ros::NodeHandle>& 
         rc = init_robot_controllers();
         if (rc)
         {
-            error_status("Robot behaviors failed to initialize",rc);
+            error_status("Robot controllers failed to initialize",rc);
             return ROBOT_CONTROLLERS_FAILED_TO_INITIALIZE;
         }
     }
     catch(...) // @todo: catch specific exceptions and report
     {
-        error_status("Robot behaviors failed to initialize (exception)",ROBOT_EXCEPTION_CONTROLLERS_FAILED_TO_INITIALIZE);
+        error_status("Robot controllers failed to initialize (exception)",ROBOT_EXCEPTION_CONTROLLERS_FAILED_TO_INITIALIZE);
         return ROBOT_EXCEPTION_CONTROLLERS_FAILED_TO_INITIALIZE;
     }
+
+    try{
+        rc = init_robot_subscribers();
+        if (rc)
+        {
+            error_status("Robot subscribers failed to initialize",rc);
+            return ROBOT_SUBSCRIBERS_FAILED_TO_INITIALIZE;
+        }
+    }
+    catch(...) // @todo: catch specific exceptions and report
+    {
+        error_status("Robot behaviors failed to initialize (exception)",ROBOT_EXCEPTION_SUBSCRIBERS_FAILED_TO_INITIALIZE);
+        return ROBOT_EXCEPTION_SUBSCRIBERS_FAILED_TO_INITIALIZE;
+    }
+
+
 }
 
 
 
 int32_t VigirHumanoidController::cleanup()
 {
+    std::cout << " Cleanup the controller ..." << std::endl;
     int32_t rc;
     try{
+        std::cout << "      Cleanup the suscribers ..." << std::endl;
+        rc =   cleanup_robot_subscribers();
+
+        if (rc)
+        {
+            cleanup_status("Robot subscribers failed to cleanup properly",rc);
+            return ROBOT_SUBSCRIBERS_FAILED_TO_CLEANUP_PROPERLY;
+        }
+    }
+    catch(...) // @todo: catch specific exceptions and report
+    {
+        cleanup_status("Robot subscribers failed to cleanup properly (exception)");
+        return ROBOT_EXCEPTION_SUBSCRIBERS_FAILED_TO_CLEANUP_PROPERLY;
+    }
+
+    try{
+        std::cout << "      Cleanup the publishers ..." << std::endl;
+        rc =   cleanup_robot_publishers();
+
+        if (rc)
+        {
+            cleanup_status("Robot subscribers failed to cleanup properly",rc);
+            return ROBOT_PUBLISHERS_FAILED_TO_CLEANUP_PROPERLY;
+        }
+    }
+    catch(...) // @todo: catch specific exceptions and report
+    {
+        cleanup_status("Robot subscribers failed to cleanup properly (exception)");
+        return ROBOT_EXCEPTION_PUBLISHERS_FAILED_TO_CLEANUP_PROPERLY;
+    }
+
+    try{
+        std::cout << "      Cleanup the controllers ..." << std::endl;
         rc =   cleanup_robot_controllers();
 
         if (rc)
         {
-            error_status("Robot interface failed to cleanup properly",rc);
+            cleanup_status("Robot interface failed to cleanup properly",rc);
             return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
         }
     }
     catch(...) // @todo: catch specific exceptions and report
     {
-        error_status("Robot interface failed to cleanup properly (exception)");
-        return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
+        cleanup_status("Robot interface failed to cleanup properly (exception)");
+        return ROBOT_EXCEPTION_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
     }
 
     try{
+        std::cout << "      Cleanup the interface ..." << std::endl;
         rc =   cleanup_robot_interface();
         if (rc)
         {
-            error_status("Robot interface failed to cleanup properly",rc);
+            cleanup_status("Robot interface failed to cleanup properly",rc);
             return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
         }
     }
     catch(...) // @todo: catch specific exceptions and report
     {
-        error_status("Robot interface failed to cleanup properly (exception)");
-        return ROBOT_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
+        cleanup_status("Robot interface failed to cleanup properly (exception)");
+        return ROBOT_EXCEPTION_INTERFACE_FAILED_TO_CLEANUP_PROPERLY;
     }
+    std::cout << " Done cleanup !" << std::endl;
 
 }
 
@@ -218,6 +272,21 @@ void VigirHumanoidController::error_status(const std::string& msg, int32_t rc)
         ROS_ERROR((msg+" (rc=%d)").c_str(),rc);
         ROS_WARN( (msg+" (rc=%d)").c_str(),rc);  // try to get on screen and in log file
         // @todo - publish status to OCS
+    }
+}
+
+void VigirHumanoidController::cleanup_status(const std::string& msg, int32_t rc)
+{ // Assume ROS no longer works during cleanup
+    if (rc < 0)
+    {
+        std::cerr << msg << std::endl;
+        std::cout << msg << std::endl;
+
+    }
+    else
+    {
+        std::cerr << msg << "(rc=" << rc << ")" << std::endl;
+        std::cout << msg << "(rc=" << rc << ")" <<  std::endl;
     }
 }
 

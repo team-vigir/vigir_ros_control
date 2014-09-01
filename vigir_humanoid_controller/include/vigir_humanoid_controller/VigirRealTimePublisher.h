@@ -36,6 +36,7 @@
 #include <ros/ros.h>
 
 #include <vigir_humanoid_controller/VigirRealTimeBuffer.h>
+#include <flor_utilities/timing.h>
 
 namespace vigir_control
 {
@@ -83,19 +84,21 @@ class VigirRealTimePublisher
 
     // Default constructor - (cannot use default publishLoop)
     VigirRealTimePublisher(const std::string& name = "VigirRealTimePublisher")
-        :  keep_running_(true), publisher_name_(name)
+        : keep_running_(true), publisher_name_(name),last_data_count_(std::numeric_limits<uint32_t>::max()),
+          publisher_timing_(name,true,false)
     {
-        sleep_ts_.tv_sec  = 0;
-        sleep_ts_.tv_nsec = 50000; // 50 micro seconds
+        //sleep_ts_.tv_sec  = 0;
+        //sleep_ts_.tv_nsec = 50000; // 50 micro seconds
         ROS_INFO("Construct %s publisher ...",publisher_name_.c_str());
     }
 
     // Constructor that provides access to real time buffer for publishLoop
     VigirRealTimePublisher(const std::string& name, boost::shared_ptr<VigirRealTimeBuffer<DataType> >& rt_buffer)
-        :  keep_running_(true), publisher_name_(name),rt_buffer_(rt_buffer)
+        :  keep_running_(true), publisher_name_(name),rt_buffer_(rt_buffer), last_data_count_(std::numeric_limits<uint32_t>::max()),
+           publisher_timing_(name,true,false)
     {
-        sleep_ts_.tv_sec  = 0;
-        sleep_ts_.tv_nsec = 50000; // 50 micro seconds
+        //sleep_ts_.tv_sec  = 0;
+        //sleep_ts_.tv_nsec = 50000; // 50 micro seconds
         ROS_INFO("Construct %s publisher with direct real time buffer access ...",publisher_name_.c_str());
     }
 
@@ -127,6 +130,18 @@ class VigirRealTimePublisher
         }
     }
 
+    inline bool publishAnyNewData()
+    {
+        if (rt_buffer_->dataCount() != last_data_count_)
+        {
+            DO_TIMING(publisher_timing_);
+            last_data_count_ = rt_buffer_->readBuffer(last_data_);
+            publish(last_data_,ros::Time::now());
+            return true;
+        }
+        return false;
+    }
+
     void publishLoop()
     {
 
@@ -138,22 +153,15 @@ class VigirRealTimePublisher
 
 
         ROS_INFO("Start publisher loop for %s",publisher_name_.c_str());
-        DataType data;
-        uint32_t last_data_count = std::numeric_limits<uint32_t>::max();
-        timespec remaining_ts_;
+        //timespec remaining_ts_;
+
+        Timing loop_timing(publisher_name_+"Loop",true,false);
 
         while (keep_running_ && ros::ok())
         {
-            if (rt_buffer_->dataCount() != last_data_count)
-            {
-                last_data_count = rt_buffer_->readBuffer(data);
-                publish(data,ros::Time::now());
-            }
-            else
-            { // No new data since last loop
-                nanosleep(&sleep_ts_, &remaining_ts_);
-
-            }
+            DO_TIMING(loop_timing);
+            publishAnyNewData();
+            usleep(100); // release this thread as publishing ROS topics is not considered real time required
         }
         ROS_INFO("Exit the publisher loop for %s",publisher_name_.c_str());
     }
@@ -164,7 +172,13 @@ class VigirRealTimePublisher
     bool                                                                 keep_running_;
     std::vector< boost::shared_ptr<VigirRealTimeTopicBase< DataType> > > topics_;    // List of topics sharing a base data type
     boost::shared_ptr<VigirRealTimeBuffer<DataType> >                    rt_buffer_; // shared pointer to the real time buffer with data
-    timespec                                                             sleep_ts_;
+
+    uint32_t                                                             last_data_count_;
+    DataType                                                             last_data_;
+
+    Timing                                                               publisher_timing_;
+
+    //timespec                                                             sleep_ts_;
 
 }; // class
 

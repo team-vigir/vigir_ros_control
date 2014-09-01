@@ -67,6 +67,7 @@ namespace vigir_control {
     // same or different node handles passed to the init function
     int32_t initialize( boost::shared_ptr<ros::NodeHandle>& control_nh,
                         boost::shared_ptr<ros::NodeHandle>& pub_nh,
+                        boost::shared_ptr<ros::NodeHandle>& sub_nh,
                         boost::shared_ptr<ros::NodeHandle>& private_nh);
 
     // This should be called before destroying the controller instance
@@ -96,10 +97,12 @@ namespace vigir_control {
     virtual int32_t init_robot_controllers()  = 0;
     virtual int32_t init_robot_interface()    = 0;
     virtual int32_t init_robot_publishers()   = 0;
+    virtual int32_t init_robot_subscribers()  = 0;
 
     virtual int32_t cleanup_robot_controllers() = 0;
     virtual int32_t cleanup_robot_interface()   = 0;
     virtual int32_t cleanup_robot_publishers()  = 0;
+    virtual int32_t cleanup_robot_subscribers() = 0;
 
 
     std::string                           name_;
@@ -107,9 +110,10 @@ namespace vigir_control {
     bool                                  run_flag_;
     ros::Rate                             desired_loop_rate_;
 
-    // ROS stuff
+    // ROS stuff - these are created outside interface, and their associated callbacks and spinners determine the threading model
     boost::shared_ptr<ros::NodeHandle>    controller_nh_; // Handle controller interface
-    boost::shared_ptr<ros::NodeHandle>    pub_nh_;        // Handle controller interface
+    boost::shared_ptr<ros::NodeHandle>    pub_nh_;        // Handle publisher interfaces
+    boost::shared_ptr<ros::NodeHandle>    sub_nh_;        // Handle subscriber interfaces
     boost::shared_ptr<ros::NodeHandle>    private_nh_;    // Private node handle
 
     // Interface to robot specific implementations
@@ -120,6 +124,7 @@ namespace vigir_control {
 
     // dump errror to screen and log and potentially publish
     virtual void error_status(const std::string& msg, int32_t rc=-1);
+    virtual void cleanup_status(const std::string& msg, int32_t rc=-1);
 
 };
 
