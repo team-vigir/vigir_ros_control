@@ -132,10 +132,10 @@ class VigirRealTimeBuffer
         }
 
         // --------- debug ----------
-        if (lock_counter_ > 2)
-        {   // Debug status to we ever get blocked for more than 1 cycle
-            std::cout << "RTB " << name_ << " lock counter = " << lock_counter_ << std::endl;
-        }
+        //if (lock_counter_ > 2)
+        //{   // Debug status to we ever get blocked for more than 1 cycle
+        //    std::cout << "RTB " << name_ << " lock counter = " << lock_counter_ << std::endl;
+        //}
         // -------------------------------------------
 
 

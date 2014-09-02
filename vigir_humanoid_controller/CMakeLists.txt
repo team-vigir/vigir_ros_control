@@ -79,7 +79,7 @@ src/VigirHumanoidController.cpp
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES vigir_humanoid_controller
-  CATKIN_DEPENDS vigir_robot_model vigir_joint_interfaces roscpp hardware_interface controller_manager
+  CATKIN_DEPENDS vigir_robot_model vigir_joint_interfaces flor_utilities roscpp hardware_interface controller_manager
   DEPENDS eigen
 )
 

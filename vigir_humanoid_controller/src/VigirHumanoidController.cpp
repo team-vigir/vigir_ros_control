@@ -48,9 +48,19 @@ inline std::ostream& operator << (std::ostream& os, const std::vector<T>& v)
 namespace vigir_control {
 
 VigirHumanoidController::VigirHumanoidController(const std::string& name, const ros::Rate& loop_rate, const bool& verbose)
-    : name_(name), desired_loop_rate_(loop_rate), verbose_(verbose),run_flag_(true)
+    : name_(name), desired_loop_rate_(loop_rate), verbose_(verbose),run_flag_(true),
+      run_loop_timing_(name+" RunLoop",true,false),
+      read_timing_(name+" Read",true,false),
+      write_timing_(name+" Write",true,false),
+      controller_timing_(name+" Controller",true,false),
+      sleep_failure_(0)
 {
     ROS_INFO("Initialize VigirHumanoidController for <%s>",name_.c_str());
+    if (desired_loop_rate_.expectedCycleTime().toSec() > 0.999)
+    {
+        ROS_ERROR(" Run loop coding expects loop rate to be > 1 hz - cannot run with loop < 1hz");
+        exit(-1);
+    }
 }
 
 int32_t VigirHumanoidController::run()
@@ -58,44 +68,58 @@ int32_t VigirHumanoidController::run()
     ros::Time     current_time;
     ros::Duration elapsed_time;
     ros::Time     last_time = ros::Time::now();
+    timespec      sleep_time;
+    timespec      remaining_time;
 
     ROS_INFO("Start controller %s run loop ...",name_.c_str());
+    sleep_time.tv_sec = 0;
+
     while (ros::ok() && run_flag_)
     {
-        bool slept = desired_loop_rate_.sleep();
-
-        current_time = ros::Time::now();
-        elapsed_time = current_time - last_time;
-        last_time = current_time;
-
-        if (!slept)
         {
-            ROS_INFO("Behind the desired rate of %f  - elapsed time = %f (%f)",
-                     desired_loop_rate_.expectedCycleTime().toSec(),
-                     desired_loop_rate_.cycleTime().toSec(),
-                     elapsed_time.toSec());
+            DO_TIMING(run_loop_timing_);
+            current_time = ros::Time::now();
+            elapsed_time = current_time - last_time;
+            last_time = current_time;
+
+            //ROS_INFO("before read");
+            {
+                DO_TIMING(read_timing_);
+                this->read(current_time, elapsed_time);
+            }
+            //ROS_INFO("after read");
+
+            //ROS_INFO("before cm.update");
+            {
+                DO_TIMING(controller_timing_);
+                cm_->update(current_time, elapsed_time);
+            }
+            //ROS_INFO("after cm.update");
+
+            //ROS_INFO("before write");
+            {
+                DO_TIMING(write_timing_);
+                this->write(current_time, elapsed_time);
+            }
+            //ROS_INFO("after write");
+
+            elapsed_time = ros::Time::now() - current_time;
+            sleep_time.tv_nsec = desired_loop_rate_.expectedCycleTime().toNSec() - elapsed_time.toNSec();
+            if (sleep_time.tv_nsec > 1)
+            {
+                nanosleep(&sleep_time, &remaining_time);
+
+                // Debug tracking
+                if (remaining_time.tv_sec > 0 || remaining_time.tv_nsec > 10)
+                {
+                    ++sleep_failure_; // track statistics
+                }
+            }
+            else
+            { // Debug tracking of loop timing issues
+                ++sleep_failure_;
+            }
         }
-//        else
-//        {
-
-//            ROS_INFO("Achieving the desired rate of %f  - elapsed time = %f (%f)",
-//                     desired_loop_rate_.expectedCycleTime().toSec(),
-//                     desired_loop_rate_.cycleTime().toSec(),
-//                     elapsed_time.toSec());
-//        }
-
-        //ROS_INFO("before read");
-        this->read(current_time, elapsed_time);
-        //ROS_INFO("after read");
-
-        //ROS_INFO("before cm.update");
-        cm_->update(current_time, elapsed_time);
-        //ROS_INFO("after cm.update");
-
-        //ROS_INFO("before write");
-        this->write(current_time, elapsed_time);
-        //ROS_INFO("after write");
-
     }
     ROS_INFO("Stopped controller %s run loop !",name_.c_str());
 }

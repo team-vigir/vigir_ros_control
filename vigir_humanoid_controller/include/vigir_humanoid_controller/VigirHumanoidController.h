@@ -31,6 +31,7 @@
 #include <ros/ros.h>
 
 #include <controller_manager/controller_manager.h>
+#include <flor_utilities/timing.h>
 
 #include <vigir_robot_model/VigirRobotModel.h>
 #include <vigir_humanoid_controller/VigirHumanoidHWInterface.h>
@@ -109,6 +110,12 @@ namespace vigir_control {
     bool                                  verbose_;       // dump more data to logs
     bool                                  run_flag_;
     ros::Rate                             desired_loop_rate_;
+
+    Timing                                run_loop_timing_;
+    Timing                                read_timing_;
+    Timing                                write_timing_;
+    Timing                                controller_timing_;
+    uint32_t                              sleep_failure_;
 
     // ROS stuff - these are created outside interface, and their associated callbacks and spinners determine the threading model
     boost::shared_ptr<ros::NodeHandle>    controller_nh_; // Handle controller interface
