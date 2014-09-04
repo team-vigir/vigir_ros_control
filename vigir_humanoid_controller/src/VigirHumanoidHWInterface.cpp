@@ -100,6 +100,12 @@ int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr< std:
                                                                    &joint_command_positions_[i], &joint_command_velocities_[i], &joint_command_accelerations_[i]);
       pos_vel_acc_joint_interface_.registerHandle(pos_vel_acc_handle);
 
+      hardware_interface::PosVelAccErrHumanoidJointHandle handle (joint_state_interface_.getHandle(joint_names_->at(i)),
+                                                                  &joint_command_positions_[i], &joint_command_velocities_[i], &joint_command_accelerations_[i],
+                                                                  &joint_position_errors_[i], &joint_velocity_errors_[i]);
+
+      pos_vel_acc_err_humanoid_joint_interface_.registerHandle(handle);
+
     }
 
     registerInterface(&joint_state_interface_);
@@ -107,6 +113,7 @@ int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr< std:
     registerInterface(&velocity_joint_interface_);
     registerInterface(&effort_joint_interface_);
     registerInterface(&pos_vel_acc_joint_interface_);
+    registerInterface(&pos_vel_acc_err_humanoid_joint_interface_);
 
     ROS_ERROR(" Need to init_robot_controllers");
     return ROBOT_INITIALIZED_OK;

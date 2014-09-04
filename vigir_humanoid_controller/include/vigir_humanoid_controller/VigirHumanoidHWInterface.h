@@ -34,6 +34,7 @@
 #include <hardware_interface/joint_state_interface.h>
 #include <joint_limits_interface/joint_limits_interface.h>
 #include <vigir_joint_interfaces/pos_vel_acc_joint_iface.h>
+#include <vigir_joint_interfaces/pos_vel_acc_err_humanoid_joint_iface.h>
 
 #include <vigir_robot_model/VigirRobotDataTypes.h>
 
@@ -106,6 +107,7 @@ namespace vigir_control {
     hardware_interface::VelocityJointInterface            velocity_joint_interface_;
     hardware_interface::EffortJointInterface              effort_joint_interface_;
     hardware_interface::PosVelAccJointInterface           pos_vel_acc_joint_interface_;
+    hardware_interface::PosVelAccErrHumanoidJointInterface  pos_vel_acc_err_humanoid_joint_interface_;
     //@todo RobotMode (startup) , RobotBehavior, and RobotFootsteps interfaces
 };
 
