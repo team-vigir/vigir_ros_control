@@ -94,6 +94,9 @@ namespace vigir_control {
     VectorNd                                              joint_command_accelerations_;
     VectorNd                                              joint_command_efforts_;
 
+    VectorNd                                              joint_position_errors_;
+    VectorNd                                              joint_velocity_errors_;
+
   protected:
     std::string                                           name_;
 

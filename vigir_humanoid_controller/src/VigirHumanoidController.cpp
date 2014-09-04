@@ -104,20 +104,30 @@ int32_t VigirHumanoidController::run()
             }
             //ROS_INFO("after write");
 
-            elapsed_time = ros::Time::now() - current_time;
+            ros::Time end_time = ros::Time::now();
+            elapsed_time = end_time - current_time;
             sleep_time.tv_nsec = desired_loop_rate_.expectedCycleTime().toNSec() - elapsed_time.toNSec();
-            if (sleep_time.tv_nsec > 1)
+            if (sleep_time.tv_nsec > 10000)
             {
-                nanosleep(&sleep_time, &remaining_time);
-
-                // Debug tracking
-                if (remaining_time.tv_sec > 0 || remaining_time.tv_nsec > 10)
+                sleep_time.tv_nsec -= 10000; // remove some overhead from sleep calculation
+                int rc;
+                while ((rc=nanosleep(&sleep_time, &remaining_time)) == EINTR)
                 {
+                    sleep_time = remaining_time;
+                }
+                // Debug tracking
+                if (rc != 0)
+                {
+//                    ros::Time sleep_end = ros::Time::now();
+//                    ros::Duration slept_time = sleep_end - end_time;
+//                    ROS_INFO(" sleep time in controller update sleep was tspec= %ld.%ld elapsed=%ld slept=%ld rc=%d", sleep_time.tv_sec,  sleep_time.tv_nsec,elapsed_time.toNSec(),slept_time.toNSec(),rc);
+//                    ROS_INFO(" remaining time in controller update sleep tspec= %ld.%ld", remaining_time.tv_sec,remaining_time.tv_nsec);
                     ++sleep_failure_; // track statistics
                 }
             }
-            else
+            else if (sleep_time.tv_nsec < 0)
             { // Debug tracking of loop timing issues
+                //ROS_INFO(" sleep time in controller update sleep tspec= %ld.%ld  elapsed=%ld", sleep_time.tv_sec,  sleep_time.tv_nsec,elapsed_time.toNSec());
                 ++sleep_failure_;
             }
         }
