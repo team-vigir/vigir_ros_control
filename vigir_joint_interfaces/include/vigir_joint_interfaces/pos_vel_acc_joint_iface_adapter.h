@@ -1,7 +1,7 @@
 // Taken from https://github.com/gt-ros-pkg/universal_robot/blob/hydro-devel-c-api/ur_controllers/include/ur_controllers/ur_hardware_interface_adapter.h
 #include <joint_trajectory_controller/hardware_interface_adapter.h>
-#include <pos_vel_acc_joint_iface.h>
-//#include <trajectory_interface/pos_vel_acc_state.h>
+#include <vigir_joint_interfaces/pos_vel_acc_joint_iface.h>
+
 
 
 /**
