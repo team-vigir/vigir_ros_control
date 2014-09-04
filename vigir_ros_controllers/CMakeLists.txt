@@ -7,6 +7,7 @@ project(vigir_ros_controllers)
 find_package(catkin REQUIRED COMPONENTS
   joint_trajectory_controller
   vigir_joint_interfaces
+  controller_interface
 )
 
 ## System dependencies are found with CMake's conventions
@@ -81,7 +82,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES vigir_ros_controllers
-#  CATKIN_DEPENDS joint_trajectory_controller vigir_joint_interfaces
+CATKIN_DEPENDS joint_trajectory_controller vigir_joint_interfaces controller_interface
 #  DEPENDS system_lib
 )
 
@@ -97,16 +98,16 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-#add_library(vigir_ros_controllers
-#   src/vigir_joint_trajectory_controller.cpp
-#)
+add_library(vigir_ros_controllers
+   src/vigir_joint_trajectory_controller.cpp
+)
 
-#add_dependencies(vigir_ros_controllers ${catkin_EXPORTED_TARGETS})
+add_dependencies(vigir_ros_controllers ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-#target_link_libraries(vigir_ros_controllers
-#   ${catkin_LIBRARIES}
-#)
+target_link_libraries(vigir_ros_controllers
+   ${catkin_LIBRARIES}
+)
 
 ## Declare a cpp executable
 # add_executable(vigir_ros_controllers_node src/vigir_ros_controllers_node.cpp)
