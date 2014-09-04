@@ -28,6 +28,7 @@
 #include <pluginlib/class_list_macros.h>
 
 #include <vigir_joint_interfaces/pos_vel_acc_joint_iface_adapter.h>
+#include <vigir_joint_interfaces/pos_vel_acc_err_humanoid_joint_iface_adapter.h>
 #include <trajectory_interface/quintic_spline_segment.h>
 #include <joint_trajectory_controller/joint_trajectory_controller.h>
 
@@ -54,5 +55,17 @@ namespace pos_vel_acc_controllers
           JointTrajectoryController;
 }
 
+namespace pos_vel_acc_err_humanoid_controllers
+{
+  /**
+   * \brief Joint trajectory controller that represents trajectory segments as <b>quintic splines</b> and sends
+   * commands to an \b position/velocity/acceleration interface.
+   */
+  typedef joint_trajectory_controller::JointTrajectoryController<trajectory_interface::QuinticSplineSegment<double>,
+                                                                 hardware_interface::PosVelAccErrHumanoidJointInterface>
+          JointTrajectoryController;
+}
+
 //PLUGINLIB_EXPORT_CLASS(velocity_controllers::JointTrajectoryController, controller_interface::ControllerBase)
 PLUGINLIB_EXPORT_CLASS(pos_vel_acc_controllers::JointTrajectoryController,   controller_interface::ControllerBase)
+PLUGINLIB_EXPORT_CLASS(pos_vel_acc_err_humanoid_controllers::JointTrajectoryController,   controller_interface::ControllerBase)
