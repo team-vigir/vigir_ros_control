@@ -50,6 +50,7 @@ namespace vigir_control {
 VigirHumanoidController::VigirHumanoidController(const std::string& name, const ros::Rate& loop_rate, const bool& verbose)
     : name_(name), desired_loop_rate_(loop_rate), verbose_(verbose),run_flag_(true),
       run_loop_timing_(name+" RunLoop",true,false),
+      wait_timing_(name+" Wait",true,false),
       read_timing_(name+" Read",true,false),
       write_timing_(name+" Write",true,false),
       controller_timing_(name+" Controller",true,false),
@@ -84,7 +85,7 @@ int32_t VigirHumanoidController::run()
 
             //ROS_INFO("before read");
             {
-                DO_TIMING(read_timing_);
+                DO_TIMING(read_timing_); // includes wait time
                 this->read(current_time, elapsed_time);
             }
             //ROS_INFO("after read");

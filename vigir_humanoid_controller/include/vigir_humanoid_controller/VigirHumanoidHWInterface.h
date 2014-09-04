@@ -35,6 +35,8 @@
 #include <joint_limits_interface/joint_limits_interface.h>
 #include <vigir_joint_interfaces/pos_vel_acc_joint_iface.h>
 
+#include <vigir_robot_model/VigirRobotDataTypes.h>
+
 //@todo RobotMode (startup) , RobotBehavior, and RobotFootsteps interfaces
 
 namespace vigir_control {
@@ -85,10 +87,12 @@ namespace vigir_control {
     std::vector<double >                                  joint_state_velocities_;
     std::vector<double >                                  joint_state_accelerations_;
     std::vector<double >                                  joint_state_efforts_;
-    std::vector<double >                                  joint_command_positions_;
-    std::vector<double >                                  joint_command_velocities_;
-    std::vector<double >                                  joint_command_accelerations_;
-    std::vector<double >                                  joint_command_efforts_;
+
+
+    VectorNd                                              joint_command_positions_;
+    VectorNd                                              joint_command_velocities_;
+    VectorNd                                              joint_command_accelerations_;
+    VectorNd                                              joint_command_efforts_;
 
   protected:
     std::string                                           name_;

@@ -112,6 +112,7 @@ namespace vigir_control {
     ros::Rate                             desired_loop_rate_;
 
     Timing                                run_loop_timing_;
+    Timing                                wait_timing_;
     Timing                                read_timing_;
     Timing                                write_timing_;
     Timing                                controller_timing_;

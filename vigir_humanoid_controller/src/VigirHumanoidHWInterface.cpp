@@ -67,10 +67,10 @@ int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr< std:
         joint_state_efforts_.resize(joint_names_->size());
 
         // Control outputs
-        joint_command_positions_.resize( joint_names_->size());
-        joint_command_velocities_.resize(joint_names_->size());
-        joint_command_accelerations_.resize(joint_names_->size());
-        joint_command_efforts_.resize(joint_names_->size());
+        joint_command_positions_      = vigir_control::VectorNd::Constant(joint_names_->size(), 0.0);
+        joint_command_velocities_     = vigir_control::VectorNd::Constant(joint_names_->size(), 0.0);
+        joint_command_accelerations_  = vigir_control::VectorNd::Constant(joint_names_->size(), 0.0);
+        joint_command_efforts_        = vigir_control::VectorNd::Constant(joint_names_->size(), 0.0);
     }
     catch(...)
     {
