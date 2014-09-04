@@ -1,10 +1,11 @@
 // Taken from https://github.com/gt-ros-pkg/universal_robot/blob/hydro-devel-c-api/ur_controllers/include/ur_controllers/ur_hardware_interface_adapter.h
 
-#ifndef POS_VEL_ACC_JOINT_CMD_INTERFACE_ARAPTER_H
-#define POS_VEL_ACC_JOINT_CMD_INTERFACE_ADAPTER_H
+
+#ifndef POS_VEL_ACC_ERR_HUMANOID_JOINT_CMD_INTERFACE_ADAPTER_H
+#define POS_VEL_ACC_ERR_HUMANOID_JOINT_CMD_INTERFACE_ADAPTER_H
 
 #include <joint_trajectory_controller/hardware_interface_adapter.h>
-#include <vigir_joint_interfaces/pos_vel_acc_joint_iface.h>
+#include <vigir_joint_interfaces/pos_vel_acc_err_humanoid_joint_iface.h>
 
 
 
@@ -13,12 +14,12 @@
  * Forwards desired positions/velocities/accelerations as commands.
  */
 template <class State>
-class HardwareInterfaceAdapter<hardware_interface::PosVelAccJointInterface, State>
+class HardwareInterfaceAdapter<hardware_interface::PosVelAccErrHumanoidJointInterface, State>
 {
 public:
   HardwareInterfaceAdapter() : joint_handles_ptr_(0) {}
 
-  bool init(std::vector<hardware_interface::PosVelAccJointHandle>& joint_handles, 
+  bool init(std::vector<hardware_interface::PosVelAccErrHumanoidJointHandle>& joint_handles,
                         ros::NodeHandle& controller_nh)
   {
     // Store pointer to joint handles
@@ -33,20 +34,20 @@ public:
   void updateCommand(const ros::Time&     /*time*/,
                      const ros::Duration& /*period*/,
                      const State&         desired_state,
-                     const State&         /*state_error*/)
+                     const State&         state_error/*state_error*/)
   {
-    // Forward desired position to command
     const unsigned int n_joints = joint_handles_ptr_->size();
     for (unsigned int i = 0; i < n_joints; ++i) {
       (*joint_handles_ptr_)[i].setPosition(desired_state.position[i]);
       (*joint_handles_ptr_)[i].setVelocity(desired_state.velocity[i]);
       (*joint_handles_ptr_)[i].setAcceleration(desired_state.acceleration[i]);
+      (*joint_handles_ptr_)[i].setPositionError(state_error.position[i]);
+      (*joint_handles_ptr_)[i].setVelocityError(state_error.velocity[i]);
     }
   }
 
 private:
-  std::vector<hardware_interface::PosVelAccJointHandle>* joint_handles_ptr_;
+  std::vector<hardware_interface::PosVelAccErrHumanoidJointHandle>* joint_handles_ptr_;
 };
 
 #endif
-
