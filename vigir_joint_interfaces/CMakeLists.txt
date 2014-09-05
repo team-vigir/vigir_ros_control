@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   hardware_interface
   joint_trajectory_controller
+  control_toolbox
 )
 
 ## System dependencies are found with CMake's conventions
@@ -82,7 +83,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES vigir_joint_interfaces
-CATKIN_DEPENDS roscpp hardware_interface joint_trajectory_controller
+CATKIN_DEPENDS roscpp hardware_interface joint_trajectory_controller control_toolbox
 #  DEPENDS system_lib
 )
 
