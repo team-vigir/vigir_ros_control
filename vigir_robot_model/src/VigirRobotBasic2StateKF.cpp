@@ -76,6 +76,7 @@ bool VigirRobotBasic2StateKF::correct_filter(VectorNd& q, VectorNd& dq, VectorNd
     q += delta_q_;
     dq+= delta_dq_;
 
+    return true;
 }
 // Update the gains used for innovation
 //

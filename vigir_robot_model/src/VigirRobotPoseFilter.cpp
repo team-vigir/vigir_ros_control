@@ -56,6 +56,7 @@ bool VigirRobotPoseFilter::correct_filter(Pose& pose, Twist& twist,    // Output
 
     twist.linear  = fk_twist->linear;
     twist.angular = imu.angular_velocity;
+    return true;
 }
 
 } /* namespace vigir_control */

@@ -78,6 +78,7 @@ namespace vigir_control {
         q  += dt*dq;
         dq += dt* u;
         ddq = u;    // 2 state filter does not estimate acceleration, just use control input
+        return true;
     }
 
 

@@ -60,6 +60,7 @@ struct VigirRobotCalibration : public VigirRobotCalibrationBase
       q_sensed  += offset_;
 
       dq_sensed  = gearing_.cwiseProduct(dq_raw);
+      return true;
   }
 
   bool setCalibrationParameters(const VectorNd& gearing, const VectorNd& offset)
@@ -85,7 +86,7 @@ struct VigirRobotCalibration : public VigirRobotCalibrationBase
       }
 
       offset_  += diff_offset;
-
+      return true;
   }
 
 protected:

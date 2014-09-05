@@ -48,7 +48,7 @@ namespace vigir_control {
     virtual ~VigirRobotSimpleFilter() {};
 
     // Apply prediction step to filter
-    bool predict_filter(VectorNd& q, VectorNd& dq, VectorNd& ddq, const VectorNd& u, const double& dt) {};
+    bool predict_filter(VectorNd& q, VectorNd& dq, VectorNd& ddq, const VectorNd& u, const double& dt) {return true;}
 
 
     // Apply correction step to filter based on sensed data
@@ -59,7 +59,7 @@ namespace vigir_control {
 
          q =  q_sensed;
         dq = dq_sensed;
-
+        return true;
     }
 
 

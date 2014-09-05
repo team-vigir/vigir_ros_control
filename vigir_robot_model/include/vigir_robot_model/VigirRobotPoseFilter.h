@@ -48,7 +48,7 @@ namespace vigir_control {
     bool predict_filter(Pose& pose, Twist& twist,       // Outputs
                         const Twist& u,                 // Input (e.g. predicted motion)
                         const Matrix6d * const u_covar, //    optional input covariance
-                        const double& dt) {}
+                        const double& dt) { return true;}
 
 
     // Apply correction step to filter based on sensed data
