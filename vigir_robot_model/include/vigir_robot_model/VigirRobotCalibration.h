@@ -72,6 +72,8 @@ struct VigirRobotCalibration : public VigirRobotCalibrationBase
 
       gearing_ = gearing;
       offset_  = offset;
+
+      return true;
   }
 
 
