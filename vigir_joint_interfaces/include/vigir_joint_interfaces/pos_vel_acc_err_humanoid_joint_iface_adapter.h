@@ -38,11 +38,11 @@ public:
   {
     const unsigned int n_joints = joint_handles_ptr_->size();
     for (unsigned int i = 0; i < n_joints; ++i) {
-      (*joint_handles_ptr_)[i].setPosition(desired_state.position[i]);
-      (*joint_handles_ptr_)[i].setVelocity(desired_state.velocity[i]);
-      (*joint_handles_ptr_)[i].setAcceleration(desired_state.acceleration[i]);
-      (*joint_handles_ptr_)[i].setPositionError(state_error.position[i]);
-      (*joint_handles_ptr_)[i].setVelocityError(state_error.velocity[i]);
+      (*joint_handles_ptr_)[i].setPositionCommand(desired_state.position[i]);
+      (*joint_handles_ptr_)[i].setVelocityCommand(desired_state.velocity[i]);
+      (*joint_handles_ptr_)[i].setAccelerationCommand(desired_state.acceleration[i]);
+      (*joint_handles_ptr_)[i].setPositionErrorCommand(state_error.position[i]);
+      (*joint_handles_ptr_)[i].setVelocityErrorCommand(state_error.velocity[i]);
     }
   }
 
