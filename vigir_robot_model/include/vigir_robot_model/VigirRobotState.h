@@ -43,6 +43,7 @@ namespace vigir_control {
     {
         VigirRobotJointData(const int32_t& n_joints = 0);
 
+        uint64_t                        last_update_time_;
         VectorNd                        joint_positions_;
         VectorNd                        joint_velocities_;
         VectorNd                        joint_accelerations_;
@@ -51,6 +52,7 @@ namespace vigir_control {
         // Fast copy for same size vectors
         VigirRobotJointData& operator= (const VigirRobotJointData& rhs)
         {
+            last_update_time_ = rhs.last_update_time_;
             if (joint_positions_.size() == rhs.joint_positions_.size())
             {
                 // Memcopy first block with fixed data sizes

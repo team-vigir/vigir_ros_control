@@ -31,6 +31,7 @@
 namespace vigir_control{
 
     VigirRobotJointData::VigirRobotJointData(const int32_t& n_joints)
+        : last_update_time_(0L)
     {
         if (n_joints)
         {
