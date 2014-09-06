@@ -64,6 +64,11 @@ public:
       (*joint_handles_ptr_)[i].setPositionCommand(desired_state.position[i]);
       (*joint_handles_ptr_)[i].setVelocityCommand(desired_state.velocity[i]);
 
+      /*
+      if ((*joint_handles_ptr_)[i].getName()=="r_arm_shx"){
+        pids_[i]->printValues();
+      }
+      */
 
       double correction_acceleration = pids_[i]->computeCommand(state_error.position[i], state_error.velocity[i], period);
 
