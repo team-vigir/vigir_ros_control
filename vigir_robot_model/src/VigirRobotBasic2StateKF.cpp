@@ -101,7 +101,7 @@ bool VigirRobotBasic2StateKF::setKFInnovationGains(const VectorNd& K00, const Ve
 
     for (int i = 0; i < n_elements_; ++i)
     {
-        printf(" Joint (% 2d) filter gains=[[%f, %f]; [%f, %f]]",
+        printf(" Joint (% 2d) filter gains=[[%f, %f]; [%f, %f]]\n",
                  i, K00[i], K01[i], K10[i], K11[i]);
     }
 
