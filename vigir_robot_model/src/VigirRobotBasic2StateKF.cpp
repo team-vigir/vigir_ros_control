@@ -96,6 +96,15 @@ bool VigirRobotBasic2StateKF::setKFInnovationGains(const VectorNd& K00, const Ve
     K01_ = K01;
     K10_ = K10;
     K11_ = K11;
+
+    std::cout << " VigirRobotBasic2StateKF::setKFInnovationGains:" << std::endl;
+
+    for (int i = 0; i < n_elements_; ++i)
+    {
+        printf(" Joint (% 2d) filter gains=[[%f, %f]; [%f, %f]]",
+                 i, K00[i], K01[i], K10[i], K11[i]);
+    }
+
     return true;
 }
 
