@@ -68,7 +68,8 @@ namespace vigir_control {
 
     // Generic initialization functions
     virtual int32_t init_robot_controllers(boost::shared_ptr<std::vector<std::string> > & joint_list,
-                                           boost::shared_ptr<ros::NodeHandle>& control_nh,
+                                           boost::shared_ptr<ros::NodeHandle>& behavior_control_nh,
+                                           boost::shared_ptr<ros::NodeHandle>& joint_control_nh,
                                            boost::shared_ptr<ros::NodeHandle>& private_nh);
 
     // Generic cleanup functions

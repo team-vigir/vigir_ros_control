@@ -66,7 +66,8 @@ namespace vigir_control {
     // Initialization functions which call specific implementations
     // The node handles and associated callback queues can have the
     // same or different node handles passed to the init function
-    int32_t initialize( boost::shared_ptr<ros::NodeHandle>& control_nh,
+    int32_t initialize( boost::shared_ptr<ros::NodeHandle>& behavior_control_nh,
+                        boost::shared_ptr<ros::NodeHandle>& joint_control_nh,
                         boost::shared_ptr<ros::NodeHandle>& pub_nh,
                         boost::shared_ptr<ros::NodeHandle>& sub_nh,
                         boost::shared_ptr<ros::NodeHandle>& private_nh);
@@ -119,16 +120,19 @@ namespace vigir_control {
     uint32_t                              sleep_failure_;
 
     // ROS stuff - these are created outside interface, and their associated callbacks and spinners determine the threading model
-    boost::shared_ptr<ros::NodeHandle>    controller_nh_; // Handle controller interface
-    boost::shared_ptr<ros::NodeHandle>    pub_nh_;        // Handle publisher interfaces
-    boost::shared_ptr<ros::NodeHandle>    sub_nh_;        // Handle subscriber interfaces
-    boost::shared_ptr<ros::NodeHandle>    private_nh_;    // Private node handle
+    boost::shared_ptr<ros::NodeHandle>    behavior_controller_nh_; // Handle behavior controller interface
+    boost::shared_ptr<ros::NodeHandle>    joint_controller_nh_;    // Handle joint controller interface
+    boost::shared_ptr<ros::NodeHandle>    pub_nh_;                 // Handle publisher interfaces
+    boost::shared_ptr<ros::NodeHandle>    sub_nh_;                 // Handle subscriber interfaces
+    boost::shared_ptr<ros::NodeHandle>    private_nh_;             // Private node handle
 
     // Interface to robot specific implementations
     boost::shared_ptr<vigir_control::VigirRobotModel>           robot_model_; // Robot model type chosen by implementation
     boost::shared_ptr<vigir_control::VigirHumanoidInterface>    robot_interface_;
     boost::shared_ptr<vigir_control::VigirHumanoidHWInterface>  robot_hw_interface_;
-    boost::shared_ptr<controller_manager::ControllerManager >   cm_;
+
+    boost::shared_ptr<controller_manager::ControllerManager >   behavior_cm_;
+    boost::shared_ptr<controller_manager::ControllerManager >   joint_cm_;
 
     // dump errror to screen and log and potentially publish
     virtual void error_status(const std::string& msg, int32_t rc=-1);
