@@ -5,6 +5,7 @@ project(vigir_joint_interfaces)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  roscpp
   cmake_modules
   hardware_interface
   joint_trajectory_controller
@@ -105,16 +106,16 @@ include_directories(
 # )
 
 ## Declare a cpp executable
-# add_executable(vigir_joint_interfaces_node src/vigir_joint_interfaces_node.cpp)
+add_executable(test_interfaces src/test_interfaces.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(vigir_joint_interfaces_node vigir_joint_interfaces_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(vigir_joint_interfaces_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(test_interfaces
+   ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
