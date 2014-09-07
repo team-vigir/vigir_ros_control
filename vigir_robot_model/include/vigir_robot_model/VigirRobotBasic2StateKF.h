@@ -29,6 +29,7 @@
 #define __VIGIR_ROBOT_BASIC_2_STATE_KALMAN_FILTER_H__
 
 #include <vigir_robot_model/VigirRobotFilterBase.h>
+#include <stdio.h>
 
 namespace vigir_control {
 

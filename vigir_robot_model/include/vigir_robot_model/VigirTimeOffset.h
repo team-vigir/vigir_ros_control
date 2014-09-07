@@ -42,9 +42,9 @@ namespace vigir_control {
     VigirTimeOffset() {}
     virtual ~VigirTimeOffset() {}
 
-    ros::Time    timestamp_;           //!< Timestamp of signal
-    ros::Time    system_time_at_sync_; //!< Base time at startup
-    ros::Time    time_offset_;         //!< Time offset from base
+    ros::Time     timestamp_;         //!< Timestamp of signal
+    ros::Duration base_time_offset_;  //!< Offset to base time at startup
+    ros::Time     internal_sync_;     //!< Internal time of sync
 
   protected:
 
