@@ -92,6 +92,8 @@ public:
 
   void setLeftHandMass( const Vector3d& CoM, const float& mass, const Vector3d& Ix, const Vector3d& Iy, const Vector3d& Iz);
   void setRightHandMass(const Vector3d& CoM, const float& mass, const Vector3d& Ix, const Vector3d& Iy, const Vector3d& Iz);
+  void getJointTransform(const int32_t& ctrl_joint_id, Transform& T);
+  void getBaseTransform(Transform& T);
 
 protected:
 

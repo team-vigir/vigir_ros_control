@@ -135,6 +135,10 @@ namespace vigir_control {
     virtual void setLeftHandMass( const Vector3d& CoM, const float& mass, const Vector3d& Ix, const Vector3d& Iy, const Vector3d& Iz) = 0;
     virtual void setRightHandMass(const Vector3d& CoM, const float& mass, const Vector3d& Ix, const Vector3d& Iy, const Vector3d& Iz) = 0;
 
+    virtual void getJointTransform(const int32_t& ctrl_joint_id, Transform& T) = 0;
+    virtual void getBaseTransform(Transform& T) = 0;
+
+
     inline void getCoM(Vector3d& CoM, double& mass)
     {
         CoM = CoM_pelvis_;

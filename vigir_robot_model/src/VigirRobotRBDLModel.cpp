@@ -290,9 +290,9 @@ void VigirRobotRBDLModel::updateBasePose(const PoseZYX& pose)
     my_rbdl_->Q_[0] = pose.position[0];
     my_rbdl_->Q_[1] = pose.position[1];
     my_rbdl_->Q_[2] = pose.position[2];
-    my_rbdl_->Q_[3] = pose.orientation[0];
+    my_rbdl_->Q_[3] = pose.orientation[2];
     my_rbdl_->Q_[4] = pose.orientation[1];
-    my_rbdl_->Q_[5] = pose.orientation[2];
+    my_rbdl_->Q_[5] = pose.orientation[0];
 }
 
 void VigirRobotRBDLModel::updateBaseVelocity(const PoseZYX& velocity)
@@ -300,9 +300,9 @@ void VigirRobotRBDLModel::updateBaseVelocity(const PoseZYX& velocity)
     my_rbdl_->QDot_[0] = velocity.position[0];
     my_rbdl_->QDot_[1] = velocity.position[1];
     my_rbdl_->QDot_[2] = velocity.position[2];
-    my_rbdl_->QDot_[3] = velocity.orientation[0];
+    my_rbdl_->QDot_[3] = velocity.orientation[2];
     my_rbdl_->QDot_[4] = velocity.orientation[1];
-    my_rbdl_->QDot_[5] = velocity.orientation[2];
+    my_rbdl_->QDot_[5] = velocity.orientation[0];
 }
 
 void VigirRobotRBDLModel::updateBasePose(const Pose& pose)
@@ -312,7 +312,9 @@ void VigirRobotRBDLModel::updateBasePose(const Pose& pose)
     my_rbdl_->Q_[2] = pose.position[2];
 
     urdf::Rotation rot(pose.orientation.x(),pose.orientation.y(),pose.orientation.z(),pose.orientation.w());
-    rot.getRPY(my_rbdl_->Q_[5],my_rbdl_->Q_[4],my_rbdl_->Q_[3]);
+    rot.getRPY(my_rbdl_->Q_[3],my_rbdl_->Q_[4],my_rbdl_->Q_[5]);
+    //printf("  update Base pose q=[(%f, %f, %f), %f)  RPY=(%f, %f, %f)\n",
+    //         pose.orientation.x(),pose.orientation.y(),pose.orientation.z(),pose.orientation.w(), my_rbdl_->Q_[3],my_rbdl_->Q_[4],my_rbdl_->Q_[5]);
 }
 
 // Update model with position and velocity
@@ -415,6 +417,39 @@ void VigirRobotRBDLModel::calcEETransforms()
     b_transforms_up_to_date_ = true;
 }
 
+void VigirRobotRBDLModel::getJointTransform(const int32_t& ctrl_joint_id, Transform& T)
+{
+    int8_t rbdl_id            = ctrl_to_rbdl_joint[ctrl_joint_id];
+    T.translation = RigidBodyDynamics::CalcBodyToBaseCoordinates (
+                            my_rbdl_->rbdl_model_,
+                            my_rbdl_->Q_,
+                            rbdl_id,
+                            RigidBodyDynamics::Math::Vector3d(0.0,0.0,0.0), // origin
+                            false);// don't update kinematics here
+
+    T.rotation = RigidBodyDynamics::CalcBodyWorldOrientation (
+                            my_rbdl_->rbdl_model_,
+                            my_rbdl_->Q_,
+                            rbdl_id,
+                            false).inverse();// don't update kinematics here
+}
+
+void VigirRobotRBDLModel::getBaseTransform(Transform& T)
+{
+    int8_t rbdl_id            = 6; // assumes floating base
+    T.translation = RigidBodyDynamics::CalcBodyToBaseCoordinates (
+                            my_rbdl_->rbdl_model_,
+                            my_rbdl_->Q_,
+                            rbdl_id,
+                            RigidBodyDynamics::Math::Vector3d(0.0,0.0,0.0), // origin
+                            false);// don't update kinematics here
+
+    T.rotation = RigidBodyDynamics::CalcBodyWorldOrientation (
+                            my_rbdl_->rbdl_model_,
+                            my_rbdl_->Q_,
+                            rbdl_id,
+                            false).inverse();// don't update kinematics here
+}
 
 // Calculate the torques to hold the current state
 //   Assumes that gravity vector is specified in the pelvis frame, and current kinematic joint positions and velocities are up to date
