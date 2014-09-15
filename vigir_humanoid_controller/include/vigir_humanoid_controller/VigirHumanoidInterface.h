@@ -85,8 +85,8 @@ namespace vigir_control {
     // The implmentation will define two data buffers that can be safely shared across any threads
     // The specific data structures will vary with robot implementation
     //   For example:
-    //  VigirRealTimeBuffer<atlas_control::AtlasobotInterfaceData>  robot_state_;     // structure to store latest robot state data
-    //  VigirRealTimeBuffer<atlas_control::AtlasRobotControlData>   robot_control_;   // structure to store filtered robot state data
+    //  VigirRealTimeBuffer<atlas_control::AtlasRobotInterfaceData>  robot_state_;     // structure to store latest robot state data
+    //  VigirRealTimeBuffer<atlas_control::AtlasRobotControlData>    robot_control_;   // structure to store filtered robot state data
 
 
 };
