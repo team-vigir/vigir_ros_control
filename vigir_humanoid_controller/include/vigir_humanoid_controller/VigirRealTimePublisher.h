@@ -54,8 +54,6 @@ public:
         : topic_name_(topic), publish_rate_(rate), on_change_(on_change),next_publish_time_(0)
     {
 
-        ROS_INFO("  parameters constructor for TopicBase");
-
     }
 
     virtual ~VigirRealTimeTopicBase(){}
