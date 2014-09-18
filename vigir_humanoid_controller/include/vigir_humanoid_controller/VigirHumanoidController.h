@@ -118,6 +118,7 @@ namespace vigir_control {
     Timing                                write_timing_;
     Timing                                controller_timing_;
     uint32_t                              sleep_failure_;
+    uint32_t                              max_read_waits_;
 
     // ROS stuff - these are created outside interface, and their associated callbacks and spinners determine the threading model
     boost::shared_ptr<ros::NodeHandle>    behavior_controller_nh_; // Handle behavior controller interface
