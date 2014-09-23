@@ -4,7 +4,8 @@ uint32 MODE_ACCEPTED                    =    1
 uint32 MODE_REJECTED                    =    2
 uint32 MODE_PREEMPTED                   =    4
 uint32 MODE_PROCESSING                  =    8
-uint32 EXTERNAL_CHANGE                  =   16
+uint32 MODE_DUPLICATE                   =   16
+uint32 EXTERNAL_CHANGE                  =   32
 
 # Error codes
 uint32 ERR_UNKNOWN                      =  256
