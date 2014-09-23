@@ -1,13 +1,10 @@
 # Action to request control mode (behavior) by name
+# Action goal
 string  mode_request
 ---
-string  current_mode
+# Action result
+ControlModeStatus  result
 ---
-int32 REQUESTED      =  0
-int32 ACHIEVED       =  1
-int32 FAILED         = -1
-int32 INVALID_REQUEST= -2
-
-int32  transition_state
-string current_mode
+# Action feedback
+ControlModeStatus  feedback
 

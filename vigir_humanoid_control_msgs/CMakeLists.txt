@@ -20,10 +20,13 @@ find_package(catkin REQUIRED COMPONENTS roscpp rospy message_generation std_msgs
 ## Declare ROS messages and services ##
 #######################################
 
-## Generate messages in the 'msg' folder
-#add_message_files(
-#  FILES
-#)
+# Generate messages in the 'msg' folder
+add_message_files(
+  DIRECTORY
+  msg
+  FILES
+  ControlModeStatus.msg
+)
 
 ## Generate services in the 'srv' folder
 #add_service_files(
@@ -71,6 +74,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 ## Specify additional locations of header files
 set(HEADERS
+    include/${PROJECT_NAME}/vigir_humanoid_control_msgs.h
 )
 
 set(SOURCES
