@@ -93,12 +93,12 @@ int32_t VigirHumanoidController::run()
             //ROS_INFO("before cm.update");
             {
                 DO_TIMING(controller_timing_);
-                behavior_cm_->update(current_time, elapsed_time);
+                mode_cm_->update(current_time, elapsed_time);
 
                 // @todo - need to switch controllers on/off based on behavior mode
 
 
-                joint_cm_->update(current_time, elapsed_time);
+                robot_cm_->update(current_time, elapsed_time);
             }
             //ROS_INFO("after cm.update");
 
@@ -141,14 +141,14 @@ int32_t VigirHumanoidController::run()
 }
 
 // Initialization functions
-int32_t VigirHumanoidController::initialize(boost::shared_ptr<ros::NodeHandle>& behavior_control_nh,
-                                            boost::shared_ptr<ros::NodeHandle>& joint_control_nh,
+int32_t VigirHumanoidController::initialize(boost::shared_ptr<ros::NodeHandle>& mode_control_nh,
+                                            boost::shared_ptr<ros::NodeHandle>& robot_control_nh,
                                             boost::shared_ptr<ros::NodeHandle>& pub_nh,
                                             boost::shared_ptr<ros::NodeHandle>& sub_nh,
                                             boost::shared_ptr<ros::NodeHandle>& private_nh)
 {
-    behavior_controller_nh_  = behavior_control_nh;
-    joint_controller_nh_     = joint_control_nh;
+    mode_controller_nh_      = mode_control_nh;
+    robot_controller_nh_     = robot_control_nh;
     pub_nh_                  = pub_nh    ;
     sub_nh_                  = sub_nh    ;
     private_nh_              = private_nh;

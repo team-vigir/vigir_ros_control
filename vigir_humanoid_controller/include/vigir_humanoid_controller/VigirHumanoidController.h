@@ -66,8 +66,8 @@ namespace vigir_control {
     // Initialization functions which call specific implementations
     // The node handles and associated callback queues can have the
     // same or different node handles passed to the init function
-    int32_t initialize( boost::shared_ptr<ros::NodeHandle>& behavior_control_nh,
-                        boost::shared_ptr<ros::NodeHandle>& joint_control_nh,
+    int32_t initialize( boost::shared_ptr<ros::NodeHandle>& mode_control_nh,
+                        boost::shared_ptr<ros::NodeHandle>& robot_control_nh,
                         boost::shared_ptr<ros::NodeHandle>& pub_nh,
                         boost::shared_ptr<ros::NodeHandle>& sub_nh,
                         boost::shared_ptr<ros::NodeHandle>& private_nh);
@@ -121,8 +121,8 @@ namespace vigir_control {
     uint32_t                              max_read_waits_;
 
     // ROS stuff - these are created outside interface, and their associated callbacks and spinners determine the threading model
-    boost::shared_ptr<ros::NodeHandle>    behavior_controller_nh_; // Handle behavior controller interface
-    boost::shared_ptr<ros::NodeHandle>    joint_controller_nh_;    // Handle joint controller interface
+    boost::shared_ptr<ros::NodeHandle>    mode_controller_nh_;     // Handle control mode controller interface
+    boost::shared_ptr<ros::NodeHandle>    robot_controller_nh_;    // Handle robot controller interface
     boost::shared_ptr<ros::NodeHandle>    pub_nh_;                 // Handle publisher interfaces
     boost::shared_ptr<ros::NodeHandle>    sub_nh_;                 // Handle subscriber interfaces
     boost::shared_ptr<ros::NodeHandle>    private_nh_;             // Private node handle
@@ -132,8 +132,8 @@ namespace vigir_control {
     boost::shared_ptr<vigir_control::VigirHumanoidInterface>    robot_interface_;
     boost::shared_ptr<vigir_control::VigirHumanoidHWInterface>  robot_hw_interface_;
 
-    boost::shared_ptr<controller_manager::ControllerManager >   behavior_cm_;
-    boost::shared_ptr<controller_manager::ControllerManager >   joint_cm_;
+    boost::shared_ptr<controller_manager::ControllerManager >   mode_cm_;  // Handle control mode changes
+    boost::shared_ptr<controller_manager::ControllerManager >   robot_cm_; // Handle robot controllers (joints, footsteps, ...)
 
     // dump errror to screen and log and potentially publish
     virtual void error_status(const std::string& msg, int32_t rc=-1);
