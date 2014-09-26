@@ -44,18 +44,7 @@ typedef std::map<std::string, JointPtr > URDFJointMap;
 
 // load original construct_model function rbdl_urdfreader.cc
 // @todo - make rbdl_urdfreader_util a Catkin package to avoid this hack
-//#include <rbdl/../../addons/urdfreader/rbdl_urdfreader.cc>
-
-//At first catkin was linking this wrong. Now it seems to be linking it fine....
-//maybe there is something wrong with catkin install rules? hm...
 #include <rbdl/../../addons/urdfreader/rbdl_urdfreader.cc>
-
-// Define prototype for hidden function in RBDL Addons rbdl_urdfreader.cc
-namespace RigidBodyDynamics {
-//namespace Addons {
-//bool construct_model (Model* rbdl_model, ModelPtr urdf_model, bool verbose) {
-//}
-//}
 
 namespace vigir_control {
 
