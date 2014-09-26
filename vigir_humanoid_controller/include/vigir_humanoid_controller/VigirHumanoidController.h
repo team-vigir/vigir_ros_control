@@ -111,6 +111,9 @@ namespace vigir_control {
     bool                                  verbose_;       // dump more data to logs
     bool                                  run_flag_;
     ros::Rate                             desired_loop_rate_;
+    int32_t                               active_control_mode_id_;
+    const std::vector<std::string > *     active_controllers_list_;
+    bool                                  controller_switching_fault_;
 
     Timing                                run_loop_timing_;
     Timing                                wait_timing_;
@@ -138,6 +141,11 @@ namespace vigir_control {
     // dump errror to screen and log and potentially publish
     virtual void error_status(const std::string& msg, int32_t rc=-1);
     virtual void cleanup_status(const std::string& msg, int32_t rc=-1);
+
+    // Determing unique elements in old and new lists to start and stop
+    void processControllerLists(const std::vector<std::string> * const old_controllers,
+                                const std::vector<std::string> * const new_controllers,
+                                std::vector<std::string> & stop_list, std::vector<std::string> & start_list);
 
 };
 

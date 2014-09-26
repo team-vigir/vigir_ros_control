@@ -54,7 +54,8 @@ VigirHumanoidController::VigirHumanoidController(const std::string& name, const 
       read_timing_(name+" Read",true,false),
       write_timing_(name+" Write",true,false),
       controller_timing_(name+" Controller",true,false),
-      sleep_failure_(0)
+      sleep_failure_(0),
+      active_control_mode_id_(-1)
 {
     ROS_INFO("Initialize VigirHumanoidController for <%s>",name_.c_str());
     if (desired_loop_rate_.expectedCycleTime().toSec() > 0.999)
@@ -95,8 +96,23 @@ int32_t VigirHumanoidController::run()
                 DO_TIMING(controller_timing_);
                 mode_cm_->update(current_time, elapsed_time);
 
-                // @todo - need to switch controllers on/off based on behavior mode
+                // Switch controllers on/off based on behavior mode
+                if (robot_hw_interface_->getActiveControlModeId() != active_control_mode_id_)
+                {
+                    active_control_mode_id_ = robot_hw_interface_->getActiveControlModeId();
 
+                    std::vector<std::string> stop_list;
+                    std::vector<std::string> start_list;
+
+                    // Determine unused controllers to stop, and new controllers to start (leave common controllers running)
+                    processControllerLists(active_controllers_list_, robot_hw_interface_->getActiveControllersList(), stop_list, start_list);
+
+                    // Update active list
+                    active_controllers_list_ = robot_hw_interface_->getActiveControllersList();
+
+                    controller_switching_fault_ = robot_cm_->switchControllerRealtime(start_list, stop_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
+
+                }
 
                 robot_cm_->update(current_time, elapsed_time);
             }
@@ -398,5 +414,29 @@ int32_t VigirHumanoidController::init_robot_model()
     return ROBOT_INITIALIZED_OK;
 }
 
+// Process list of old and new controllers to determine unique elements that should be started or stopped, and common elements that may continue to ru
+// precondition: assumes that *_controllers lists are sorted vectors of strings
+void VigirHumanoidController::processControllerLists(const std::vector<std::string> * const old_controllers,
+                            const std::vector<std::string> * const new_controllers,
+                            std::vector<std::string> & stop_list, std::vector<std::string> & start_list)
+{
+    stop_list.clear();
+    start_list.clear();
+    //std::vector<std::string> common_list; // debug
+
+    // @todo - Assigned to Rohan DRC-113 ticket in TORC JIRA
+    // process lists add strings unique to old_controllers list to stop_list
+    //               add strings unique to new_controllers list to start_list
+    //               add strings common to both lists to common_list
+
+
+    // For now simple stop all, start all (will not play nice with footstep controller!)
+    stop_list = *old_controllers;
+    start_list = *new_controllers;
+
+    std::cout << "Control Stop  List: " << stop_list  << std::endl;
+    std::cout << "Control Start List: " << start_list << std::endl;
+
+}
 
 } /* namespace flor_control */
