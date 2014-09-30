@@ -26,6 +26,7 @@ public:
     // Define pure virtual functions
     const int32_t                       getActiveControlModeId() { return -1;}
     const std::vector< std::string >*   getActiveControllersList(){return &test;}
+    const VigirHumanoidSwitchMode       permitControllerSwitch()  {return SWITCH_IMMEDIATE;}
 };
 
 class VigirRobotBehaviorData  // temporary dummy class definition

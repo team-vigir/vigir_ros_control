@@ -28,6 +28,8 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <iostream>
+#include <algorithm>
 #include <vigir_humanoid_controller/VigirHumanoidController.h>
 #include <vigir_humanoid_controller/VigirHumanoidStatusCodes.h>
 
@@ -99,19 +101,30 @@ int32_t VigirHumanoidController::run()
                 // Switch controllers on/off based on behavior mode
                 if (robot_hw_interface_->getActiveControlModeId() != active_control_mode_id_)
                 {
-                    active_control_mode_id_ = robot_hw_interface_->getActiveControlModeId();
+                    VigirHumanoidSwitchMode switch_status= robot_hw_interface_->permitControllerSwitch();
+                    if (switch_status)
+                    {
+                        ROS_INFO("  ControlModeID changed = %d old=%d", robot_hw_interface_->getActiveControlModeId(), active_control_mode_id_);
 
-                    std::vector<std::string> stop_list;
-                    std::vector<std::string> start_list;
+                        active_control_mode_id_ = robot_hw_interface_->getActiveControlModeId();
 
-                    // Determine unused controllers to stop, and new controllers to start (leave common controllers running)
-                    processControllerLists(active_controllers_list_, robot_hw_interface_->getActiveControllersList(), stop_list, start_list);
+                        if (switch_status == SWITCH_HARD_RESET)
+                        { // force hard reset by stopping then restarting controllers
+                            controller_switching_fault_ = robot_cm_->switchControllerRealtime(*active_controllers_list_, *robot_hw_interface_->getActiveControllersList(), current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
+                        }
+                        else
+                        {
+                            std::vector<std::string> stop_list;
+                            std::vector<std::string> start_list;
 
-                    // Update active list
-                    active_controllers_list_ = robot_hw_interface_->getActiveControllersList();
+                            // Determine unused controllers to stop, and new controllers to start (leave common controllers running)
+                            processControllerLists(active_controllers_list_, robot_hw_interface_->getActiveControllersList(), stop_list, start_list);
+                            controller_switching_fault_ = robot_cm_->switchControllerRealtime(start_list, stop_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
+                        }
 
-                    controller_switching_fault_ = robot_cm_->switchControllerRealtime(start_list, stop_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
-
+                        // Update active list
+                        active_controllers_list_ = robot_hw_interface_->getActiveControllersList();
+                    }
                 }
 
                 robot_cm_->update(current_time, elapsed_time);
@@ -219,6 +232,10 @@ int32_t VigirHumanoidController::initialize(boost::shared_ptr<ros::NodeHandle>& 
             error_status("Robot controllers failed to initialize",rc);
             return ROBOT_CONTROLLERS_FAILED_TO_INITIALIZE;
         }
+
+        // Assign pointer to list of the active controllers
+        active_controllers_list_ = robot_hw_interface_->getActiveControllersList();
+
     }
     catch(...) // @todo: catch specific exceptions and report
     {
@@ -414,6 +431,8 @@ int32_t VigirHumanoidController::init_robot_model()
     return ROBOT_INITIALIZED_OK;
 }
 
+bool has_element(const std::vector<std::string> & sub, const std::vector<std::string>* large) {  if(sub.size() == 0)return false;   else     return std::includes(large->begin(), large->end(), sub.begin(), sub.end());}
+
 // Process list of old and new controllers to determine unique elements that should be started or stopped, and common elements that may continue to ru
 // precondition: assumes that *_controllers lists are sorted vectors of strings
 void VigirHumanoidController::processControllerLists(const std::vector<std::string> * const old_controllers,
@@ -422,21 +441,94 @@ void VigirHumanoidController::processControllerLists(const std::vector<std::stri
 {
     stop_list.clear();
     start_list.clear();
-    //std::vector<std::string> common_list; // debug
+    std::vector<std::string> common_list; // debug
 
-    // @todo - Assigned to Rohan DRC-113 ticket in TORC JIRA
-    // process lists add strings unique to old_controllers list to stop_list
-    //               add strings unique to new_controllers list to start_list
-    //               add strings common to both lists to common_list
+    // print strings from input lists, and 3 output lists to screen for debugging
+    size_t old_i = 0;
+    size_t new_i = 0;
+
+    while(old_i < old_controllers->size() && new_i < new_controllers->size())
+    {
+        if(old_controllers->at(old_i).compare(new_controllers->at(new_i)) == 0)
+        {
+            if(!(common_list.size() > 0 && common_list[common_list.size()-1].compare(old_controllers->at(old_i)) == 0))
+            {
+                common_list.push_back(old_controllers->at(old_i));
+            }
+
+            old_i++;
+            new_i++;
+        }
+        else if(old_controllers->at(old_i).compare(new_controllers->at(new_i)) > 0)
+        {
+            do
+            {
+                if(!(new_i != 0  && new_controllers->at(new_i).compare(new_controllers->at(new_i-1)) == 0))
+                {
+                    start_list.push_back(new_controllers->at(new_i));
+                }
+                new_i++;
+            }
+            while(new_i < new_controllers->size() && old_controllers->at(old_i).compare(new_controllers->at(new_i)) > 0);
+        }
+        else
+        {
+            do
+            {
+                if(!(old_i != 0  && old_controllers->at(old_i).compare(old_controllers->at(old_i-1)) == 0))
+                {
+                    stop_list.push_back(old_controllers->at(old_i));
+
+                }
+                old_i++;
+            }
+            while(old_i < old_controllers->size() && new_controllers->at(new_i).compare(old_controllers->at(old_i)) > 0);
+        }
+    }
+
+    while(old_i < old_controllers->size())
+    {
+        if(!(old_i != 0  && old_controllers->at(old_i).compare(old_controllers->at(old_i-1)) == 0))
+            stop_list.push_back(old_controllers->at(old_i));
+        old_i++;
+    }
+    while(new_i < new_controllers->size())
+    {
+        if(!(new_i != 0  && new_controllers->at(new_i).compare(new_controllers->at(new_i-1)) == 0))
+            start_list.push_back(new_controllers->at(new_i));
+        new_i++;
+    }
 
 
-    // For now simple stop all, start all (will not play nice with footstep controller!)
-    stop_list = *old_controllers;
-    start_list = *new_controllers;
+    //// For now simple stop all, start all (will not play nice with footstep controller!)
+    //stop_list = *old_controllers;
+    //start_list = *new_controllers;
 
-    std::cout << "Control Stop  List: " << stop_list  << std::endl;
-    std::cout << "Control Start List: " << start_list << std::endl;
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv DEBUG vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    // @todo - remove this debug block
+    //The following checks if the common list is included in all the elements and that stop_list and start_list both are not contained in new_controllers and old_controllers respectively
 
+    using namespace std;
+    if(has_element(stop_list, new_controllers) || has_element(start_list, old_controllers)//Comment this out if you would like everything to be printed out
+            || !std::includes(new_controllers->begin(), new_controllers->end(), common_list.begin(), common_list.end())
+            || !std::includes(old_controllers->begin(), old_controllers->end(), common_list.begin(), common_list.end())
+            || (common_list.size() > 0) && (std::includes(start_list.begin(), start_list.end(), common_list.begin(), common_list.end())
+                                        ||  std::includes(stop_list.begin(),  stop_list.end(),  common_list.begin(), common_list.end())))
+    {
+            cout << "ERROR FOUND: " ;
+            cout << has_element(stop_list, new_controllers) << " " << has_element(start_list, old_controllers) << " ";
+            cout << !std::includes(new_controllers->begin(), new_controllers->end(), common_list.begin(), common_list.end()) << " " ;
+            cout << !std::includes(old_controllers->begin(), old_controllers->end(), common_list.begin(), common_list.end());
+            cout << endl;
+
+        cout << "Old controllers: " <<  *old_controllers << endl;
+        cout << "New controllers: " <<  *new_controllers << endl;
+
+    }
+    std::cout << "Control Stop  List: " << stop_list   << std::endl;
+    std::cout << "        Start List: " << start_list  << std::endl;
+    std::cout << "       Common List: " << common_list << std::endl;
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 }
 
 } /* namespace flor_control */
