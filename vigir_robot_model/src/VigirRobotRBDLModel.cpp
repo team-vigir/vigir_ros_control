@@ -43,7 +43,7 @@ typedef std::map<std::string, LinkPtr > URDFLinkMap;
 typedef std::map<std::string, JointPtr > URDFJointMap;
 
 // load original construct_model function rbdl_urdfreader.cc
-// @todo - make rbdl_urdfreader_util a Catkin package to avoid this hack
+// @todo - make rbdl_urdfreader a Catkin package to avoid this hack
 #include <rbdl/../../addons/urdfreader/rbdl_urdfreader.cc>
 
 namespace vigir_control {
