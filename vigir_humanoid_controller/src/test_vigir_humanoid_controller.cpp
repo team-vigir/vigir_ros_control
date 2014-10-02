@@ -16,6 +16,19 @@
 namespace vigir_control
 {
 
+class TestHumanoidHWInterface : public VigirHumanoidHWInterface
+{
+public:
+    TestHumanoidHWInterface(const std::string& name) :  VigirHumanoidHWInterface(name) {}
+
+    std::vector< std::string > test;
+
+    // Define pure virtual functions
+    const int32_t                       getActiveControlModeId() { return -1;}
+    const std::vector< std::string >*   getActiveControllersList(){return &test;}
+    const VigirHumanoidSwitchMode       permitControllerSwitch()  {return SWITCH_IMMEDIATE;}
+};
+
 class VigirRobotBehaviorData  // temporary dummy class definition
 {
 public:
@@ -150,14 +163,14 @@ class TestHumanoidController : public VigirHumanoidController
         ROS_INFO("  initialize robot controllers from derived Controller");
 
         // Initialize the robot hardware interface here to allow override
-        robot_hw_interface_.reset(new VigirHumanoidHWInterface(name_));
+        robot_hw_interface_.reset(new TestHumanoidHWInterface(name_));
 
         // Set up the controller manager and assign a specific call backand controller manager
-        behavior_cm_.reset(new controller_manager::ControllerManager(robot_hw_interface_.get(), *behavior_controller_nh_.get()));
-        joint_cm_.reset(new controller_manager::ControllerManager(robot_hw_interface_.get(), *joint_controller_nh_.get()));
+        mode_cm_.reset(new controller_manager::ControllerManager(robot_hw_interface_.get(), *mode_controller_nh_.get()));
+        robot_cm_.reset(new controller_manager::ControllerManager(robot_hw_interface_.get(), *robot_controller_nh_.get()));
 
         // Initialize the controllers
-        int32_t rc = robot_hw_interface_->init_robot_controllers(robot_model_->joint_names_, behavior_controller_nh_, joint_controller_nh_, private_nh_);
+        int32_t rc = robot_hw_interface_->init_robot_controllers(robot_model_->joint_names_, mode_controller_nh_, robot_controller_nh_, private_nh_);
         if (rc)
         {
             ROS_ERROR("Failed to initialize the HW interface for controllers - abort!");
