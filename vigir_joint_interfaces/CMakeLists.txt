@@ -117,6 +117,11 @@ target_link_libraries(test_interfaces
    ${catkin_LIBRARIES}
 )
 
+install( TARGETS
+    test_interfaces
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 #############
 ## Install ##
 #############

@@ -121,6 +121,13 @@ target_link_libraries(test_vigir_robot_pose_filter ${catkin_LIBRARIES} ${PROJECT
 
 add_dependencies(test_vigir_robot_pose_filter ${catkin_EXPORTED_TARGETS})
 
+
+install( TARGETS
+    test_${PROJECT_NAME}
+    test_vigir_robot_basic_kf
+    test_vigir_robot_pose_filter
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 #############
 ## Install ##
 #############

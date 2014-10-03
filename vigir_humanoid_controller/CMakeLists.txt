@@ -102,6 +102,12 @@ add_executable(test_${PROJECT_NAME} src/test_vigir_humanoid_controller.cpp ${HEA
 target_link_libraries(test_${PROJECT_NAME} ${catkin_LIBRARIES} ${PROJECT_NAME} )
 add_dependencies(test_${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 
+
+install( TARGETS
+    test_${PROJECT_NAME}
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 #############
 ## Install ##
 #############
