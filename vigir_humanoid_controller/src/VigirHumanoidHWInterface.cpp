@@ -71,6 +71,7 @@ int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr< std:
         joint_command_positions_      = vigir_control::VectorNd::Constant(joint_names_->size(), 0.0);
         joint_command_velocities_     = vigir_control::VectorNd::Constant(joint_names_->size(), 0.0);
         joint_command_accelerations_  = vigir_control::VectorNd::Constant(joint_names_->size(), 0.0);
+        joint_command_control_        = vigir_control::VectorNd::Constant(joint_names_->size(), 0.0);
         joint_command_efforts_        = vigir_control::VectorNd::Constant(joint_names_->size(), 0.0);
 
         joint_position_errors_        = vigir_control::VectorNd::Constant(joint_names_->size(), 0.0);

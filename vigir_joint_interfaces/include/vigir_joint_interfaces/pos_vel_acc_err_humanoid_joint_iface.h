@@ -17,7 +17,7 @@ namespace hardware_interface
 class PosVelAccErrHumanoidJointHandle : public JointHandle
 {
 public:
-  PosVelAccErrHumanoidJointHandle() : hardware_interface::JointHandle(), vel_(0), acc_(0), pos_error_(0), vel_error_(0) {}
+  PosVelAccErrHumanoidJointHandle() : hardware_interface::JointHandle(), desired_vel_(0), desired_acc_(0), pos_error_(0), vel_error_(0) {}
 
   /**
    * \param js This joint's handle
@@ -25,24 +25,24 @@ public:
    * \param vel A pointer to the storage for this joint's velocity command
    * \param acc A pointer to the storage for this joint's acceleration command
    */
-  PosVelAccErrHumanoidJointHandle(const JointStateHandle& js, double* pos, double* vel, double* acc, double* pos_error, double* vel_error)
-    : JointHandle(js, pos), vel_(vel), acc_(acc), pos_error_(pos_error), vel_error_(vel_error)
+  PosVelAccErrHumanoidJointHandle(const JointStateHandle& js, double* desired_pos, double* desired_vel, double* desired_acc, double* pos_error, double* vel_error)
+    : JointHandle(js, desired_pos), desired_vel_(desired_vel), desired_acc_(desired_acc), pos_error_(pos_error), vel_error_(vel_error)
   {
-    if (!vel_ || !acc_ || !pos_error_ || !vel_error_)
+    if (!desired_pos || !desired_vel_ || !desired_acc_ || !pos_error_ || !vel_error_)
     {
       throw HardwareInterfaceException(
           "Cannot create handle '" + js.getName() + "'. Some command data pointer is null.");
     }
   }
 
-  void   setPositionCommand(double pos) {setCommand(pos);}
+  void   setPositionCommand(double pos) {setCommand(pos);} // JointHandle uses cmd_ for desired position
   double getPositionCommand() const {return getCommand();}
 
-  void   setVelocityCommand(double vel) {assert(vel_); *vel_ = vel;}
-  double getVelocityCommand() const {assert(vel_); return *vel_;}
+  void   setVelocityCommand(double vel) {assert(desired_vel_); *desired_vel_ = vel;}
+  double getVelocityCommand() const {assert(desired_vel_); return *desired_vel_;}
 
-  void   setAccelerationCommand(double acc) {assert(acc_); *acc_ = acc;}
-  double getAccelerationCommand() const {assert(acc_); return *acc_;}
+  void   setAccelerationCommand(double acc) {assert(desired_acc_); *desired_acc_ = acc;}
+  double getAccelerationCommand() const {assert(desired_acc_); return *desired_acc_;}
 
   void   setPositionError(double pos) {assert(pos_error_); *pos_error_ = pos;}
   double getPositionError() const {assert(pos_error_); return *pos_error_;}
@@ -51,8 +51,8 @@ public:
   double getVelocityError() const {assert(vel_error_); return *vel_error_;}
 
 private:
-  double* vel_;
-  double* acc_;
+  double* desired_vel_;
+  double* desired_acc_;
   double* pos_error_;
   double* vel_error_;
 };

@@ -42,6 +42,14 @@
 
 namespace vigir_control {
 
+enum VigirHumanoidSwitchMode
+{
+    SWITCH_DISALLOWED  =   0,
+    SWITCH_IMMEDIATE   =   1,
+    SWITCH_ON_FEEDBACK =   2,
+    SWITCH_HARD_RESET  =   3
+};
+
 /**
  * This class defines the HW Interface for a generic
  * humanoid robot.
@@ -75,6 +83,10 @@ namespace vigir_control {
     // Generic cleanup functions
     virtual int32_t cleanup_robot_controllers();
 
+    virtual const int32_t                          getActiveControlModeId()  = 0;
+    virtual const std::vector< std::string >*      getActiveControllersList()= 0;
+    virtual const VigirHumanoidSwitchMode          permitControllerSwitch()  = 0;
+
     // Following public data structures are used directly by controllers
     // The data structures must be populated during a read() function in a
     // thread safe manner
@@ -91,10 +103,11 @@ namespace vigir_control {
     std::vector<double >                                  joint_state_efforts_;
 
 
-    VectorNd                                              joint_command_positions_;
-    VectorNd                                              joint_command_velocities_;
-    VectorNd                                              joint_command_accelerations_;
-    VectorNd                                              joint_command_efforts_;
+    VectorNd                                              joint_command_positions_;     //!< desired position
+    VectorNd                                              joint_command_velocities_;    //!< desired velocity
+    VectorNd                                              joint_command_accelerations_; //!< desired acceleration
+    VectorNd                                              joint_command_efforts_;       //!< desired effort
+    VectorNd                                              joint_command_control_;       //!< desired control command (
 
     VectorNd                                              joint_position_errors_;
     VectorNd                                              joint_velocity_errors_;
@@ -103,11 +116,11 @@ namespace vigir_control {
     std::string                                           name_;
 
     // ROS control interfaces
-    hardware_interface::JointStateInterface               joint_state_interface_;
-    hardware_interface::PositionJointInterface            position_joint_interface_;
-    hardware_interface::VelocityJointInterface            velocity_joint_interface_;
-    hardware_interface::EffortJointInterface              effort_joint_interface_;
-    hardware_interface::PosVelAccJointInterface           pos_vel_acc_joint_interface_;
+    hardware_interface::JointStateInterface                 joint_state_interface_;
+    hardware_interface::PositionJointInterface              position_joint_interface_;
+    hardware_interface::VelocityJointInterface              velocity_joint_interface_;
+    hardware_interface::EffortJointInterface                effort_joint_interface_;
+    hardware_interface::PosVelAccJointInterface             pos_vel_acc_joint_interface_;
     hardware_interface::PosVelAccErrHumanoidJointInterface  pos_vel_acc_err_humanoid_joint_interface_;
     //@todo RobotMode (startup) , RobotBehavior, and RobotFootsteps interfaces
 };
