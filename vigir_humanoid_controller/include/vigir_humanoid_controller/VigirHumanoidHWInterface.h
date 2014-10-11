@@ -45,9 +45,9 @@ namespace vigir_control {
 enum VigirHumanoidSwitchMode
 {
     SWITCH_DISALLOWED  =   0,
-    SWITCH_IMMEDIATE   =   1,
-    SWITCH_ON_FEEDBACK =   2,
-    SWITCH_HARD_RESET  =   3
+    SWITCH_IMMEDIATE   =   1,  // Switch on change request
+    SWITCH_ON_FEEDBACK =   2,  // Switch on feedback matching desired state
+    SWITCH_HARD_RESET  =   3,  // Stop all currently active and restart desired, even if same
 };
 
 /**

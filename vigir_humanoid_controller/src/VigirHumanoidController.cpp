@@ -108,12 +108,13 @@ int32_t VigirHumanoidController::run()
 
                         active_control_mode_id_ = robot_hw_interface_->getActiveControlModeId();
 
-                        if (switch_status == SWITCH_HARD_RESET)
-                        { // force hard reset by stopping then restarting controllers
-                            controller_switching_fault_ = robot_cm_->switchControllerRealtime(*active_controllers_list_, *robot_hw_interface_->getActiveControllersList(), current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
-                        }
-                        else
+                        switch(switch_status)
                         {
+                        case SWITCH_HARD_RESET:
+                            // force hard reset by stopping all, then restarting desired controllers
+                            controller_switching_fault_ = robot_cm_->switchControllerRealtime(*active_controllers_list_, *robot_hw_interface_->getActiveControllersList(), current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
+                            break;
+                        default:
                             std::vector<std::string> stop_list;
                             std::vector<std::string> start_list;
 
