@@ -35,6 +35,7 @@
 #include <joint_limits_interface/joint_limits_interface.h>
 #include <vigir_joint_interfaces/pos_vel_acc_joint_iface.h>
 #include <vigir_joint_interfaces/pos_vel_acc_err_humanoid_joint_iface.h>
+#include <vigir_joint_interfaces/vigir_pelvis_iface.h>
 
 #include <vigir_robot_model/VigirRobotDataTypes.h>
 
@@ -112,8 +113,13 @@ enum VigirHumanoidSwitchMode
     VectorNd                                              joint_position_errors_;
     VectorNd                                              joint_velocity_errors_;
 
+    std::vector<double >                                  pelvis_states_;
+    std::vector<double >                                  pelvis_commands_;
+    std::vector<double >                                  pelvis_errors_;
+    bool                                                  use_desired_pelvis_pose_;
+
   protected:
-    std::string                                           name_;
+    std::string                                             name_;
 
     // ROS control interfaces
     hardware_interface::JointStateInterface                 joint_state_interface_;
@@ -123,6 +129,12 @@ enum VigirHumanoidSwitchMode
     hardware_interface::PosVelAccJointInterface             pos_vel_acc_joint_interface_;
     hardware_interface::PosVelAccErrHumanoidJointInterface  pos_vel_acc_err_humanoid_joint_interface_;
     //@todo RobotMode (startup) , RobotBehavior, and RobotFootsteps interfaces
+
+    double                                                  pelvis_dummy_; // no velocity or effort for these "joints"
+    std::vector<std::string>                                pelvis_joint_names_;
+    hardware_interface::JointStateInterface                 pelvis_state_interface_;
+    hardware_interface::VigirPelvisInterface                pelvis_command_interface_;
+
 };
 
 } // end of vigir_control namespace
