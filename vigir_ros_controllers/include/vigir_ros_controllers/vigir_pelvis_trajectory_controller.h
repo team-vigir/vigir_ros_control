@@ -45,8 +45,8 @@
 // ROS
 #include <ros/node_handle.h>
 
-// URDF
-#include <urdf/model.h>
+// URDF  - not using URDF for pelvis pose
+//#include <urdf/model.h>
 
 // ROS messages
 #include <control_msgs/FollowJointTrajectoryAction.h>

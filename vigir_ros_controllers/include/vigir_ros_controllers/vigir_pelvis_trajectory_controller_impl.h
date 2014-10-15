@@ -77,49 +77,49 @@ std::vector<std::string> getStrings(const ros::NodeHandle& nh, const std::string
   return out;
 }
 
-boost::shared_ptr<urdf::Model> getUrdf(const ros::NodeHandle& nh, const std::string& param_name)
-{
-  boost::shared_ptr<urdf::Model> urdf(new urdf::Model);
+//boost::shared_ptr<urdf::Model> getUrdf(const ros::NodeHandle& nh, const std::string& param_name)
+//{
+//  boost::shared_ptr<urdf::Model> urdf(new urdf::Model);
 
-  std::string urdf_str;
-  // Check for robot_description in proper namespace
-  if (nh.getParam(param_name, urdf_str))
-  {
-    if (!urdf->initString(urdf_str))
-    {
-      ROS_ERROR_STREAM("Failed to parse URDF contained in '" << param_name << "' parameter (namespace: " <<
-        nh.getNamespace() << ").");
-      return boost::shared_ptr<urdf::Model>();
-    }
-  }
-  // Check for robot_description in root
-  else if (!urdf->initParam("robot_description"))
-  {
-    ROS_ERROR_STREAM("Failed to parse URDF contained in '" << param_name << "' parameter");
-    return boost::shared_ptr<urdf::Model>();
-  }
-  return urdf;
-}
+//  std::string urdf_str;
+//  // Check for robot_description in proper namespace
+//  if (nh.getParam(param_name, urdf_str))
+//  {
+//    if (!urdf->initString(urdf_str))
+//    {
+//      ROS_ERROR_STREAM("Failed to parse URDF contained in '" << param_name << "' parameter (namespace: " <<
+//        nh.getNamespace() << ").");
+//      return boost::shared_ptr<urdf::Model>();
+//    }
+//  }
+//  // Check for robot_description in root
+//  else if (!urdf->initParam("robot_description"))
+//  {
+//    ROS_ERROR_STREAM("Failed to parse URDF contained in '" << param_name << "' parameter");
+//    return boost::shared_ptr<urdf::Model>();
+//  }
+//  return urdf;
+//}
 
-typedef boost::shared_ptr<const urdf::Joint> UrdfJointConstPtr;
-std::vector<UrdfJointConstPtr> getUrdfJoints(const urdf::Model& urdf, const std::vector<std::string>& joint_names)
-{
-  std::vector<UrdfJointConstPtr> out;
-  for (unsigned int i = 0; i < joint_names.size(); ++i)
-  {
-    UrdfJointConstPtr urdf_joint = urdf.getJoint(joint_names[i]);
-    if (urdf_joint)
-    {
-      out.push_back(urdf_joint);
-    }
-    else
-    {
-      ROS_ERROR_STREAM("Could not find joint '" << joint_names[i] << "' in URDF model.");
-      return std::vector<UrdfJointConstPtr>();
-    }
-  }
-  return out;
-}
+//typedef boost::shared_ptr<const urdf::Joint> UrdfJointConstPtr;
+//std::vector<UrdfJointConstPtr> getUrdfJoints(const urdf::Model& urdf, const std::vector<std::string>& joint_names)
+//{
+//  std::vector<UrdfJointConstPtr> out;
+//  for (unsigned int i = 0; i < joint_names.size(); ++i)
+//  {
+//    UrdfJointConstPtr urdf_joint = urdf.getJoint(joint_names[i]);
+//    if (urdf_joint)
+//    {
+//      out.push_back(urdf_joint);
+//    }
+//    else
+//    {
+//      ROS_ERROR_STREAM("Could not find joint '" << joint_names[i] << "' in URDF model.");
+//      return std::vector<UrdfJointConstPtr>();
+//    }
+//  }
+//  return out;
+//}
 
 std::string getLeafNamespace(const ros::NodeHandle& nh)
 {
@@ -283,13 +283,13 @@ bool VigirPelvisTrajectoryController<SegmentImpl, HardwareInterface>::init(Hardw
   if (joint_names_.empty()) {return false;}
   const unsigned int n_joints = joint_names_.size();
 
-  // URDF joints
-  boost::shared_ptr<urdf::Model> urdf = getUrdf(root_nh, "robot_description");
-  if (!urdf) {return false;}
+//  // URDF joints
+//  boost::shared_ptr<urdf::Model> urdf = getUrdf(root_nh, "robot_description");
+//  if (!urdf) {return false;}
 
-  std::vector<UrdfJointConstPtr> urdf_joints = getUrdfJoints(*urdf, joint_names_);
-  if (urdf_joints.empty()) {return false;}
-  assert(n_joints == urdf_joints.size());
+//  std::vector<UrdfJointConstPtr> urdf_joints = getUrdfJoints(*urdf, joint_names_);
+//  if (urdf_joints.empty()) {return false;}
+//  assert(n_joints == urdf_joints.size());
 
   // Initialize members
   joints_.resize(n_joints);
@@ -306,7 +306,7 @@ bool VigirPelvisTrajectoryController<SegmentImpl, HardwareInterface>::init(Hardw
     }
 
     // Whether a joint is continuous (ie. has angle wraparound)
-    angle_wraparound_[i] = urdf_joints[i]->type == urdf::Joint::CONTINUOUS;
+    angle_wraparound_[i] = false;//urdf_joints[i]->type == urdf::Joint::CONTINUOUS;
     const std::string not_if = angle_wraparound_[i] ? "" : "non-";
 
     ROS_DEBUG_STREAM_NAMED(name_, "Found " << not_if << "continuous joint '" << joint_names_[i] << "' in '" <<
@@ -376,6 +376,14 @@ update(const ros::Time& time, const ros::Duration& period)
 {
   // Get currently followed trajectory
   TrajectoryPtr curr_traj_ptr;
+
+  if (!hw_iface_adapter_.getInPelvisControlMode())
+  { // Until we are in manipulate mode, just hold the current position
+    ROS_INFO(" Continue in hold until the robot is Manipulate mode!");
+    starting(time);
+    return;
+  }
+
   curr_trajectory_box_.get(curr_traj_ptr);
   Trajectory& curr_traj = *curr_traj_ptr;
 

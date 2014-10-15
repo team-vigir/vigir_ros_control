@@ -80,6 +80,28 @@ int32_t VigirHumanoidController::run()
 
     while (ros::ok() && run_flag_)
     {
+        current_time = ros::Time::now();
+        elapsed_time = current_time - last_time;
+        last_time = current_time;
+
+        //ROS_INFO("before read");
+        {
+            DO_TIMING(read_timing_); // includes wait time
+            if (this->read(current_time, elapsed_time))
+            {
+              ROS_INFO("Read data from robot - ready to begin control loop!");
+              break;
+            }
+            else
+            {
+              ROS_INFO_THROTTLE(1.0,"Waiting for robot connection before starting control loop!");
+            }
+        }
+    }
+
+    // Main control loop
+    while (ros::ok() && run_flag_)
+    {
         {
             DO_TIMING(run_loop_timing_);
             current_time = ros::Time::now();

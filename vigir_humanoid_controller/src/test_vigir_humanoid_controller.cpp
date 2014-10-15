@@ -217,9 +217,10 @@ class TestHumanoidController : public VigirHumanoidController
     }
 
 
-    void read(ros::Time time, ros::Duration period)
+    bool read(ros::Time time, ros::Duration period)
     {
         ROS_INFO("Read - controller");
+        return true;
     }
 
     void write(ros::Time time, ros::Duration period)

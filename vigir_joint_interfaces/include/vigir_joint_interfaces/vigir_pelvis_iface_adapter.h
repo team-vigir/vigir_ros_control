@@ -73,8 +73,9 @@ public:
                      const State&         desired_state,
                      const State&         state_error)
   {
-    if ((*pelvis_handles_ptr_)[0].getUseDesiredPelvisCommand())
+    if ((*pelvis_handles_ptr_)[0].getInPelvisControlMode())
     {
+      (*pelvis_handles_ptr_)[0].setUseDesiredPelvisCommand(1); // flag to use this value
       for (unsigned int i = 0; i < n_joints_; ++i) {
         // Update the desired commands based on the desired trajectory
         (*pelvis_handles_ptr_)[i].setPositionCommand(desired_state.position[i]);
@@ -88,6 +89,8 @@ public:
       }
     }
   }
+
+  bool getInPelvisControlMode() {if (pelvis_handles_ptr_) return (*pelvis_handles_ptr_)[0].getInPelvisControlMode(); else return false;};
 
 private:
 

@@ -87,7 +87,7 @@ namespace vigir_control {
     //    providing data protection in multithreaded environments
     //    as these may be called at any time from the asynchronous
     //    spinner.
-    virtual void read(ros::Time time, ros::Duration period) = 0;
+    virtual bool read(ros::Time time, ros::Duration period) = 0;
     virtual void write(ros::Time time, ros::Duration period) = 0;
 
   protected:

@@ -50,10 +50,10 @@ public:
    * \param desired_pos A pointer to the storage for this pelvis axis's position command
    * \param use_desired A pointer to the storage for boolean flag denoting we are ready to use pelvis commands
    */
-  VigirPelvisHandle(const JointStateHandle& js, double* desired_pos,double * posn_error, bool  * use_desired)
-    : JointHandle(js, desired_pos),  desired_pos_(desired_pos), posn_error_(posn_error), use_desired_(use_desired)
+  VigirPelvisHandle(const JointStateHandle& js, double* desired_pos,double * posn_error, bool  * in_pelvis_control_mode, int32_t * use_desired)
+    : JointHandle(js, desired_pos),  desired_pos_(desired_pos), posn_error_(posn_error), in_pelvis_control_mode_(in_pelvis_control_mode), use_desired_(use_desired)
   {
-      if (!desired_pos_ || !use_desired_ || !posn_error_)
+      if (!desired_pos_ || !use_desired_ || !posn_error_ || !in_pelvis_control_mode_)
       {
         throw HardwareInterfaceException(
             "Cannot create handle '" + js.getName() + "'. Some command data pointer is null.");
@@ -64,14 +64,17 @@ public:
   inline void   setPositionCommand(double pos) {assert(desired_pos_); *desired_pos_ = pos;}
   inline double getPositionCommand() const {assert(desired_pos_); return *desired_pos_;}
 
+  inline bool   getInPelvisControlMode() {assert(in_pelvis_control_mode_); return *in_pelvis_control_mode_ ;}
   inline bool   getUseDesiredPelvisCommand() {assert(use_desired_); return *use_desired_ ;}
+  inline void   setUseDesiredPelvisCommand(int32_t value = 0) {assert(use_desired_); *use_desired_ = value;}
 
 
 private:
 
-  double* desired_pos_;
-  double* posn_error_;
-  bool  * use_desired_;
+  double  *   desired_pos_;
+  double  *   posn_error_;
+  bool    *   in_pelvis_control_mode_;
+  int32_t *   use_desired_;
 };
 
 /** \brief Hardware interface to support commanding an array of pelvis commands by position.
