@@ -19,4 +19,14 @@
     </description>
   </class>
 
+  <class name="vigir_ros_controllers/PelvisTrajectoryController"
+         type="vigir_ros_controllers::PelvisTrajectoryController"
+         base_class_type="controller_interface::ControllerBase">
+    <description>
+      The PelvisTrajectoryController executes "joint-space" trajectories on the x,y,z, roll, pitch, yaw of target pelvis pose.
+      This variant represents trajectory segments as quintic splines and sends commands to a position command interface.
+      Errors are also transmitted.
+    </description>
+  </class>
+
 </library>

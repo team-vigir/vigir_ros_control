@@ -98,15 +98,22 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library(vigir_ros_controllers
-   src/vigir_joint_trajectory_controller.cpp
+SET(HEADERS
+include/${PROJECT_NAME}/vigir_pelvis_trajectory_controller.h
+include/${PROJECT_NAME}/vigir_pelvis_trajectory_controller_impl.h
 )
+
+SET(SOURCE
+src/vigir_joint_trajectory_controller.cpp
+src/vigir_pelvis_trajectory_controller.cpp
+)
+
+add_library(vigir_ros_controllers ${SOURCE} ${HEADERS} )
 
 add_dependencies(vigir_ros_controllers ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(vigir_ros_controllers
-   ${catkin_LIBRARIES}
+target_link_libraries(vigir_ros_controllers ${catkin_LIBRARIES}
 )
 
 ## Declare a cpp executable
