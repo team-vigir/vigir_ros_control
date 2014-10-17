@@ -74,6 +74,7 @@ int32_t VigirHumanoidController::run()
     ros::Time     last_time = ros::Time::now();
     timespec      sleep_time;
     timespec      remaining_time;
+    std::vector<std::string > running_controllers_list;
 
     ROS_INFO("Start controller %s run loop ...",name_.c_str());
     sleep_time.tv_sec = 0;
@@ -99,7 +100,28 @@ int32_t VigirHumanoidController::run()
         }
     }
 
+    // Start the mode controllers once we have a connection to the robot and have read valid data
+    current_time = ros::Time::now();
+    elapsed_time = current_time - last_time;
+    last_time = current_time;
+    ROS_INFO("Ready to start the mode controller manager controllers ...");
+    mode_cm_->update(current_time, elapsed_time);
+
+    mode_cm_->getRunningControllersListRealTime(running_controllers_list); // get list of all controllers currently loaded in this manager
+    std::cout << "Currently Running: " << running_controllers_list << std::endl;
+
+    mode_cm_->getControllerNamesRealtime(running_controllers_list); // get list of all controllers currently loaded in this manager
+    if (!mode_cm_->switchControllerRealtime(running_controllers_list, std::vector<std::string>(),current_time, controller_manager_msgs::SwitchController::Request::STRICT))
+    {
+        ROS_ERROR("Failed to start the mode controllers!");
+        exit(-1);
+    }
+
+    // Force starting the correct robot controllers
+    active_control_mode_id_ = -1;
+
     // Main control loop
+    ROS_INFO("Entering the main control loop...");
     while (ros::ok() && run_flag_)
     {
         {
@@ -128,20 +150,22 @@ int32_t VigirHumanoidController::run()
                     {
                         ROS_INFO("  ControlModeID changed = %d old=%d", robot_hw_interface_->getActiveControlModeId(), active_control_mode_id_);
 
+                        robot_cm_->getRunningControllersListRealTime(running_controllers_list);
+
                         active_control_mode_id_ = robot_hw_interface_->getActiveControlModeId();
 
                         switch(switch_status)
                         {
                         case SWITCH_HARD_RESET:
                             // force hard reset by stopping all, then restarting desired controllers         start_list                              stop_list
-                            controller_switching_fault_ = robot_cm_->switchControllerRealtime(*robot_hw_interface_->getActiveControllersList(), *active_controllers_list_, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
+                            controller_switching_fault_ = robot_cm_->switchControllerRealtime(*robot_hw_interface_->getActiveControllersList(), running_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
                             break;
                         default:
                             std::vector<std::string> stop_list;
                             std::vector<std::string> start_list;
 
                             // Determine unused controllers to stop, and new controllers to start (leave common controllers running)
-                            processControllerLists(active_controllers_list_, robot_hw_interface_->getActiveControllersList(), stop_list, start_list);
+                            processControllerLists(&running_controllers_list, robot_hw_interface_->getActiveControllersList(), stop_list, start_list);
                             controller_switching_fault_ = robot_cm_->switchControllerRealtime(start_list, stop_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
                         }
 
