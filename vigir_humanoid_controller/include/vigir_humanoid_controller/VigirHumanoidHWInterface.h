@@ -49,6 +49,7 @@ enum VigirHumanoidSwitchMode
     SWITCH_IMMEDIATE   =   1,  // Switch on change request
     SWITCH_ON_FEEDBACK =   2,  // Switch on feedback matching desired state
     SWITCH_HARD_RESET  =   3,  // Stop all currently active and restart desired, even if same
+    HARD_RESET_MAINTAIN=   4   // Stop and reset all controllers to maintain active but force a reset
 };
 
 /**

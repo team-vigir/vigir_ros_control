@@ -156,6 +156,10 @@ int32_t VigirHumanoidController::run()
 
                         switch(switch_status)
                         {
+                        case HARD_RESET_MAINTAIN:
+                            // force hard reset by stopping all, then restarting desired controllers         start_list                              stop_list
+                            controller_switching_fault_ = robot_cm_->switchControllerRealtime(running_controllers_list, running_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
+                            break;
                         case SWITCH_HARD_RESET:
                             // force hard reset by stopping all, then restarting desired controllers         start_list                              stop_list
                             controller_switching_fault_ = robot_cm_->switchControllerRealtime(*robot_hw_interface_->getActiveControllersList(), running_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
