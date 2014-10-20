@@ -408,7 +408,7 @@ update(const ros::Time& time, const ros::Duration& period)
   {
     // Non-realtime safe, but should never happen under normal operation
     ROS_ERROR_NAMED(name_,
-                    "Unexpected error: No trajectory defined at current time. Please contact the package maintainer.");
+                    "Unexpected error: No trajectory defined at current time for %s. Please contact the package maintainer.", name_.c_str());
     return;
   }
 
@@ -463,13 +463,13 @@ updateTrajectoryCommand(const JointTrajectoryConstPtr& msg, RealtimeGoalHandlePt
   // Preconditions
   if (!this->isRunning())
   {
-    ROS_ERROR_NAMED(name_, "Can't accept new commands. Controller is not running.");
+    ROS_ERROR_NAMED(name_, "Can't accept new commands. Controller %s is not running.", name_.c_str());
     return false;
   }
 
   if (!msg)
   {
-    ROS_WARN_NAMED(name_, "Received null-pointer trajectory message, skipping.");
+    ROS_WARN_NAMED(name_, "Received null-pointer trajectory message, skipping %s.", name_.c_str());
     return false;
   }
 
@@ -486,7 +486,7 @@ updateTrajectoryCommand(const JointTrajectoryConstPtr& msg, RealtimeGoalHandlePt
   if (msg->points.empty())
   {
     setHoldPosition(time_data->uptime);
-    ROS_DEBUG_NAMED(name_, "Empty trajectory command, stopping.");
+    ROS_DEBUG_NAMED(name_, "Empty trajectory command, holding %s.", name_.c_str());
     return true;
   }
 
@@ -524,7 +524,7 @@ updateTrajectoryCommand(const JointTrajectoryConstPtr& msg, RealtimeGoalHandlePt
   }
   catch(...)
   {
-    ROS_ERROR_NAMED(name_, "Unexpected exception caught when initializing trajectory from ROS message data.");
+    ROS_ERROR_NAMED(name_, "Unexpected exception caught when initializing trajectory from ROS message data for %s.", name_.c_str());
     return false;
   }
 
@@ -535,7 +535,7 @@ template <class SegmentImpl, class HardwareInterface>
 void VigirPelvisTrajectoryController<SegmentImpl, HardwareInterface>::
 goalCB(GoalHandle gh)
 {
-  ROS_DEBUG_STREAM_NAMED(name_,"Recieved new action goal");
+  ROS_DEBUG_STREAM_NAMED(name_,"Recieved new action goal for " << name_);
 
   // Precondition: Running controller
   if (!this->isRunning())
@@ -604,7 +604,7 @@ cancelCB(GoalHandle gh)
 
     // Enter hold current position mode
     setHoldPosition(uptime);
-    ROS_DEBUG_NAMED(name_, "Canceling active action goal because cancel callback recieved from actionlib.");
+    ROS_DEBUG_NAMED(name_, "Canceling active action goal because cancel callback recieved from actionlib for %s.", name_.c_str());
 
     // Mark the current goal as canceled
     current_active_goal->gh_.setCanceled();
@@ -619,7 +619,7 @@ queryStateService(control_msgs::QueryTrajectoryState::Request&  req,
   // Preconditions
   if (!this->isRunning())
   {
-    ROS_ERROR_NAMED(name_, "Can't sample trajectory. Controller is not running.");
+    ROS_ERROR_NAMED(name_, "Can't sample trajectory. Controller %s is not running.", name_.c_str());
     return false;
   }
 
@@ -637,7 +637,7 @@ queryStateService(control_msgs::QueryTrajectoryState::Request&  req,
   typename Trajectory::const_iterator segment_it = sample(curr_traj, sample_time.toSec(), state);
   if (curr_traj.end() == segment_it)
   {
-    ROS_ERROR_STREAM_NAMED(name_, "Requested sample time preceeds trajectory start time.");
+    ROS_ERROR_STREAM_NAMED(name_, "Requested sample time preceeds trajectory start time for " << name_);
     return false;
   }
 
