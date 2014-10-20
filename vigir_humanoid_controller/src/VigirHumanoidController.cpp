@@ -128,6 +128,11 @@ int32_t VigirHumanoidController::run()
             DO_TIMING(run_loop_timing_);
             current_time = ros::Time::now();
             elapsed_time = current_time - last_time;
+            while (ros::Duration(0.0) == elapsed_time)
+            {   // Should only be an issue in simulation
+                current_time = ros::Time::now();
+                elapsed_time = current_time - last_time;
+            }
             last_time = current_time;
 
             //ROS_INFO("before read");
