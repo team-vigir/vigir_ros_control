@@ -120,6 +120,9 @@ int32_t VigirHumanoidController::run()
     // Force starting the correct robot controllers
     active_control_mode_id_ = -1;
 
+    // Call update loop with all off to initialize properly
+    robot_cm_->update(current_time, elapsed_time);
+
     // Main control loop
     ROS_INFO("Entering the main control loop...");
     while (ros::ok() && run_flag_)
