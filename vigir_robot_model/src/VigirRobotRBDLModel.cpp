@@ -251,7 +251,8 @@ VigirRobotRBDLModel::VigirRobotRBDLModel()
          printf("Controlled link: %d rbdl ndx=%d\n",ndx, ctrl_to_rbdl_joint[ndx]);
      }
 
-
+     // Assume model in upright pose
+     my_rbdl_->rbdl_model_.gravity.set (0., 0., -9.81);
 
      // Initialize the vectors for storing robot state
      my_rbdl_->Q_     = RigidBodyDynamics::Math::VectorNd::Constant ((size_t)my_rbdl_->rbdl_model_.dof_count,0.0); // contra documentation, Q[0] is first joint
