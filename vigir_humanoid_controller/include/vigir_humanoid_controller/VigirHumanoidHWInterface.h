@@ -110,6 +110,7 @@ enum VigirHumanoidSwitchMode
     VectorNd                                              joint_command_accelerations_; //!< desired acceleration
     VectorNd                                              joint_command_efforts_;       //!< desired effort
     VectorNd                                              joint_command_control_;       //!< desired control command (
+    VectorNd                                              joint_command_friction_compensation_;
 
     VectorNd                                              joint_position_errors_;
     VectorNd                                              joint_velocity_errors_;
