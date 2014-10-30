@@ -60,8 +60,8 @@ namespace vigir_control {
       VigirHumanoidController(const std::string& name, const ros::Rate& loop_rate=ros::Rate(500), const bool& verbose=false);
     virtual ~VigirHumanoidController()
     {
-        std::cout << "Destroy VigirHumanoidController ..." << std::endl;
-    };
+        std::cout << "  Destroyed VigirHumanoidController!" << std::endl;
+    }
 
     // Initialization functions which call specific implementations
     // The node handles and associated callback queues can have the

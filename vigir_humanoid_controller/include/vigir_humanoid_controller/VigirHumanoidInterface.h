@@ -56,7 +56,10 @@ namespace vigir_control {
         printf("Initialize VigirHumanoidController for <%s> with %d joints",name_.c_str(), n_joints);
     }
 
-    virtual ~VigirHumanoidInterface() {}
+    virtual ~VigirHumanoidInterface()
+    {
+        std::cout << "  Destroyed VigirHumanoidInterface!" << std::endl;
+    }
 
 
     // Implementation specific functions that provide access to robot
