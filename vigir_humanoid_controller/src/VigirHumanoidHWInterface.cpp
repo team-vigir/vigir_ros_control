@@ -124,7 +124,7 @@ int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr< std:
 
 int32_t VigirHumanoidHWInterface::cleanup_robot_controllers()
 {
-    std::cout << "          Cleanup_robot_controllers!" << std::endl;
+    std::cout << "      Cleanup       VigirHumanoidHWInterface::cleanup_robot_controllers!" << std::endl;
     return ROBOT_CLEANUP_OK;
 }
 
