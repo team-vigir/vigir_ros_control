@@ -225,7 +225,7 @@ int32_t VigirHumanoidController::run()
             }
         }
     }
-    ROS_INFO("Stopped controller %s run loop !",name_.c_str());
+    std::cout << "Exitting the main ROS controllers " << name_ << " run loop!" << std::endl;
 }
 
 // Initialization functions
@@ -557,11 +557,6 @@ void VigirHumanoidController::processControllerLists(const std::vector<std::stri
             start_list.push_back(new_controllers->at(new_i));
         new_i++;
     }
-
-
-    //// For now simple stop all, start all (will not play nice with footstep controller!)
-    //stop_list = *old_controllers;
-    //start_list = *new_controllers;
 
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv DEBUG vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     // @todo - remove this debug block

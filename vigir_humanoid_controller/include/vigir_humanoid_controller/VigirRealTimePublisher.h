@@ -56,7 +56,10 @@ public:
 
     }
 
-    virtual ~VigirRealTimeTopicBase(){}
+    virtual ~VigirRealTimeTopicBase()
+    {
+        std::cout << "  Destroyed VigirRealTimeTopicBase for " << topic_name_ << "!" << std::endl;
+    }
 
     // Templated topic publisher that extracts topic specific data from common structure passed between real time threads
     virtual void publish(const DataType& data, const ros::Time& current_time) = 0;
@@ -102,8 +105,7 @@ class VigirRealTimePublisher
 
     ~VigirRealTimePublisher()
     {
-        ROS_INFO("Destroy %s publisher ... ",publisher_name_.c_str());
-
+        std::cout << "      Destroyed " << publisher_name_ << " publisher!" << std::endl;
     }
 
     const std::string& name(){return publisher_name_;}
@@ -161,7 +163,7 @@ class VigirRealTimePublisher
             publishAnyNewData();
             usleep(100); // release this thread as publishing ROS topics is not considered real time required
         }
-        ROS_INFO("Exit the publisher loop for %s",publisher_name_.c_str());
+        std::cout << "Exit the publisher loop for " << publisher_name_ << " !" << std::endl;
     }
 
  private:

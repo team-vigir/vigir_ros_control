@@ -57,6 +57,7 @@ int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr< std:
                                                          boost::shared_ptr<ros::NodeHandle>& joint_control_nh,
                                                          boost::shared_ptr<ros::NodeHandle>& private_nh)
 {
+    ROS_INFO(" Initialize the generic humanoid HW interfaces ...");
     // Store the list of controlled joints
     joint_names_ = joint_list;
     try {
@@ -118,13 +119,13 @@ int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr< std:
     registerInterface(&pos_vel_acc_joint_interface_);
     registerInterface(&pos_vel_acc_err_humanoid_joint_interface_);
 
-    ROS_ERROR(" Need to init_robot_controllers");
+    ROS_INFO(" Now need to initialize the robot specific interfaces and controllers ...");
     return ROBOT_INITIALIZED_OK;
 }
 
 int32_t VigirHumanoidHWInterface::cleanup_robot_controllers()
 {
-    ROS_ERROR(" Need to cleanup_robot_controllers");
+    std::cout << "      Cleanup       VigirHumanoidHWInterface::cleanup_robot_controllers!" << std::endl;
     return ROBOT_CLEANUP_OK;
 }
 

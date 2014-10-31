@@ -73,7 +73,10 @@ enum VigirHumanoidSwitchMode
 
   public:
     VigirHumanoidHWInterface(const std::string& name);
-    virtual ~VigirHumanoidHWInterface() {};
+    virtual ~VigirHumanoidHWInterface()
+    {
+        std::cout << "  Destroyed VigirHumanoidHWInterface!" << std::endl;
+    }
 
 
     // Generic initialization functions
