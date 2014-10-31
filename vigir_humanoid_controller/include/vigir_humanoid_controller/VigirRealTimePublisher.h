@@ -58,7 +58,7 @@ public:
 
     virtual ~VigirRealTimeTopicBase()
     {
-        std::cout << "  Destroyed VigirRealTimeTopicBase for " << topic_name_ << "!" << std::endl;
+        //std::cout << "  Destroyed VigirRealTimeTopicBase for " << topic_name_ << "!" << std::endl;
     }
 
     // Templated topic publisher that extracts topic specific data from common structure passed between real time threads
@@ -105,7 +105,7 @@ class VigirRealTimePublisher
 
     ~VigirRealTimePublisher()
     {
-        std::cout << "      Destroyed " << publisher_name_ << " publisher!" << std::endl;
+        //std::cout << "      Destroyed " << publisher_name_ << " publisher!" << std::endl;
     }
 
     const std::string& name(){return publisher_name_;}
