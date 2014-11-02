@@ -135,6 +135,11 @@ int32_t VigirHumanoidController::run()
             {   // Should only be an issue in simulation
                 current_time = ros::Time::now();
                 elapsed_time = current_time - last_time;
+                if (!run_flag_)
+                {
+                    std::cout << "      Finished run loop while waiting on simulation time to change!" << std::endl << "        Exitting the main ROS controllers " << name_ << " run loop!" << std::endl;
+                    return 0;
+                }
             }
             last_time = current_time;
 
@@ -226,6 +231,7 @@ int32_t VigirHumanoidController::run()
         }
     }
     std::cout << "Exitting the main ROS controllers " << name_ << " run loop!" << std::endl;
+    return 0;
 }
 
 // Initialization functions
