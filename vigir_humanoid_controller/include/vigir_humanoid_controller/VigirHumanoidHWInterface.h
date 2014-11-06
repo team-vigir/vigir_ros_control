@@ -108,15 +108,16 @@ enum VigirHumanoidSwitchMode
     std::vector<double >                                  joint_state_efforts_;
 
 
-    VectorNd                                              joint_command_positions_;     //!< desired position
-    VectorNd                                              joint_command_velocities_;    //!< desired velocity
-    VectorNd                                              joint_command_accelerations_; //!< desired acceleration
-    VectorNd                                              joint_command_efforts_;       //!< desired effort
-    VectorNd                                              joint_command_control_;       //!< desired control command (
-    VectorNd                                              joint_command_friction_compensation_;
+    VectorNd                                              joint_command_positions_;             //!< desired position
+    VectorNd                                              joint_command_velocities_;            //!< desired velocity
+    VectorNd                                              joint_command_accelerations_;         //!< desired acceleration
+    VectorNd                                              joint_command_efforts_;               //!< desired effort
+    VectorNd                                              joint_command_control_;               //!< desired control command (acceleration)
+    VectorNd                                              joint_command_friction_compensation_; //!< effort to compensate for friction
 
     VectorNd                                              joint_position_errors_;
     VectorNd                                              joint_velocity_errors_;
+    VectorNd                                              joint_effort_errors_;
 
     std::vector<double >                                  pelvis_states_;
     std::vector<double >                                  pelvis_commands_;
