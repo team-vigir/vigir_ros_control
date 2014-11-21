@@ -388,7 +388,7 @@ int main(int argc, char ** argv)
         }
 
         // Run the loop until ROS or other tells the controller to quit
-        test_controller.run();
+        test_controller.runController();
 
 
         ROS_INFO("Explicitly call cleanup before exit!");

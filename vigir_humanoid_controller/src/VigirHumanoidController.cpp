@@ -149,7 +149,7 @@ int32_t VigirHumanoidController::update(const ros::Time&     current_time, const
 }
 
 // Default run loop for controller updates
-int32_t VigirHumanoidController::run()
+int32_t VigirHumanoidController::runController()
 {
     static timespec sleep_ts={0L,100L};
 
@@ -172,9 +172,13 @@ int32_t VigirHumanoidController::run()
         //ROS_INFO("before read");
         {
             DO_TIMING(read_timing_); // includes wait time
-            if (this->read(current_time, elapsed_time))
+            if (this->newDataAvailable())
             {
-              ROS_INFO("Read data from robot - ready to begin control loop!");
+              ROS_INFO("New data from robot is available - ready to begin control loop!");
+              {
+                  DO_TIMING(read_timing_);
+                  this->read(current_time, elapsed_time);
+              }
               break;
             }
             else
