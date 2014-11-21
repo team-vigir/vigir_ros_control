@@ -89,14 +89,15 @@ enum VigirHumanoidSwitchMode
     virtual int32_t cleanup_robot_controllers();
 
     virtual const int32_t                          getActiveControlModeId()  = 0;
-    virtual const std::vector< std::string >*      getActiveControllersList()= 0;
+    virtual const std::vector< std::string >*      getActiveJointControllersList()= 0;
+    virtual const std::vector< std::string >*      getActiveRobotControllersList()= 0;
     virtual const VigirHumanoidSwitchMode          permitControllerSwitch()  = 0;
 
     // Following public data structures are used directly by controllers
     // The data structures must be populated during a read() function in a
     // thread safe manner
     // I'd prefer to use VectorNd, but I am not sure if local_vector = data_vector
-    // would every reallocate and change memory locations after registering.
+    // would ever reallocate and change memory locations after registering.
     // I would not expect it to if the underlying sizes are the same, but I'm not
     // certain, so I'm going to play it safe for now.
 

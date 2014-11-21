@@ -67,6 +67,7 @@ namespace vigir_control {
     // The node handles and associated callback queues can have the
     // same or different node handles passed to the init function
     int32_t initialize( boost::shared_ptr<ros::NodeHandle>& mode_control_nh,
+                        boost::shared_ptr<ros::NodeHandle>& joint_control_nh,
                         boost::shared_ptr<ros::NodeHandle>& robot_control_nh,
                         boost::shared_ptr<ros::NodeHandle>& pub_nh,
                         boost::shared_ptr<ros::NodeHandle>& sub_nh,
@@ -75,10 +76,11 @@ namespace vigir_control {
     // This should be called before destroying the controller instance
     int32_t cleanup();
 
+
     // Main run loop of the controller -
-    // this function does not exit until ROS is shutdown or the shutdown command is given
-    // A basic read-update-write loop is defined, but can be overridden for
-    // custom setups.
+    //  this function provides a simple single thread for repeated invocation of the update function.
+    //  this function does not exit until ROS is shutdown or the shutdown command is given.
+    //  this function can be overridden for custom setups.
     virtual int32_t run();
 
     // Handle data transfer from/to the robot interface and the
@@ -91,6 +93,10 @@ namespace vigir_control {
     virtual void write(ros::Time time, ros::Duration period) = 0;
 
   protected:
+
+    // Main update loop for controllers
+    // A basic read-update each controller manager -write loop is defined, but can be overridden for custom setups.
+    virtual int32_t update(const ros::Time&     current_time, const ros::Duration& elapsed_time);
 
     // generic functions given instantiated types
     int32_t init_robot_model();
@@ -112,7 +118,8 @@ namespace vigir_control {
     bool                                  run_flag_;
     ros::Rate                             desired_loop_rate_;
     int32_t                               active_control_mode_id_;
-    const std::vector<std::string > *     active_controllers_list_;
+    const std::vector<std::string > *     active_joint_controllers_list_;
+    const std::vector<std::string > *     active_robot_controllers_list_;
     bool                                  controller_switching_fault_;
 
     Timing                                run_loop_timing_;
@@ -125,6 +132,7 @@ namespace vigir_control {
 
     // ROS stuff - these are created outside interface, and their associated callbacks and spinners determine the threading model
     boost::shared_ptr<ros::NodeHandle>    mode_controller_nh_;     // Handle control mode controller interface
+    boost::shared_ptr<ros::NodeHandle>    joint_controller_nh_;    // Handle joint controller interface
     boost::shared_ptr<ros::NodeHandle>    robot_controller_nh_;    // Handle robot controller interface
     boost::shared_ptr<ros::NodeHandle>    pub_nh_;                 // Handle publisher interfaces
     boost::shared_ptr<ros::NodeHandle>    sub_nh_;                 // Handle subscriber interfaces
@@ -135,8 +143,10 @@ namespace vigir_control {
     boost::shared_ptr<vigir_control::VigirHumanoidInterface>    robot_interface_;
     boost::shared_ptr<vigir_control::VigirHumanoidHWInterface>  robot_hw_interface_;
 
+    // Independent controller managers (executed in the following order)
     boost::shared_ptr<controller_manager::ControllerManager >   mode_cm_;  // Handle control mode changes
-    boost::shared_ptr<controller_manager::ControllerManager >   robot_cm_; // Handle robot controllers (joints, footsteps, ...)
+    boost::shared_ptr<controller_manager::ControllerManager >   joint_cm_; // Handle joint level controllers (joints, ...)
+    boost::shared_ptr<controller_manager::ControllerManager >   robot_cm_; // Handle robot level controllers (footsteps, whole-body, ...)
 
     // dump errror to screen and log and potentially publish
     virtual void error_status(const std::string& msg, int32_t rc=-1);

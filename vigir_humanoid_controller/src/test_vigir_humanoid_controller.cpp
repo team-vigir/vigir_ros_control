@@ -25,7 +25,8 @@ public:
 
     // Define pure virtual functions
     const int32_t                       getActiveControlModeId() { return -1;}
-    const std::vector< std::string >*   getActiveControllersList(){return &test;}
+    const std::vector< std::string >*   getActiveJointControllersList(){return &test;}
+    const std::vector< std::string >*   getActiveRobotControllersList(){return &test;}
     const VigirHumanoidSwitchMode       permitControllerSwitch()  {return SWITCH_IMMEDIATE;}
 };
 
@@ -378,7 +379,7 @@ int main(int argc, char ** argv)
         // Set up the controller to try and run at 1kHz
         vigir_control::TestHumanoidController test_controller("Test", 1000);
 
-        if (int32_t rc = test_controller.initialize(main_nh,main_nh,main_nh,main_nh,nhp))
+        if (int32_t rc = test_controller.initialize(main_nh,main_nh,main_nh,main_nh,main_nh,nhp))
         {
             ROS_ERROR("Failed to initialize the controller with rc=%d - abort!", rc);
             exit(rc);

@@ -67,6 +67,88 @@ VigirHumanoidController::VigirHumanoidController(const std::string& name, const 
     }
 }
 
+int32_t VigirHumanoidController::update(const ros::Time&     current_time, const ros::Duration& elapsed_time)
+{
+    static std::vector<std::string > running_joint_controllers_list;
+    static std::vector<std::string > running_robot_controllers_list;
+
+    // Update
+    {
+        //ROS_INFO("before read");
+        {
+            DO_TIMING(read_timing_); // includes wait time
+            this->read(current_time, elapsed_time);
+        }
+        //ROS_INFO("after read");
+
+        //ROS_INFO("before cm.update");
+        {
+            DO_TIMING(controller_timing_);
+
+            // Update the mode controllers first  (This may include stability calculations)
+            mode_cm_->update(current_time, elapsed_time);
+
+            // Switch joint and robot controllers on/off based on behavior mode
+            if (robot_hw_interface_->getActiveControlModeId() != active_control_mode_id_)
+            {
+                VigirHumanoidSwitchMode switch_status= robot_hw_interface_->permitControllerSwitch();
+                if (switch_status)
+                {
+                    ROS_INFO("  ControlModeID changed = %d old=%d", robot_hw_interface_->getActiveControlModeId(), active_control_mode_id_);
+
+                    joint_cm_->getRunningControllersListRealTime(running_joint_controllers_list);
+                    robot_cm_->getRunningControllersListRealTime(running_robot_controllers_list);
+
+                    active_control_mode_id_ = robot_hw_interface_->getActiveControlModeId();
+
+                    switch(switch_status)
+                    {
+                    case HARD_RESET_MAINTAIN:
+                        // force hard reset by stopping all, then restarting desired controllers         start_list                              stop_list
+                        controller_switching_fault_  = joint_cm_->switchControllerRealtime(running_joint_controllers_list, running_joint_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
+                        controller_switching_fault_ += robot_cm_->switchControllerRealtime(running_robot_controllers_list, running_robot_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT) << 8;
+                        break;
+                    case SWITCH_HARD_RESET:
+                        // force hard reset by stopping all, then restarting desired controllers         start_list                              stop_list
+                        controller_switching_fault_  = joint_cm_->switchControllerRealtime(*robot_hw_interface_->getActiveJointControllersList(), running_joint_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
+                        controller_switching_fault_ += robot_cm_->switchControllerRealtime(*robot_hw_interface_->getActiveRobotControllersList(), running_robot_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT) << 8;
+                        break;
+                    default:
+                        std::vector<std::string> stop_list;
+                        std::vector<std::string> start_list;
+
+                        // Determine unused controllers to stop, and new controllers to start (leave common controllers running)
+                        processControllerLists(&running_joint_controllers_list, robot_hw_interface_->getActiveJointControllersList(), stop_list, start_list);
+                        controller_switching_fault_  = joint_cm_->switchControllerRealtime(start_list, stop_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
+
+                        processControllerLists(&running_robot_controllers_list, robot_hw_interface_->getActiveRobotControllersList(), stop_list, start_list);
+                        controller_switching_fault_ += robot_cm_->switchControllerRealtime(start_list, stop_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT) << 8;
+                    }
+
+                    // Update active list
+                    active_joint_controllers_list_ = robot_hw_interface_->getActiveJointControllersList();
+                    active_robot_controllers_list_ = robot_hw_interface_->getActiveRobotControllersList();
+                }
+            }
+
+            // Update the joint level controllers
+            joint_cm_->update(current_time, elapsed_time);
+
+            // Update the robot level controllers
+            robot_cm_->update(current_time, elapsed_time);
+        }
+        //ROS_INFO("after cm.update");
+
+        //ROS_INFO("before write");
+        {
+            DO_TIMING(write_timing_);
+            this->write(current_time, elapsed_time);
+        }
+    }
+    return 0;
+}
+
+// Default run loop for controller updates
 int32_t VigirHumanoidController::run()
 {
     ros::Time     current_time;
@@ -74,7 +156,7 @@ int32_t VigirHumanoidController::run()
     ros::Time     last_time = ros::Time::now();
     timespec      sleep_time;
     timespec      remaining_time;
-    std::vector<std::string > running_controllers_list;
+    static std::vector<std::string > running_controllers_list;
 
     ROS_INFO("Start controller %s run loop ...",name_.c_str());
     sleep_time.tv_sec = 0;
@@ -121,6 +203,7 @@ int32_t VigirHumanoidController::run()
     active_control_mode_id_ = -1;
 
     // Call update loop with all off to initialize properly
+    joint_cm_->update(current_time, elapsed_time);
     robot_cm_->update(current_time, elapsed_time);
 
     // Main control loop
@@ -143,65 +226,10 @@ int32_t VigirHumanoidController::run()
             }
             last_time = current_time;
 
-            //ROS_INFO("before read");
-            {
-                DO_TIMING(read_timing_); // includes wait time
-                this->read(current_time, elapsed_time);
-            }
-            //ROS_INFO("after read");
+            // Update this controller by doing the read- update CM - write functions
+            this->update(current_time, elapsed_time);
 
-            //ROS_INFO("before cm.update");
-            {
-                DO_TIMING(controller_timing_);
-                mode_cm_->update(current_time, elapsed_time);
-
-                // Switch controllers on/off based on behavior mode
-                if (robot_hw_interface_->getActiveControlModeId() != active_control_mode_id_)
-                {
-                    VigirHumanoidSwitchMode switch_status= robot_hw_interface_->permitControllerSwitch();
-                    if (switch_status)
-                    {
-                        ROS_INFO("  ControlModeID changed = %d old=%d", robot_hw_interface_->getActiveControlModeId(), active_control_mode_id_);
-
-                        robot_cm_->getRunningControllersListRealTime(running_controllers_list);
-
-                        active_control_mode_id_ = robot_hw_interface_->getActiveControlModeId();
-
-                        switch(switch_status)
-                        {
-                        case HARD_RESET_MAINTAIN:
-                            // force hard reset by stopping all, then restarting desired controllers         start_list                              stop_list
-                            controller_switching_fault_ = robot_cm_->switchControllerRealtime(running_controllers_list, running_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
-                            break;
-                        case SWITCH_HARD_RESET:
-                            // force hard reset by stopping all, then restarting desired controllers         start_list                              stop_list
-                            controller_switching_fault_ = robot_cm_->switchControllerRealtime(*robot_hw_interface_->getActiveControllersList(), running_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
-                            break;
-                        default:
-                            std::vector<std::string> stop_list;
-                            std::vector<std::string> start_list;
-
-                            // Determine unused controllers to stop, and new controllers to start (leave common controllers running)
-                            processControllerLists(&running_controllers_list, robot_hw_interface_->getActiveControllersList(), stop_list, start_list);
-                            controller_switching_fault_ = robot_cm_->switchControllerRealtime(start_list, stop_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
-                        }
-
-                        // Update active list
-                        active_controllers_list_ = robot_hw_interface_->getActiveControllersList();
-                    }
-                }
-
-                robot_cm_->update(current_time, elapsed_time);
-            }
-            //ROS_INFO("after cm.update");
-
-            //ROS_INFO("before write");
-            {
-                DO_TIMING(write_timing_);
-                this->write(current_time, elapsed_time);
-            }
-            //ROS_INFO("after write");
-
+            // Check time and sleep to stay on desired cycle time
             ros::Time end_time = ros::Time::now();
             elapsed_time = end_time - current_time;
             sleep_time.tv_nsec = desired_loop_rate_.expectedCycleTime().toNSec() - elapsed_time.toNSec();
@@ -236,12 +264,14 @@ int32_t VigirHumanoidController::run()
 
 // Initialization functions
 int32_t VigirHumanoidController::initialize(boost::shared_ptr<ros::NodeHandle>& mode_control_nh,
+                                            boost::shared_ptr<ros::NodeHandle>& joint_control_nh,
                                             boost::shared_ptr<ros::NodeHandle>& robot_control_nh,
                                             boost::shared_ptr<ros::NodeHandle>& pub_nh,
                                             boost::shared_ptr<ros::NodeHandle>& sub_nh,
                                             boost::shared_ptr<ros::NodeHandle>& private_nh)
 {
     mode_controller_nh_      = mode_control_nh;
+    joint_controller_nh_     = joint_control_nh;
     robot_controller_nh_     = robot_control_nh;
     pub_nh_                  = pub_nh    ;
     sub_nh_                  = sub_nh    ;
@@ -299,7 +329,8 @@ int32_t VigirHumanoidController::initialize(boost::shared_ptr<ros::NodeHandle>& 
         }
 
         // Assign pointer to list of the active controllers
-        active_controllers_list_ = robot_hw_interface_->getActiveControllersList();
+        active_joint_controllers_list_ = robot_hw_interface_->getActiveJointControllersList();
+        active_robot_controllers_list_ = robot_hw_interface_->getActiveRobotControllersList();
 
     }
     catch(...) // @todo: catch specific exceptions and report
