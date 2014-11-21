@@ -230,6 +230,8 @@ class TestHumanoidController : public VigirHumanoidController
 
     }
 
+    bool newDataAvailable(){return true;}
+
 };
 
 }

@@ -92,6 +92,8 @@ namespace vigir_control {
     virtual bool read(ros::Time time, ros::Duration period) = 0;
     virtual void write(ros::Time time, ros::Duration period) = 0;
 
+    virtual bool newDataAvailable() = 0;
+
   protected:
 
     // Main update loop for controllers
