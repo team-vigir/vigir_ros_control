@@ -116,6 +116,11 @@ add_dependencies(vigir_ros_controllers ${catkin_EXPORTED_TARGETS})
 target_link_libraries(vigir_ros_controllers ${catkin_LIBRARIES}
 )
 
+install(FILES
+	vigir_ros_controllers_plugins.xml
+	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
 ## Declare a cpp executable
 # add_executable(vigir_ros_controllers_node src/vigir_ros_controllers_node.cpp)
 

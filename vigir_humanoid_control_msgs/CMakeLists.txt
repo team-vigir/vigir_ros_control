@@ -123,6 +123,16 @@ install(TARGETS ${PROJECT_NAME}
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   PATTERN "*.h")
+  
+install(DIRECTORY msg
+	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  	FILES_MATCHING PATTERN "*.msg"
+)
+
+install(DIRECTORY launch
+	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  	FILES_MATCHING PATTERN "*.action"
+)
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS vigir_footstep_planning_msgs vigir_footstep_planning_msgs_node
