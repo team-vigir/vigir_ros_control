@@ -81,7 +81,7 @@ namespace vigir_control {
     //  this function provides a simple single thread for repeated invocation of the update function.
     //  this function does not exit until ROS is shutdown or the shutdown command is given.
     //  this function can be overridden for custom setups.
-    virtual int32_t run();
+    virtual int32_t runController();
 
     // Handle data transfer from/to the robot interface and the
     // ROS controllers HWinterface
@@ -91,6 +91,8 @@ namespace vigir_control {
     //    spinner.
     virtual bool read(ros::Time time, ros::Duration period) = 0;
     virtual void write(ros::Time time, ros::Duration period) = 0;
+
+    virtual bool newDataAvailable() = 0;
 
   protected:
 

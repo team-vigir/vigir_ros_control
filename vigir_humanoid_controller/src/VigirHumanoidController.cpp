@@ -76,7 +76,7 @@ int32_t VigirHumanoidController::update(const ros::Time&     current_time, const
     {
         //ROS_INFO("before read");
         {
-            DO_TIMING(read_timing_); // includes wait time
+            DO_TIMING(read_timing_);
             this->read(current_time, elapsed_time);
         }
         //ROS_INFO("after read");
@@ -149,8 +149,10 @@ int32_t VigirHumanoidController::update(const ros::Time&     current_time, const
 }
 
 // Default run loop for controller updates
-int32_t VigirHumanoidController::run()
+int32_t VigirHumanoidController::runController()
 {
+    static timespec sleep_ts={0L,100L};
+
     ros::Time     current_time;
     ros::Duration elapsed_time;
     ros::Time     last_time = ros::Time::now();
@@ -170,9 +172,13 @@ int32_t VigirHumanoidController::run()
         //ROS_INFO("before read");
         {
             DO_TIMING(read_timing_); // includes wait time
-            if (this->read(current_time, elapsed_time))
+            if (this->newDataAvailable())
             {
-              ROS_INFO("Read data from robot - ready to begin control loop!");
+              ROS_INFO("New data from robot is available - ready to begin control loop!");
+              {
+                  DO_TIMING(read_timing_);
+                  this->read(current_time, elapsed_time);
+              }
               break;
             }
             else
@@ -225,6 +231,24 @@ int32_t VigirHumanoidController::run()
                 }
             }
             last_time = current_time;
+
+            // Wait for new data before proceeding
+            {
+                DO_TIMING(wait_timing_);
+                int count =0;
+                while (!newDataAvailable() && count < 10)
+                {
+                    ++count;
+                    nanosleep(&sleep_ts,NULL);
+                }
+
+                if (count > max_read_waits_) max_read_waits_ = count;
+
+            }
+
+            //if (count > 2)
+            //    printf(" read wait counter = %d\n",count);
+
 
             // Update this controller by doing the read- update CM - write functions
             this->update(current_time, elapsed_time);
