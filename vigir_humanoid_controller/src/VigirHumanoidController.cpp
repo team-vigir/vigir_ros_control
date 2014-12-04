@@ -199,6 +199,7 @@ int32_t VigirHumanoidController::runController()
     std::cout << "Currently Running: " << running_controllers_list << std::endl;
 
     mode_cm_->getControllerNamesRealtime(running_controllers_list); // get list of all controllers currently loaded in this manager
+    std::cout << "Starting : " << running_controllers_list << std::endl;
     if (!mode_cm_->switchControllerRealtime(running_controllers_list, std::vector<std::string>(),current_time, controller_manager_msgs::SwitchController::Request::STRICT))
     {
         ROS_ERROR("Failed to start the mode controllers!");
