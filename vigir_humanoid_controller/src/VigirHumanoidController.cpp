@@ -67,7 +67,7 @@ VigirHumanoidController::VigirHumanoidController(const std::string& name, const 
     }
 }
 
-int32_t VigirHumanoidController::update(const ros::Time&     current_time, const ros::Duration& elapsed_time)
+int32_t VigirHumanoidController::updateController(const ros::Time&     current_time, const ros::Duration& elapsed_time)
 {
     static std::vector<std::string > running_joint_controllers_list;
     static std::vector<std::string > running_robot_controllers_list;
@@ -199,6 +199,7 @@ int32_t VigirHumanoidController::runController()
     std::cout << "Currently Running: " << running_controllers_list << std::endl;
 
     mode_cm_->getControllerNamesRealtime(running_controllers_list); // get list of all controllers currently loaded in this manager
+    std::cout << "Starting : " << running_controllers_list << std::endl;
     if (!mode_cm_->switchControllerRealtime(running_controllers_list, std::vector<std::string>(),current_time, controller_manager_msgs::SwitchController::Request::STRICT))
     {
         ROS_ERROR("Failed to start the mode controllers!");
@@ -251,7 +252,7 @@ int32_t VigirHumanoidController::runController()
 
 
             // Update this controller by doing the read- update CM - write functions
-            this->update(current_time, elapsed_time);
+            this->updateController(current_time, elapsed_time);
 
             // Check time and sleep to stay on desired cycle time
             ros::Time end_time = ros::Time::now();
