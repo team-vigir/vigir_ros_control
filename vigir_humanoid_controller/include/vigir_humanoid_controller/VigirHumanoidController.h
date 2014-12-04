@@ -98,7 +98,7 @@ namespace vigir_control {
 
     // Main update loop for controllers
     // A basic read-update each controller manager -write loop is defined, but can be overridden for custom setups.
-    virtual int32_t update(const ros::Time&     current_time, const ros::Duration& elapsed_time);
+    virtual int32_t updateController(const ros::Time&     current_time, const ros::Duration& elapsed_time);
 
     // generic functions given instantiated types
     int32_t init_robot_model();
