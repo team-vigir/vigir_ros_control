@@ -5,6 +5,27 @@
 #include <fstream>
 #include <flor_utilities/timing.h>
 
+
+inline std::ostream& operator << (std::ostream& os, const vigir_control::Quatd& q)
+{
+    os << "q=[(" << q.x() << ", " << q.y() << ", " << q.z()<< ") w=" << q.w() << "]";
+    return os;
+}
+
+inline std::ostream& operator << (std::ostream& os, const vigir_control::Pose& p)
+{
+    os << "p=[" << p.position[0] << ", " <<  p.position[1] << ", " <<  p.position[2] << "] " <<p.orientation;
+    return os;
+}
+
+inline std::ostream& operator << (std::ostream& os, const vigir_control::Transform& p)
+{
+    vigir_control::Quatd q(p.rotation);
+    os << "t=[" << p.translation[0] << ", " <<  p.translation[1] << ", " <<  p.translation[2] << "] " << q;
+    return os;
+}
+
+
 #include <ros/ros.h>
 int main(int argc, char ** argv)
 {
@@ -239,6 +260,41 @@ int main(int argc, char ** argv)
     //std::cout << "  mass=" << mass << " CoM = " << CoM.transpose() << std::endl;
     //std::cout << "  T=" << torques.transpose() << std::endl;
   }
+
+
+  {
+       std::cout << " Testing pose and transform inverses" << std::endl;
+
+       vigir_control::Pose p1,p2,pi;
+       vigir_control::Transform t1,t2,ti;
+
+       using namespace Eigen;
+       p1.position[0] = 1.0;
+       p1.position[1] = -2.0;
+       p1.position[2] = 3.0;
+
+       p1.orientation = AngleAxisd(0.25*M_PI, Vector3d::UnitX())* AngleAxisd(0.5*M_PI,  Vector3d::UnitY()) * AngleAxisd(0.33*M_PI, Vector3d::UnitZ());
+       p1.invert(p2);
+
+       pi  = p1;
+       pi *= p2;
+       std::cout << "Pose test: p1="  << p1 << std::endl;
+       std::cout << "         : p2="  << p2 << std::endl;
+       std::cout << "         : pi="  << pi << std::endl;
+
+       t1.translation = p1.position;
+       t1.rotation    = p1.orientation;
+
+       t1.invert(t2);
+
+       ti  = t2;
+       ti *= t1;
+       std::cout << "Transform test: t1="  << t1 << std::endl;
+       std::cout << "              : t2="  << t2 << std::endl;
+       std::cout << "              : ti="  << ti << std::endl;
+  }
+
+
     std::cout << std::endl;
     std::cout << "Done!" << std::endl << std::endl << std::endl << std::endl;
     return 0;

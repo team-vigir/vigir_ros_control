@@ -110,6 +110,20 @@ typedef struct Pose
 
     }
 
+    Pose operator *= (const Pose& rhs)
+    {
+        position += orientation*rhs.position;
+        orientation *= rhs.orientation;
+        return *this;
+    }
+
+    // Returns the inverse transformation as a pose
+    void invert(Pose& lhs)
+    {
+        lhs.orientation = orientation.inverse();       // R^t
+        lhs.position    = lhs.orientation*(-position); // R^t * -p
+    }
+
 } Pose;
 
 typedef struct Twist
@@ -173,6 +187,20 @@ typedef struct Transform
     {
         return ((translation != rhs.translation) || (rotation != rhs.rotation));
 
+    }
+
+    Transform operator *= (const Transform& rhs)
+    {
+        translation += rotation*rhs.translation;
+        rotation *= rhs.rotation;
+        return *this;
+    }
+
+    // Returns the inverse transformation assuming a SO(3) rotation matrix
+    void invert(Transform& lhs)
+    {
+        lhs.rotation    = rotation.transpose();        // R^t
+        lhs.translation = lhs.rotation*(-translation); // R^t * -p
     }
 
 } Transform;
