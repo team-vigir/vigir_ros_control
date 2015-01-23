@@ -79,7 +79,7 @@ enum VigirHumanoidSwitchMode
 
 
     // Generic initialization functions
-    virtual int32_t init_robot_controllers(boost::shared_ptr<vigir_control::VigirRobotModel>& robot_model, //boost::shared_ptr<std::vector<std::string> > & joint_list,
+    virtual int32_t init_robot_controllers(boost::shared_ptr<vigir_control::VigirRobotModel>& robot_model,
                                            boost::shared_ptr<ros::NodeHandle>& behavior_control_nh,
                                            boost::shared_ptr<ros::NodeHandle>& joint_control_nh,
                                            boost::shared_ptr<ros::NodeHandle>& private_nh);
