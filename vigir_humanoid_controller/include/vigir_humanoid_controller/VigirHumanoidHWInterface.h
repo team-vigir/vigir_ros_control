@@ -38,8 +38,7 @@
 #include <vigir_joint_interfaces/vigir_pelvis_iface.h>
 
 #include <vigir_robot_model/VigirRobotDataTypes.h>
-
-//@todo RobotMode (startup) , RobotBehavior, and RobotFootsteps interfaces
+#include <vigir_robot_model/VigirRobotModel.h>
 
 namespace vigir_control {
 
@@ -80,7 +79,7 @@ enum VigirHumanoidSwitchMode
 
 
     // Generic initialization functions
-    virtual int32_t init_robot_controllers(boost::shared_ptr<std::vector<std::string> > & joint_list,
+    virtual int32_t init_robot_controllers(boost::shared_ptr<vigir_control::VigirRobotModel>& robot_model, //boost::shared_ptr<std::vector<std::string> > & joint_list,
                                            boost::shared_ptr<ros::NodeHandle>& behavior_control_nh,
                                            boost::shared_ptr<ros::NodeHandle>& joint_control_nh,
                                            boost::shared_ptr<ros::NodeHandle>& private_nh);

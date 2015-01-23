@@ -171,7 +171,7 @@ class TestHumanoidController : public VigirHumanoidController
         robot_cm_.reset(new controller_manager::ControllerManager(robot_hw_interface_.get(), *robot_controller_nh_.get()));
 
         // Initialize the controllers
-        int32_t rc = robot_hw_interface_->init_robot_controllers(robot_model_->joint_names_, mode_controller_nh_, robot_controller_nh_, private_nh_);
+        int32_t rc = robot_hw_interface_->init_robot_controllers(robot_model_, mode_controller_nh_, robot_controller_nh_, private_nh_);
         if (rc)
         {
             ROS_ERROR("Failed to initialize the HW interface for controllers - abort!");

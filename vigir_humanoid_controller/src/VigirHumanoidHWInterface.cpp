@@ -52,14 +52,14 @@ VigirHumanoidHWInterface::VigirHumanoidHWInterface(const std::string& name)
 }
 
 // Set up the data for ros_controllers
-int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr< std::vector<std::string> >& joint_list,
+int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr<vigir_control::VigirRobotModel>& robot_model, //boost::shared_ptr< std::vector<std::string> >& joint_list,
                                                          boost::shared_ptr<ros::NodeHandle>& behavior_control_nh,
                                                          boost::shared_ptr<ros::NodeHandle>& joint_control_nh,
                                                          boost::shared_ptr<ros::NodeHandle>& private_nh)
 {
     ROS_INFO(" Initialize the generic humanoid HW interfaces ...");
     // Store the list of controlled joints
-    joint_names_ = joint_list;
+    joint_names_ = robot_model->joint_names_;
     try {
         // State inputs
         std::cout << "Initialize HW interface for " << joint_names_->size() << " joints!" << std::endl;
