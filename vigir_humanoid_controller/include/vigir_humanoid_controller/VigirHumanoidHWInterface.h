@@ -96,17 +96,21 @@ enum VigirHumanoidSwitchMode
     // Following public data structures are used directly by controllers
     // The data structures must be populated during a read() function in a
     // thread safe manner
+
+    ros::Time                                             last_update_time_;
+    boost::shared_ptr< std::vector<std::string> >         joint_names_;
     // I'd prefer to use VectorNd, but I am not sure if local_vector = data_vector
     // would ever reallocate and change memory locations after registering.
     // I would not expect it to if the underlying sizes are the same, but I'm not
     // certain, so I'm going to play it safe for now.
-
-    ros::Time                                             last_update_time_;
-    boost::shared_ptr< std::vector<std::string> >         joint_names_;
-    std::vector<double >                                  joint_state_positions_;
-    std::vector<double >                                  joint_state_velocities_;
-    std::vector<double >                                  joint_state_accelerations_;
-    std::vector<double >                                  joint_state_efforts_;
+    //std::vector<double >                                  joint_state_positions_;
+    //std::vector<double >                                  joint_state_velocities_;
+    //std::vector<double >                                  joint_state_accelerations_;
+    //std::vector<double >                                  joint_state_efforts_;
+    VectorNd                                              joint_state_positions_;
+    VectorNd                                              joint_state_velocities_;
+    VectorNd                                              joint_state_accelerations_;
+    VectorNd                                              joint_state_efforts_;
 
 
     VectorNd                                              joint_command_positions_;             //!< desired position
