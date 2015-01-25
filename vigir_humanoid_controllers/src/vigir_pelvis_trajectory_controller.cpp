@@ -28,21 +28,21 @@
 
 #include <pluginlib/class_list_macros.h>
 
-#include <vigir_joint_interfaces/vigir_pelvis_iface_adapter.h>
+#include <vigir_humanoid_interfaces/vigir_pelvis_iface_adapter.h>
 
 #include <trajectory_interface/quintic_spline_segment.h>
-#include <vigir_ros_controllers/vigir_pelvis_trajectory_controller.h>
+#include <vigir_humanoid_controllers/vigir_pelvis_trajectory_controller.h>
 
 
-namespace vigir_ros_controllers
+namespace vigir_humanoid_controllers
 {
   /**
    * \brief Joint trajectory controller that represents trajectory segments as <b>quintic splines</b> and sends
    * commands to an \b position/velocity/acceleration interface.
    */
-  typedef vigir_ros_controllers::VigirPelvisTrajectoryController<trajectory_interface::QuinticSplineSegment<double>,
+  typedef vigir_humanoid_controllers::VigirPelvisTrajectoryController<trajectory_interface::QuinticSplineSegment<double>,
                                                                        hardware_interface::VigirPelvisInterface>
           PelvisTrajectoryController;
 }
 
-PLUGINLIB_EXPORT_CLASS(vigir_ros_controllers::PelvisTrajectoryController,   controller_interface::ControllerBase)
+PLUGINLIB_EXPORT_CLASS(vigir_humanoid_controllers::PelvisTrajectoryController,   controller_interface::ControllerBase)

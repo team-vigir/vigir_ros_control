@@ -1,4 +1,4 @@
-<library path="lib/libvigir_ros_controllers">
+<library path="lib/libvigir_humanoid_controllers">
 
   <class name="pos_vel_acc_controllers/JointTrajectoryController" 
          type="pos_vel_acc_controllers::JointTrajectoryController" 
@@ -19,8 +19,8 @@
     </description>
   </class>
 
-  <class name="vigir_ros_controllers/PelvisTrajectoryController"
-         type="vigir_ros_controllers::PelvisTrajectoryController"
+  <class name="vigir_humanoid_controllers/PelvisTrajectoryController"
+         type="vigir_humanoid_controllers::PelvisTrajectoryController"
          base_class_type="controller_interface::ControllerBase">
     <description>
       The PelvisTrajectoryController executes "joint-space" trajectories on the x,y,z, roll, pitch, yaw of target pelvis pose.
@@ -28,5 +28,22 @@
       Errors are also transmitted.
     </description>
   </class>
+
+  <class name="vigir_humanoid_controllers/VigirGravityCompensationController" 
+         type="vigir_humanoid_controllers::VigirGravityCompensationController" 
+         base_class_type="controller_interface::ControllerBase">
+    <description>
+      VigirGravityCompensationController adds the effort required to compensate for gravity (quasi-static) to the full Team ViGIR humanoid controller setup
+    </description>
+  </class>
+
+  <class name="vigir_humanoid_controllers/VigirInverseDynamicsController" 
+         type="vigir_atlas_controllers::VigirInverseDynamicsController" 
+         base_class_type="controller_interface::ControllerBase">
+    <description>
+      VigirInverseDynamicsController adds the effort required to compensate for gravity and dynamics (velocity and acceleration) effects to the full Team ViGIR humanoid controller setup 
+    </description>
+  </class>
+
 
 </library>

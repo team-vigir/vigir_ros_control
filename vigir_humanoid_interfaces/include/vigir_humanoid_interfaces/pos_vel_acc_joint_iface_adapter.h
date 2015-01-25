@@ -4,7 +4,7 @@
 #define POS_VEL_ACC_JOINT_CMD_INTERFACE_ADAPTER_H
 
 #include <joint_trajectory_controller/hardware_interface_adapter.h>
-#include <vigir_joint_interfaces/pos_vel_acc_joint_iface.h>
+#include <vigir_humanoid_interfaces/pos_vel_acc_joint_iface.h>
 
 
 

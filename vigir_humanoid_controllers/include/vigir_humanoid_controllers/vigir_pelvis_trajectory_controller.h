@@ -75,7 +75,7 @@
 #include <joint_trajectory_controller/init_joint_trajectory.h>
 #include <joint_trajectory_controller/hardware_interface_adapter.h>
 
-namespace vigir_ros_controllers
+namespace vigir_humanoid_controllers
 {
 
 /**
@@ -272,6 +272,6 @@ private:
 
 } // namespace
 
-#include <vigir_ros_controllers/vigir_pelvis_trajectory_controller_impl.h>
+#include <vigir_humanoid_controllers/vigir_pelvis_trajectory_controller_impl.h>
 
 #endif // header guard

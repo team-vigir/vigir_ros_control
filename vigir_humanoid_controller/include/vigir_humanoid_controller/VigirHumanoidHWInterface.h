@@ -33,9 +33,9 @@
 #include <hardware_interface/joint_command_interface.h>
 #include <hardware_interface/joint_state_interface.h>
 #include <joint_limits_interface/joint_limits_interface.h>
-#include <vigir_joint_interfaces/pos_vel_acc_joint_iface.h>
-#include <vigir_joint_interfaces/pos_vel_acc_err_humanoid_joint_iface.h>
-#include <vigir_joint_interfaces/vigir_pelvis_iface.h>
+#include <vigir_humanoid_interfaces/pos_vel_acc_joint_iface.h>
+#include <vigir_humanoid_interfaces/pos_vel_acc_err_humanoid_joint_iface.h>
+#include <vigir_humanoid_interfaces/vigir_pelvis_iface.h>
 
 #include <vigir_robot_model/VigirRobotDataTypes.h>
 #include <vigir_robot_model/VigirRobotModel.h>
