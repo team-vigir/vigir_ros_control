@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(vigir_humanoid_interfaces)
 
+## System dependencies are found with CMake's conventions
+find_package(Boost REQUIRED COMPONENTS system)
+find_package(catkin REQUIRED COMPONENTS cmake_modules)
+find_package(Eigen REQUIRED)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -11,12 +16,9 @@ find_package(catkin REQUIRED COMPONENTS
   joint_trajectory_controller
   control_toolbox
   vigir_robot_model
+  eigen_stl_containers
+  eigen_conversions
 )
-
-## System dependencies are found with CMake's conventions
-find_package(Boost REQUIRED COMPONENTS system)
-find_package(catkin REQUIRED COMPONENTS cmake_modules)
-find_package(Eigen REQUIRED)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -88,6 +90,7 @@ catkin_package(
   LIBRARIES ${PROJECT_NAME}
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp hardware_interface joint_trajectory_controller control_toolbox vigir_robot_model
+#  DEPENDS system_lib
 )
 
 ###########
@@ -115,7 +118,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX) # Needed t
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a cpp executable
-add_executable(test_interfaces src/test_interfaces.cpp ${HEADERS})
+add_executable(test_interfaces src/test_interfaces.cpp)# ${HEADERS})
 target_link_libraries(test_interfaces ${catkin_LIBRARIES})
 add_dependencies(test_interfaces ${catkin_EXPORTED_TARGETS})
 
