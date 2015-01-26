@@ -56,7 +56,8 @@ public:
       joint_command_friction_compensation_( NULL ),
       joint_position_errors_      ( NULL ),
       joint_velocity_errors_      ( NULL ),
-      joint_effort_errors_        ( NULL )
+      joint_effort_errors_        ( NULL ),
+      robot_pose_(NULL)
  {}
 
   VigirHumanoidControllerHandle(const std::string& name, const vigir_control::VectorNd *  joint_state_positions,
@@ -72,6 +73,7 @@ public:
                                                  vigir_control::VectorNd * joint_position_errors,
                                                  vigir_control::VectorNd * joint_velocity_errors,
                                                  vigir_control::VectorNd * joint_effort_errors,
+                                                 vigir_control::Pose     * robot_pose,
                                                  boost::shared_ptr<vigir_control::VigirRobotModel> robot_model)
       : name_(name),
         joint_state_positions_      (joint_state_positions)    ,
@@ -87,6 +89,7 @@ public:
         joint_position_errors_      (joint_position_errors     ),
         joint_velocity_errors_      (joint_velocity_errors     ),
         joint_effort_errors_        (joint_effort_errors       ),
+        robot_pose_(robot_pose),
         robot_model_(robot_model)
   {
       if (NULL == joint_state_positions_       ) throw HardwareInterfaceException("Cannot create handle '" + name + "' some pointer is null.");
@@ -102,6 +105,7 @@ public:
       if (NULL == joint_position_errors_       ) throw HardwareInterfaceException("Cannot create handle '" + name + "' some pointer is null.");
       if (NULL == joint_velocity_errors_       ) throw HardwareInterfaceException("Cannot create handle '" + name + "' some pointer is null.");
       if (NULL == joint_effort_errors_         ) throw HardwareInterfaceException("Cannot create handle '" + name + "' some pointer is null.");
+      if (NULL == robot_pose_                  ) throw HardwareInterfaceException("Cannot create handle '" + name + "' robot pose pointer is null.");
       if (NULL == robot_model_.get()           ) throw HardwareInterfaceException("Cannot create handle '" + name + "' some pointer is null.");
 
   }
@@ -122,9 +126,10 @@ public:
   vigir_control::VectorNd *  joint_position_errors_;
   vigir_control::VectorNd *  joint_velocity_errors_;
   vigir_control::VectorNd *  joint_effort_errors_;
+  vigir_control::Pose     *  robot_pose_;
   boost::shared_ptr<vigir_control::VigirRobotModel> robot_model_;
 
-private:
+protected:
   std::string name_;
 
 };

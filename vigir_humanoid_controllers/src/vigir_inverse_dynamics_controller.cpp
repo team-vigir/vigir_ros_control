@@ -67,9 +67,8 @@ namespace vigir_humanoid_controllers
                                      *(controller_handle_.joint_command_velocities_),
                                      *(controller_handle_.joint_command_accelerations_));
 
-      vigir_control::Pose pose_orientation;
-      //pose_orientation.orientation = atlas_hw_interface_->atlas_state_.robot_state.pelvis_pose_.orientation;// ignoring translation offset
-      controller_handle_.robot_model_->updateBasePose(pose_orientation);
+      // Update the body pose to get gravity vector
+      controller_handle_.robot_model_->updateBasePose(*(controller_handle_.robot_pose_));
 
       // Update RBDL including accelerations (here we are assuming quasi-static gravity compensation with 0.0 velocity and acceleration)
       controller_handle_.robot_model_->updateDynamics();

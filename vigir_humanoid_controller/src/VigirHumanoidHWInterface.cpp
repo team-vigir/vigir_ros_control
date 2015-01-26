@@ -130,6 +130,7 @@ int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr<vigir
                                                                     &joint_position_errors_,
                                                                     &joint_velocity_errors_,
                                                                     &joint_effort_errors_,
+                                                                    &robot_pose_,
                                                                     robot_model);
         humanoid_controller_interface_.registerHandle(controller_handle);
 
