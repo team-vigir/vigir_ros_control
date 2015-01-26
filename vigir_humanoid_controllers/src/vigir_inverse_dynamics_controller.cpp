@@ -41,20 +41,20 @@ namespace vigir_humanoid_controllers
     controller_handle_ = hw->getHandle("controller_handle");
     joint_efforts_ = *(controller_handle_.joint_command_efforts_);
 
-    ROS_INFO_NAMED(controller_handle_.getName(), "Gravity compensation controller %s is initialized.", controller_handle_.getName().c_str());
+    ROS_INFO_NAMED(controller_handle_.getName(), "Inverse dynamics controller %s is initialized.", controller_handle_.getName().c_str());
     return true;
   }
 
   // Initialize to OFF on start up
   void VigirInverseDynamicsController::starting(const ros::Time& time)
   {
-      ROS_WARN_NAMED(controller_handle_.getName(), "Gravity compensation controller is starting.");
+      ROS_WARN_NAMED(controller_handle_.getName(), "Inverse dynamics controller is starting.");
   }
 
   // This must remain active for control, so shut off system if this unloads for any reason
   void VigirInverseDynamicsController::stopping(const ros::Time& time)
   {
-      ROS_WARN_NAMED(controller_handle_.getName(), "Gravity compensation controller is stopping.");
+      ROS_WARN_NAMED(controller_handle_.getName(), "Inverse dynamics controller is stopping.");
   }
 
   void VigirInverseDynamicsController::update(const ros::Time& time, const ros::Duration& period)
