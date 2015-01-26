@@ -56,6 +56,9 @@ VigirHumanoidController::VigirHumanoidController(const std::string& name, const 
       read_timing_(name+" Read",true,false),
       write_timing_(name+" Write",true,false),
       controller_timing_(name+" Controller",true,false),
+      mode_controller_timing_(name+" Mode Controller",true,false),
+      joint_controller_timing_(name+" Joint Controller",true,false),
+      robot_controller_timing_(name+" Robot Controller",true,false),
       sleep_failure_(0),
       active_control_mode_id_(-1)
 {
@@ -83,59 +86,67 @@ int32_t VigirHumanoidController::updateController(const ros::Time&     current_t
 
         //ROS_INFO("before cm.update");
         {
+            // Overall controller calculation timing
             DO_TIMING(controller_timing_);
 
-            // Update the mode controllers first  (This may include stability calculations)
-            mode_cm_->update(current_time, elapsed_time);
+            {   // Update the mode controllers first  (This may include stability calculations)
+                DO_TIMING(mode_controller_timing_);
 
-            // Switch joint and robot controllers on/off based on behavior mode
-            if (robot_hw_interface_->getActiveControlModeId() != active_control_mode_id_)
-            {
-                VigirHumanoidSwitchMode switch_status= robot_hw_interface_->permitControllerSwitch();
-                if (switch_status)
+                mode_cm_->update(current_time, elapsed_time);
+
+                // Switch joint and robot controllers on/off based on behavior mode
+                if (robot_hw_interface_->getActiveControlModeId() != active_control_mode_id_)
                 {
-                    ROS_INFO("  ControlModeID changed = %d old=%d", robot_hw_interface_->getActiveControlModeId(), active_control_mode_id_);
-
-                    joint_cm_->getRunningControllersListRealTime(running_joint_controllers_list);
-                    robot_cm_->getRunningControllersListRealTime(running_robot_controllers_list);
-
-                    active_control_mode_id_ = robot_hw_interface_->getActiveControlModeId();
-
-                    switch(switch_status)
+                    VigirHumanoidSwitchMode switch_status= robot_hw_interface_->permitControllerSwitch();
+                    if (switch_status)
                     {
-                    case HARD_RESET_MAINTAIN:
-                        // force hard reset by stopping all, then restarting desired controllers         start_list                              stop_list
-                        controller_switching_fault_  = joint_cm_->switchControllerRealtime(running_joint_controllers_list, running_joint_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
-                        controller_switching_fault_ += robot_cm_->switchControllerRealtime(running_robot_controllers_list, running_robot_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT) << 8;
-                        break;
-                    case SWITCH_HARD_RESET:
-                        // force hard reset by stopping all, then restarting desired controllers         start_list                              stop_list
-                        controller_switching_fault_  = joint_cm_->switchControllerRealtime(*robot_hw_interface_->getActiveJointControllersList(), running_joint_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
-                        controller_switching_fault_ += robot_cm_->switchControllerRealtime(*robot_hw_interface_->getActiveRobotControllersList(), running_robot_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT) << 8;
-                        break;
-                    default:
-                        std::vector<std::string> stop_list;
-                        std::vector<std::string> start_list;
+                        ROS_INFO("  ControlModeID changed = %d old=%d", robot_hw_interface_->getActiveControlModeId(), active_control_mode_id_);
 
-                        // Determine unused controllers to stop, and new controllers to start (leave common controllers running)
-                        processControllerLists(&running_joint_controllers_list, robot_hw_interface_->getActiveJointControllersList(), stop_list, start_list);
-                        controller_switching_fault_  = joint_cm_->switchControllerRealtime(start_list, stop_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
+                        joint_cm_->getRunningControllersListRealTime(running_joint_controllers_list);
+                        robot_cm_->getRunningControllersListRealTime(running_robot_controllers_list);
 
-                        processControllerLists(&running_robot_controllers_list, robot_hw_interface_->getActiveRobotControllersList(), stop_list, start_list);
-                        controller_switching_fault_ += robot_cm_->switchControllerRealtime(start_list, stop_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT) << 8;
+                        active_control_mode_id_ = robot_hw_interface_->getActiveControlModeId();
+
+                        switch(switch_status)
+                        {
+                        case HARD_RESET_MAINTAIN:
+                            // force hard reset by stopping all, then restarting desired controllers         start_list                              stop_list
+                            controller_switching_fault_  = joint_cm_->switchControllerRealtime(running_joint_controllers_list, running_joint_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
+                            controller_switching_fault_ += robot_cm_->switchControllerRealtime(running_robot_controllers_list, running_robot_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT) << 8;
+                            break;
+                        case SWITCH_HARD_RESET:
+                            // force hard reset by stopping all, then restarting desired controllers         start_list                              stop_list
+                            controller_switching_fault_  = joint_cm_->switchControllerRealtime(*robot_hw_interface_->getActiveJointControllersList(), running_joint_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
+                            controller_switching_fault_ += robot_cm_->switchControllerRealtime(*robot_hw_interface_->getActiveRobotControllersList(), running_robot_controllers_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT) << 8;
+                            break;
+                        default:
+                            std::vector<std::string> stop_list;
+                            std::vector<std::string> start_list;
+
+                            // Determine unused controllers to stop, and new controllers to start (leave common controllers running)
+                            processControllerLists(&running_joint_controllers_list, robot_hw_interface_->getActiveJointControllersList(), stop_list, start_list);
+                            controller_switching_fault_  = joint_cm_->switchControllerRealtime(start_list, stop_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
+
+                            processControllerLists(&running_robot_controllers_list, robot_hw_interface_->getActiveRobotControllersList(), stop_list, start_list);
+                            controller_switching_fault_ += robot_cm_->switchControllerRealtime(start_list, stop_list, current_time, controller_manager_msgs::SwitchController::Request::BEST_EFFORT) << 8;
+                        }
+
+                        // Update active list
+                        active_joint_controllers_list_ = robot_hw_interface_->getActiveJointControllersList();
+                        active_robot_controllers_list_ = robot_hw_interface_->getActiveRobotControllersList();
                     }
-
-                    // Update active list
-                    active_joint_controllers_list_ = robot_hw_interface_->getActiveJointControllersList();
-                    active_robot_controllers_list_ = robot_hw_interface_->getActiveRobotControllersList();
                 }
             }
 
-            // Update the joint level controllers
-            joint_cm_->update(current_time, elapsed_time);
+            {   // Update the joint level controllers
+                DO_TIMING(joint_controller_timing_);
+                joint_cm_->update(current_time, elapsed_time);
+            }
 
-            // Update the robot level controllers
-            robot_cm_->update(current_time, elapsed_time);
+            {   // Update the robot level controllers
+                DO_TIMING(robot_controller_timing_);
+                robot_cm_->update(current_time, elapsed_time);
+            }
         }
         //ROS_INFO("after cm.update");
 

@@ -1,5 +1,5 @@
 /*=================================================================================================
-// Copyright (c) 2014, David Conner, TORC Robotics
+// Copyright (c) 2013-2014, David Conner, TORC Robotics
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without
@@ -26,23 +26,35 @@
 //=================================================================================================
 */
 
-#include <pluginlib/class_list_macros.h>
+#ifndef ATLAS_INVERSE_DYNAMICS_CONTROLLER_CONTROLLER___
+#define ATLAS_INVERSE_DYNAMICS_CONTROLLER_CONTROLLER___
 
-#include <vigir_joint_interfaces/vigir_pelvis_iface_adapter.h>
+#include <controller_interface/controller.h>
 
-#include <trajectory_interface/quintic_spline_segment.h>
-#include <vigir_ros_controllers/vigir_pelvis_trajectory_controller.h>
+#include <vigir_humanoid_controllers/vigir_controller_controller_base.h>
 
+#include <actionlib/server/action_server.h>
 
-namespace vigir_ros_controllers
+// This controller calculates the required effort to compensate for gravity at the instantaneous desired position
+namespace vigir_humanoid_controllers
 {
-  /**
-   * \brief Joint trajectory controller that represents trajectory segments as <b>quintic splines</b> and sends
-   * commands to an \b position/velocity/acceleration interface.
-   */
-  typedef vigir_ros_controllers::VigirPelvisTrajectoryController<trajectory_interface::QuinticSplineSegment<double>,
-                                                                       hardware_interface::VigirPelvisInterface>
-          PelvisTrajectoryController;
+
+  class VigirInverseDynamicsController : public VigirControllerControllerBase
+  {
+    public:
+      bool init(hardware_interface::VigirHumanoidControllerInterface* hw, ros::NodeHandle &nh);
+
+      void update(const ros::Time& time, const ros::Duration& period);
+
+      void starting(const ros::Time& time);
+      void stopping(const ros::Time& time);
+
+    private:
+
+      hardware_interface::VigirHumanoidControllerHandle controller_handle_;
+      vigir_control::VectorNd      joint_efforts_;
+  };
+
 }
 
-PLUGINLIB_EXPORT_CLASS(vigir_ros_controllers::PelvisTrajectoryController,   controller_interface::ControllerBase)
+#endif

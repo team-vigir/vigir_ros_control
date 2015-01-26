@@ -129,6 +129,9 @@ namespace vigir_control {
     Timing                                read_timing_;
     Timing                                write_timing_;
     Timing                                controller_timing_;
+    Timing                                mode_controller_timing_;
+    Timing                                joint_controller_timing_;
+    Timing                                robot_controller_timing_;
     uint32_t                              sleep_failure_;
     uint32_t                              max_read_waits_;
 

@@ -33,7 +33,7 @@
 #define VIGIR_PELVIS_TRAJECTORY_CONTROLLER_IMP_H
 
 
-namespace vigir_ros_controllers
+namespace vigir_humanoid_controllers
 {
 
 namespace internal

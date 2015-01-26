@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(vigir_joint_interfaces)
+project(vigir_humanoid_interfaces)
+
+## System dependencies are found with CMake's conventions
+find_package(Boost REQUIRED COMPONENTS system)
+find_package(catkin REQUIRED COMPONENTS cmake_modules)
+find_package(Eigen REQUIRED)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -10,10 +15,10 @@ find_package(catkin REQUIRED COMPONENTS
   hardware_interface
   joint_trajectory_controller
   control_toolbox
+  vigir_robot_model
+  eigen_stl_containers
+  eigen_conversions
 )
-
-## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -82,9 +87,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
+  LIBRARIES ${PROJECT_NAME}
   INCLUDE_DIRS include
-#  LIBRARIES vigir_joint_interfaces
-CATKIN_DEPENDS roscpp hardware_interface joint_trajectory_controller control_toolbox
+  CATKIN_DEPENDS roscpp hardware_interface joint_trajectory_controller control_toolbox vigir_robot_model
 #  DEPENDS system_lib
 )
 
@@ -100,28 +105,22 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-## Declare a cpp library
-# add_library(vigir_joint_interfaces
-#   src/${PROJECT_NAME}/vigir_joint_interfaces.cpp
-# )
+SET(HEADERS
+include/${PROJECT_NAME}/vigir_humanoid_controller_interface.h
+include/${PROJECT_NAME}/vigir_pelvis_iface.h
+include/${PROJECT_NAME}/vigir_pelvis_iface_adapter.h
+include/${PROJECT_NAME}/pos_vel_acc_err_humanoid_joint_iface.h
+include/${PROJECT_NAME}/pos_vel_acc_err_humanoid_joint_iface_adapter.h
+)
+
+add_library(${PROJECT_NAME} ${HEADERS} )
+set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX) # Needed to infer C++ from headers
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a cpp executable
-add_executable(test_interfaces src/test_interfaces.cpp)
-
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-# add_dependencies(vigir_joint_interfaces_node vigir_joint_interfaces_generate_messages_cpp)
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(test_interfaces
-   ${catkin_LIBRARIES}
-)
-
-install( TARGETS
-    test_interfaces
-    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
+add_executable(test_interfaces src/test_interfaces.cpp)# ${HEADERS})
+target_link_libraries(test_interfaces ${catkin_LIBRARIES})
+add_dependencies(test_interfaces ${catkin_EXPORTED_TARGETS})
 
 #############
 ## Install ##
@@ -138,18 +137,18 @@ install( TARGETS
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS vigir_joint_interfaces vigir_joint_interfaces_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+ install(TARGETS ${PROJECT_NAME}
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ )
 
 ## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
+ install(DIRECTORY include/${PROJECT_NAME}/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+   FILES_MATCHING PATTERN "*.h"
+   PATTERN ".svn" EXCLUDE
+ )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
@@ -163,7 +162,7 @@ install( TARGETS
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_vigir_joint_interfaces.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_vigir_humanoid_interfaces.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

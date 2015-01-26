@@ -31,7 +31,7 @@
 #define VIGIR_PELVIS_CMD_INTERFACE_ADAPTER_H
 
 #include <joint_trajectory_controller/hardware_interface_adapter.h>
-#include <vigir_joint_interfaces/vigir_pelvis_iface.h>
+#include <vigir_humanoid_interfaces/vigir_pelvis_iface.h>
 
 
 /**
@@ -49,7 +49,7 @@ public:
                         ros::NodeHandle& controller_nh)
   {
 
-    //ROS_INFO(" Inside HardwareInterfaceAdapter<hardware_interface::VigirAtlasJointInterface, State>");
+    //ROS_INFO(" Inside HardwareInterfaceAdapter<hardware_interface::VigirVigirJointInterface, State>");
 
     // Store pointer to joint handles
     pelvis_handles_ptr_ = &pelvis_handles;
@@ -60,12 +60,12 @@ public:
 
   void starting(const ros::Time& time)
   {
-      ROS_INFO("    STARTING Atlas pelvis trajectory controller - update controller gains");
+      ROS_INFO("    STARTING Vigir pelvis trajectory controller - update controller gains");
   }
 
   void stopping(const ros::Time& time)
   {
-      ROS_INFO("    STOPPING Atlas pelvis trajectory controller ");
+      ROS_INFO("    STOPPING Vigir pelvis trajectory controller ");
   }
 
   void updateCommand(const ros::Time&     /*time*/,

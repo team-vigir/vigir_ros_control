@@ -52,21 +52,21 @@ VigirHumanoidHWInterface::VigirHumanoidHWInterface(const std::string& name)
 }
 
 // Set up the data for ros_controllers
-int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr< std::vector<std::string> >& joint_list,
+int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr<vigir_control::VigirRobotModel>& robot_model, //boost::shared_ptr< std::vector<std::string> >& joint_list,
                                                          boost::shared_ptr<ros::NodeHandle>& behavior_control_nh,
                                                          boost::shared_ptr<ros::NodeHandle>& joint_control_nh,
                                                          boost::shared_ptr<ros::NodeHandle>& private_nh)
 {
     ROS_INFO(" Initialize the generic humanoid HW interfaces ...");
     // Store the list of controlled joints
-    joint_names_ = joint_list;
+    joint_names_ = robot_model->joint_names_;
     try {
         // State inputs
         std::cout << "Initialize HW interface for " << joint_names_->size() << " joints!" << std::endl;
-        joint_state_positions_.resize( joint_names_->size());
-        joint_state_velocities_.resize(joint_names_->size());
-        joint_state_accelerations_.resize(joint_names_->size());
-        joint_state_efforts_.resize(joint_names_->size());
+        joint_state_positions_      = vigir_control::VectorNd::Constant(joint_names_->size(), 0.0);//.resize( joint_names_->size());
+        joint_state_velocities_     = vigir_control::VectorNd::Constant(joint_names_->size(), 0.0);//.resize(joint_names_->size());
+        joint_state_accelerations_  = vigir_control::VectorNd::Constant(joint_names_->size(), 0.0);//.resize(joint_names_->size());
+        joint_state_efforts_        = vigir_control::VectorNd::Constant(joint_names_->size(), 0.0);//.resize(joint_names_->size());
 
         // Control outputs
         joint_command_positions_              = vigir_control::VectorNd::Constant(joint_names_->size(), 0.0);
@@ -113,6 +113,35 @@ int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr< std:
 
     }
 
+    try {
+        ROS_INFO(" Load the whole robot controller handle ...");
+
+        hardware_interface::VigirHumanoidControllerHandle controller_handle(std::string("controller_handle"),
+                                                                    &joint_state_positions_,
+                                                                    &joint_state_velocities_,
+                                                                    &joint_state_accelerations_,
+                                                                    &joint_state_efforts_,
+                                                                    &joint_command_positions_,             //!< desired position
+                                                                    &joint_command_velocities_,            //!< desired velocity
+                                                                    &joint_command_accelerations_,         //!< desired acceleration
+                                                                    &joint_command_efforts_,               //!< desired effort
+                                                                    &joint_command_control_,               //!< desired control command (acceleration)
+                                                                    &joint_command_friction_compensation_, //!< effort to compensate for friction
+                                                                    &joint_position_errors_,
+                                                                    &joint_velocity_errors_,
+                                                                    &joint_effort_errors_,
+                                                                    robot_model);
+        humanoid_controller_interface_.registerHandle(controller_handle);
+
+        ROS_INFO(" Register the controller interface...");
+        registerInterface(&humanoid_controller_interface_);
+    }
+    catch(...)
+    {
+        ROS_ERROR("Exception: could not initialize the Atlas pelvis control interface");
+        return ROBOT_EXCEPTION_CONTROLLERS_FAILED_TO_INITIALIZE;
+    }
+
     registerInterface(&joint_state_interface_);
     registerInterface(&position_joint_interface_);
     registerInterface(&velocity_joint_interface_);
@@ -120,7 +149,7 @@ int32_t VigirHumanoidHWInterface::init_robot_controllers(boost::shared_ptr< std:
     registerInterface(&pos_vel_acc_joint_interface_);
     registerInterface(&pos_vel_acc_err_humanoid_joint_interface_);
 
-    ROS_INFO(" Now need to initialize the robot specific interfaces and controllers ...");
+    ROS_INFO(" Done initializing the base HWInterface class for the humanoid controller ...");
     return ROBOT_INITIALIZED_OK;
 }
 

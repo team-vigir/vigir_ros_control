@@ -27,8 +27,8 @@
 
 #include <pluginlib/class_list_macros.h>
 
-#include <vigir_joint_interfaces/pos_vel_acc_joint_iface_adapter.h>
-#include <vigir_joint_interfaces/pos_vel_acc_err_humanoid_joint_iface_adapter.h>
+#include <vigir_humanoid_interfaces/pos_vel_acc_joint_iface_adapter.h>
+#include <vigir_humanoid_interfaces/pos_vel_acc_err_humanoid_joint_iface_adapter.h>
 #include <trajectory_interface/quintic_spline_segment.h>
 #include <joint_trajectory_controller/joint_trajectory_controller.h>
 

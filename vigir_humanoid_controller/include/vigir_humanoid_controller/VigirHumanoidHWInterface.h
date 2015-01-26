@@ -33,13 +33,14 @@
 #include <hardware_interface/joint_command_interface.h>
 #include <hardware_interface/joint_state_interface.h>
 #include <joint_limits_interface/joint_limits_interface.h>
-#include <vigir_joint_interfaces/pos_vel_acc_joint_iface.h>
-#include <vigir_joint_interfaces/pos_vel_acc_err_humanoid_joint_iface.h>
-#include <vigir_joint_interfaces/vigir_pelvis_iface.h>
+#include <vigir_humanoid_interfaces/pos_vel_acc_joint_iface.h>
+#include <vigir_humanoid_interfaces/pos_vel_acc_err_humanoid_joint_iface.h>
+#include <vigir_humanoid_interfaces/vigir_pelvis_iface.h>
+#include <vigir_humanoid_interfaces/vigir_humanoid_controller_interface.h>
 
 #include <vigir_robot_model/VigirRobotDataTypes.h>
+#include <vigir_robot_model/VigirRobotModel.h>
 
-//@todo RobotMode (startup) , RobotBehavior, and RobotFootsteps interfaces
 
 namespace vigir_control {
 
@@ -80,7 +81,7 @@ enum VigirHumanoidSwitchMode
 
 
     // Generic initialization functions
-    virtual int32_t init_robot_controllers(boost::shared_ptr<std::vector<std::string> > & joint_list,
+    virtual int32_t init_robot_controllers(boost::shared_ptr<vigir_control::VigirRobotModel>& robot_model,
                                            boost::shared_ptr<ros::NodeHandle>& behavior_control_nh,
                                            boost::shared_ptr<ros::NodeHandle>& joint_control_nh,
                                            boost::shared_ptr<ros::NodeHandle>& private_nh);
@@ -96,17 +97,21 @@ enum VigirHumanoidSwitchMode
     // Following public data structures are used directly by controllers
     // The data structures must be populated during a read() function in a
     // thread safe manner
+
+    ros::Time                                             last_update_time_;
+    boost::shared_ptr< std::vector<std::string> >         joint_names_;
     // I'd prefer to use VectorNd, but I am not sure if local_vector = data_vector
     // would ever reallocate and change memory locations after registering.
     // I would not expect it to if the underlying sizes are the same, but I'm not
     // certain, so I'm going to play it safe for now.
-
-    ros::Time                                             last_update_time_;
-    boost::shared_ptr< std::vector<std::string> >         joint_names_;
-    std::vector<double >                                  joint_state_positions_;
-    std::vector<double >                                  joint_state_velocities_;
-    std::vector<double >                                  joint_state_accelerations_;
-    std::vector<double >                                  joint_state_efforts_;
+    //std::vector<double >                                  joint_state_positions_;
+    //std::vector<double >                                  joint_state_velocities_;
+    //std::vector<double >                                  joint_state_accelerations_;
+    //std::vector<double >                                  joint_state_efforts_;
+    VectorNd                                              joint_state_positions_;
+    VectorNd                                              joint_state_velocities_;
+    VectorNd                                              joint_state_accelerations_;
+    VectorNd                                              joint_state_efforts_;
 
 
     VectorNd                                              joint_command_positions_;             //!< desired position
@@ -141,6 +146,7 @@ enum VigirHumanoidSwitchMode
     std::vector<std::string>                                pelvis_joint_names_;
     hardware_interface::JointStateInterface                 pelvis_state_interface_;
     hardware_interface::VigirPelvisInterface                pelvis_command_interface_;
+    hardware_interface::VigirHumanoidControllerInterface    humanoid_controller_interface_;
 
 };
 

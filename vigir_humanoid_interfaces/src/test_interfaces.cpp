@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include <vigir_joint_interfaces/pos_vel_acc_err_humanoid_joint_iface_adapter.h>
+#include <vigir_humanoid_interfaces/pos_vel_acc_err_humanoid_joint_iface_adapter.h>
 
 struct DummyState
 {

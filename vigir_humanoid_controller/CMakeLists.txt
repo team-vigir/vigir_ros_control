@@ -16,7 +16,7 @@ find_package(Eigen REQUIRED)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs eigen_stl_containers eigen_conversions hardware_interface controller_manager flor_utilities vigir_robot_model vigir_joint_interfaces)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs eigen_stl_containers eigen_conversions hardware_interface controller_manager flor_utilities vigir_robot_model vigir_humanoid_interfaces)
 
 #set the default path for built executables to the "bin" directory
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
@@ -79,7 +79,7 @@ src/VigirHumanoidController.cpp
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES vigir_humanoid_controller
-  CATKIN_DEPENDS vigir_robot_model vigir_joint_interfaces flor_utilities roscpp hardware_interface controller_manager
+  CATKIN_DEPENDS vigir_robot_model vigir_humanoid_interfaces flor_utilities roscpp hardware_interface controller_manager
   DEPENDS eigen
 )
 

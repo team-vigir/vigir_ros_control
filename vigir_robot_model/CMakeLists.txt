@@ -87,7 +87,8 @@ src/VigirRobotPoseFilter.cpp
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES vigir_robot_model
-#  CATKIN_DEPENDS other_catkin_pkg
+  CATKIN_DEPENDS eigen_stl_containers eigen_conversions
+
 #  DEPENDS system_lib
 )
 
