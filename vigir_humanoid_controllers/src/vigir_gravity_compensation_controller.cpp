@@ -31,9 +31,9 @@
 #include <vigir_humanoid_controllers/vigir_gravity_compensation_controller.h>
 #include <pluginlib/class_list_macros.h>
 
-PLUGINLIB_EXPORT_CLASS(vigir_atlas_controllers::VigirGravityCompensationController, controller_interface::ControllerBase)
+PLUGINLIB_EXPORT_CLASS(vigir_humanoid_controllers::VigirGravityCompensationController, controller_interface::ControllerBase)
 
-namespace vigir_atlas_controllers
+namespace vigir_humanoid_controllers
 {
 
   bool VigirGravityCompensationController::init(hardware_interface::VigirControllerInterface* hw, ros::NodeHandle &nh)

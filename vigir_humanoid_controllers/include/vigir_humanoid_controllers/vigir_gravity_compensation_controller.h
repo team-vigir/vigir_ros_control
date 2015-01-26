@@ -40,7 +40,7 @@
 //#include <realtime_tools/realtime_server_goal_handle.h>
 
 // This controller calculates the required effort to compensate for gravity at the instantaneous desired position
-namespace vigir_atlas_controllers
+namespace vigir_humanoid_controllers
 {
 
   class VigirGravityCompensationController : public VigirControllerControllerBase

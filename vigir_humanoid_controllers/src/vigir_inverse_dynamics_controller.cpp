@@ -31,7 +31,7 @@
 #include <vigir_humanoid_controllers/vigir_inverse_dynamics_controller.h>
 #include <pluginlib/class_list_macros.h>
 
-PLUGINLIB_EXPORT_CLASS(vigir_atlas_controllers::VigirInverseDynamicsController, controller_interface::ControllerBase)
+PLUGINLIB_EXPORT_CLASS(vigir_humanoid_controllers::VigirInverseDynamicsController, controller_interface::ControllerBase)
 
 namespace vigir_atlas_controllers
 {

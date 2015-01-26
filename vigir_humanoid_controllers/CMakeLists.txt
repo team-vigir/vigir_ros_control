@@ -31,7 +31,7 @@ find_package(Eigen REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS joint_trajectory_controller vigir_humanoid_interfaces controller_interface
+  CATKIN_DEPENDS roscpp joint_trajectory_controller vigir_humanoid_interfaces controller_interface
 )
 
 ###########

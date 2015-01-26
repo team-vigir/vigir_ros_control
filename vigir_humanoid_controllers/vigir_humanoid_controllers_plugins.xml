@@ -38,7 +38,7 @@
   </class>
 
   <class name="vigir_humanoid_controllers/VigirInverseDynamicsController" 
-         type="vigir_atlas_controllers::VigirInverseDynamicsController" 
+         type="vigir_humanoid_controllers::VigirInverseDynamicsController"
          base_class_type="controller_interface::ControllerBase">
     <description>
       VigirInverseDynamicsController adds the effort required to compensate for gravity and dynamics (velocity and acceleration) effects to the full Team ViGIR humanoid controller setup 

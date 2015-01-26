@@ -85,10 +85,9 @@ find_package(Eigen REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
+  LIBRARIES ${PROJECT_NAME}
   INCLUDE_DIRS include
-#  LIBRARIES vigir_humanoid_interfaces
   CATKIN_DEPENDS roscpp hardware_interface joint_trajectory_controller control_toolbox vigir_robot_model
-#  DEPENDS system_lib
 )
 
 ###########
@@ -103,11 +102,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-## Declare a cpp library
-# add_library(vigir_humanoid_interfaces
-#   src/${PROJECT_NAME}/vigir_humanoid_interfaces.cpp
-# )
-
 SET(HEADERS
 include/${PROJECT_NAME}/vigir_humanoid_controller_interface.h
 include/${PROJECT_NAME}/vigir_pelvis_iface.h
@@ -116,17 +110,14 @@ include/${PROJECT_NAME}/pos_vel_acc_err_humanoid_joint_iface.h
 include/${PROJECT_NAME}/pos_vel_acc_err_humanoid_joint_iface_adapter.h
 )
 
+add_library(${PROJECT_NAME} ${HEADERS} )
+set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX) # Needed to infer C++ from headers
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+
 ## Declare a cpp executable
 add_executable(test_interfaces src/test_interfaces.cpp ${HEADERS})
 target_link_libraries(test_interfaces ${catkin_LIBRARIES})
 add_dependencies(test_interfaces ${catkin_EXPORTED_TARGETS})
-
-#
-#install( TARGETS
-#    test_interfaces
-#    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#)
-
 
 #############
 ## Install ##
@@ -143,11 +134,11 @@ add_dependencies(test_interfaces ${catkin_EXPORTED_TARGETS})
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS vigir_humanoid_interfaces vigir_humanoid_interfaces_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+ install(TARGETS ${PROJECT_NAME}
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ )
 
 ## Mark cpp header files for installation
  install(DIRECTORY include/${PROJECT_NAME}/
