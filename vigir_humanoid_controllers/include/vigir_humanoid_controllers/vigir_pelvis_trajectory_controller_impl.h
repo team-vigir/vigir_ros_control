@@ -379,7 +379,7 @@ update(const ros::Time& time, const ros::Duration& period)
 
   if (!hw_iface_adapter_.getInPelvisControlMode())
   { // Until we are in manipulate mode, just hold the current position
-    ROS_INFO(" Continue in hold until the robot is Manipulate mode!");
+    ROS_DEBUG(" Continue in hold until the robot is Manipulate mode!");
     starting(time);
     return;
   }
