@@ -39,7 +39,7 @@ namespace vigir_humanoid_controllers
   class VigirControllerControllerBase : public controller_interface::Controller<hardware_interface::VigirHumanoidControllerInterface>
   {
     public:
-      virtual bool init(hardware_interface::AtlasControllerInterface* hw, ros::NodeHandle &nh) = 0;
+      virtual bool init(hardware_interface::VigirHumanoidControllerInterface* hw, ros::NodeHandle &nh) = 0;
 
       virtual void update(const ros::Time& time, const ros::Duration& period) = 0;
 

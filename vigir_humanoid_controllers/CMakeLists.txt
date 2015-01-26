@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(vigir_humanoid_controllers)
 
+## System dependencies are found with CMake's conventions
+find_package(Boost REQUIRED COMPONENTS system)
+find_package(catkin REQUIRED COMPONENTS cmake_modules)
+find_package(Eigen REQUIRED)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -10,13 +15,9 @@ find_package(catkin REQUIRED COMPONENTS
   joint_trajectory_controller
   vigir_humanoid_interfaces
   controller_interface
+  eigen_stl_containers
+  eigen_conversions
 )
-
-## System dependencies are found with CMake's conventions
-find_package(Boost REQUIRED COMPONENTS system)
-find_package(catkin REQUIRED COMPONENTS cmake_modules)
-find_package(Eigen REQUIRED)
-
 
 
 ###################################

@@ -56,25 +56,22 @@ public:
       joint_command_friction_compensation_( NULL ),
       joint_position_errors_      ( NULL ),
       joint_velocity_errors_      ( NULL ),
-      joint_effort_errors_        ( NULL ),
-      current_bdi_control_gains_  ( NULL ),
-      current_vigir_control_gains_( NULL ),
-      robot_model_(NULL)
+      joint_effort_errors_        ( NULL )
  {}
 
-  VigirHumanoidControllerHandle(const std::string& name, const VectorNd *  joint_state_positions,
-                                                 const VectorNd *  joint_state_velocities,
-                                                 const VectorNd *  joint_state_accelerations,
-                                                 const VectorNd *  joint_state_efforts,
-                                                 VectorNd * joint_command_positions,             //!< desired position
-                                                 VectorNd * joint_command_velocities,            //!< desired velocity
-                                                 VectorNd * joint_command_accelerations,         //!< desired acceleration
-                                                 VectorNd * joint_command_efforts,               //!< desired effort
-                                                 VectorNd * joint_command_control,               //!< desired control command (acceleration)
-                                                 VectorNd * joint_command_friction_compensation, //!< effort to compensate for friction
-                                                 VectorNd * joint_position_errors,
-                                                 VectorNd * joint_velocity_errors,
-                                                 VectorNd * joint_effort_errors,
+  VigirHumanoidControllerHandle(const std::string& name, const vigir_control::VectorNd *  joint_state_positions,
+                                                 const vigir_control::VectorNd *  joint_state_velocities,
+                                                 const vigir_control::VectorNd *  joint_state_accelerations,
+                                                 const vigir_control::VectorNd *  joint_state_efforts,
+                                                 vigir_control::VectorNd * joint_command_positions,             //!< desired position
+                                                 vigir_control::VectorNd * joint_command_velocities,            //!< desired velocity
+                                                 vigir_control::VectorNd * joint_command_accelerations,         //!< desired acceleration
+                                                 vigir_control::VectorNd * joint_command_efforts,               //!< desired effort
+                                                 vigir_control::VectorNd * joint_command_control,               //!< desired control command (acceleration)
+                                                 vigir_control::VectorNd * joint_command_friction_compensation, //!< effort to compensate for friction
+                                                 vigir_control::VectorNd * joint_position_errors,
+                                                 vigir_control::VectorNd * joint_velocity_errors,
+                                                 vigir_control::VectorNd * joint_effort_errors,
                                                  boost::shared_ptr<vigir_control::VigirRobotModel> robot_model)
       : name_(name),
         joint_state_positions_      (joint_state_positions)    ,
@@ -112,19 +109,19 @@ public:
   std::string getName() const {return name_;}
 
   // Keep these public for access by controller (yes - this is bad form)
-  const VectorNd * joint_state_positions_;
-  const VectorNd * joint_state_velocities_;
-  const VectorNd * joint_state_accelerations_;
-  const VectorNd * joint_state_efforts_;
-  VectorNd *  joint_command_positions_;             //!< desired position
-  VectorNd *  joint_command_velocities_;            //!< desired velocity
-  VectorNd *  joint_command_accelerations_;         //!< desired acceleration
-  VectorNd *  joint_command_efforts_;               //!< desired effort
-  VectorNd *  joint_command_control_;               //!< desired control command (acceleration)
-  VectorNd *  joint_command_friction_compensation_; //!< effort to compensate for friction
-  VectorNd *  joint_position_errors_;
-  VectorNd *  joint_velocity_errors_;
-  VectorNd *  joint_effort_errors_;
+  const vigir_control::VectorNd * joint_state_positions_;
+  const vigir_control::VectorNd * joint_state_velocities_;
+  const vigir_control::VectorNd * joint_state_accelerations_;
+  const vigir_control::VectorNd * joint_state_efforts_;
+  vigir_control::VectorNd *  joint_command_positions_;             //!< desired position
+  vigir_control::VectorNd *  joint_command_velocities_;            //!< desired velocity
+  vigir_control::VectorNd *  joint_command_accelerations_;         //!< desired acceleration
+  vigir_control::VectorNd *  joint_command_efforts_;               //!< desired effort
+  vigir_control::VectorNd *  joint_command_control_;               //!< desired control command (acceleration)
+  vigir_control::VectorNd *  joint_command_friction_compensation_; //!< effort to compensate for friction
+  vigir_control::VectorNd *  joint_position_errors_;
+  vigir_control::VectorNd *  joint_velocity_errors_;
+  vigir_control::VectorNd *  joint_effort_errors_;
   boost::shared_ptr<vigir_control::VigirRobotModel> robot_model_;
 
 private:

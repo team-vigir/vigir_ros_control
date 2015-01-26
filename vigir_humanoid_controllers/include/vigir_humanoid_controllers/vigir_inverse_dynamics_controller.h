@@ -42,7 +42,7 @@ namespace vigir_humanoid_controllers
   class VigirInverseDynamicsController : public VigirControllerControllerBase
   {
     public:
-      bool init(hardware_interface::VigirControllerInterface* hw, ros::NodeHandle &nh);
+      bool init(hardware_interface::VigirHumanoidControllerInterface* hw, ros::NodeHandle &nh);
 
       void update(const ros::Time& time, const ros::Duration& period);
 
@@ -51,8 +51,8 @@ namespace vigir_humanoid_controllers
 
     private:
 
-      hardware_interface::VigirControllerHandle controller_handle_;
-      VectorNd      joint_efforts_;
+      hardware_interface::VigirHumanoidControllerHandle controller_handle_;
+      vigir_control::VectorNd      joint_efforts_;
   };
 
 }

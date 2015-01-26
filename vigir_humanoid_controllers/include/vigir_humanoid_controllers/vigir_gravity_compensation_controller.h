@@ -35,10 +35,6 @@
 
 #include <actionlib/server/action_server.h>
 
-//// actionlib
-//#include <realtime_tools/realtime_box.h>
-//#include <realtime_tools/realtime_server_goal_handle.h>
-
 // This controller calculates the required effort to compensate for gravity at the instantaneous desired position
 namespace vigir_humanoid_controllers
 {
@@ -46,7 +42,7 @@ namespace vigir_humanoid_controllers
   class VigirGravityCompensationController : public VigirControllerControllerBase
   {
     public:
-      bool init(hardware_interface::VigirControllerInterface* hw, ros::NodeHandle &nh);
+      bool init(hardware_interface::VigirHumanoidControllerInterface* hw, ros::NodeHandle &nh);
 
       void update(const ros::Time& time, const ros::Duration& period);
 
@@ -55,8 +51,9 @@ namespace vigir_humanoid_controllers
 
     private:
 
-      hardware_interface::VigirControllerHandle controller_handle_;
-      VectorNd      joint_efforts_;
+      hardware_interface::VigirHumanoidControllerHandle controller_handle_;
+      vigir_control::VectorNd      joint_efforts_;
+      vigir_control::VectorNd      zero_vector_;
   };
 
 }

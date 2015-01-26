@@ -33,15 +33,15 @@
 
 PLUGINLIB_EXPORT_CLASS(vigir_humanoid_controllers::VigirInverseDynamicsController, controller_interface::ControllerBase)
 
-namespace vigir_atlas_controllers
+namespace vigir_humanoid_controllers
 {
 
-  bool VigirInverseDynamicsController::init(hardware_interface::VigirControllerInterface* hw, ros::NodeHandle &nh)
+  bool VigirInverseDynamicsController::init(hardware_interface::VigirHumanoidControllerInterface* hw, ros::NodeHandle &nh)
   {
-    ROS_INFO_NAMED(controller_handle_.getName(), "Gravity compensation controller %s is initialized.", controller_handle_.getName().c_str());
     controller_handle_ = hw->getHandle("controller_handle");
-
     joint_efforts_ = *(controller_handle_.joint_command_efforts_);
+
+    ROS_INFO_NAMED(controller_handle_.getName(), "Gravity compensation controller %s is initialized.", controller_handle_.getName().c_str());
     return true;
   }
 

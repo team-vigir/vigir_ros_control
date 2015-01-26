@@ -36,12 +36,14 @@ PLUGINLIB_EXPORT_CLASS(vigir_humanoid_controllers::VigirGravityCompensationContr
 namespace vigir_humanoid_controllers
 {
 
-  bool VigirGravityCompensationController::init(hardware_interface::VigirControllerInterface* hw, ros::NodeHandle &nh)
+  bool VigirGravityCompensationController::init(hardware_interface::VigirHumanoidControllerInterface* hw, ros::NodeHandle &nh)
   {
-    ROS_INFO_NAMED(controller_handle_.getName(), "Gravity compensation controller %s is initialized.", controller_handle_.getName().c_str());
     controller_handle_ = hw->getHandle("controller_handle");
 
     joint_efforts_ = *(controller_handle_.joint_command_efforts_);
+    zero_vector_   = vigir_control::VectorNd::Constant(controller_handle_.robot_model_->n_joints_,0.0);
+
+    ROS_INFO_NAMED(controller_handle_.getName(), "Gravity compensation controller %s is initialized.", controller_handle_.getName().c_str());
     return true;
   }
 
@@ -64,8 +66,8 @@ namespace vigir_humanoid_controllers
       //   Assuming a reasonable fast update so that desired position is close to the current position and slightly forward in time.
       controller_handle_.robot_model_->updateJointState(time.toNSec(),
                                      *(controller_handle_.joint_command_positions_),
-                                     VectorNd::Constant(controller_handle_.robot_model_->n_joints_,0.0),
-                                     VectorNd::Constant(controller_handle_.robot_model_->n_joints_,0.0));
+                                     zero_vector_,
+                                     zero_vector_);
 
       vigir_control::Pose pose_orientation;
       //pose_orientation.orientation = atlas_hw_interface_->atlas_state_.robot_state.pelvis_pose_.orientation;// ignoring translation offset
