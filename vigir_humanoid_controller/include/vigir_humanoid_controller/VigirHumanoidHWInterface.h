@@ -36,9 +36,11 @@
 #include <vigir_humanoid_interfaces/pos_vel_acc_joint_iface.h>
 #include <vigir_humanoid_interfaces/pos_vel_acc_err_humanoid_joint_iface.h>
 #include <vigir_humanoid_interfaces/vigir_pelvis_iface.h>
+#include <vigir_humanoid_interfaces/vigir_humanoid_controller_interface.h>
 
 #include <vigir_robot_model/VigirRobotDataTypes.h>
 #include <vigir_robot_model/VigirRobotModel.h>
+
 
 namespace vigir_control {
 
@@ -144,6 +146,7 @@ enum VigirHumanoidSwitchMode
     std::vector<std::string>                                pelvis_joint_names_;
     hardware_interface::JointStateInterface                 pelvis_state_interface_;
     hardware_interface::VigirPelvisInterface                pelvis_command_interface_;
+    hardware_interface::VigirHumanoidControllerInterface    humanoid_controller_interface_;
 
 };
 
