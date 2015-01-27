@@ -34,6 +34,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <vigir_robot_model/VigirRobotDataTypes.h>
+#include <vigir_robot_model/VigirRobotStability.h>
 
 namespace vigir_control {
 
@@ -90,6 +91,8 @@ namespace vigir_control {
     bool                                            b_dynamics_up_to_date_;
     bool                                            b_CoM_up_to_date_;
     bool                                            b_transforms_up_to_date_;
+
+    VigirStabilityData                              stability_data_;
 
     uint32_t initializeRobotJoints(const std::vector<std::string>& controlled_joints,
                                    const std::string& root_link_name,
