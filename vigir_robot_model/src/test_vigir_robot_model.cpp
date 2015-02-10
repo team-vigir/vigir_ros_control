@@ -68,7 +68,7 @@ int main(int argc, char ** argv)
     }
     //std::cout << xml << std::endl << std::endl << std::endl << std::endl << std::endl;
 
-    std::vector<std::string> controlled_joints;
+    std::vector<std::string> controlled_joints, left_arm_chain, left_leg_chain, right_arm_chain, right_leg_chain, torso_chain, head_chain;
     controlled_joints.clear();;
     controlled_joints.push_back("back_bkz" );
     controlled_joints.push_back("back_bky" );
@@ -99,11 +99,24 @@ int main(int argc, char ** argv)
     controlled_joints.push_back("r_arm_wry");
     controlled_joints.push_back("r_arm_wrx");
 
+    // pseudo joint for not giving an empty chain to the function. TODO: give reasonable chains and test them later on
+    left_arm_chain.push_back("back_bkz");
+    left_leg_chain.push_back("back_bkz");
+    right_arm_chain.push_back("back_bkz");
+    right_leg_chain.push_back("back_bkz");
+    torso_chain.push_back("back_bkz");
+    head_chain.push_back("back_bkz");
 
     std::cout << " Loading robot model ..." << std::endl;
     vigir_control::VigirRobotRBDLModel      robot_model;
     int rc;
     if (rc = robot_model.initializeRobotJoints(controlled_joints,
+                                               left_arm_chain,
+                                               left_leg_chain,
+                                               right_arm_chain,
+                                               right_leg_chain,
+                                               torso_chain,
+                                               head_chain,
                                                "pelvis",
                                                "l_foot", "r_foot",
                                                "l_hand", "r_hand"))

@@ -43,61 +43,91 @@ VigirRobotModel::VigirRobotModel()
 
 }
 
- VigirRobotModel::~VigirRobotModel() {
+VigirRobotModel::~VigirRobotModel() {
 
- }
+}
 
- uint32_t VigirRobotModel::initializeRobotJoints(const std::vector<std::string>& controlled_joints,
-                            const std::string& root_link_name,
-                            const std::string& l_foot_link_name,
-                            const std::string& r_foot_link_name,
-                            const std::string& l_hand_link_name,
-                            const std::string& r_hand_link_name)
- {
-     // Store the names of the specific links of concern
-     root_link_name_ = root_link_name;
-     rfoot_link_name_= r_foot_link_name;
-     lfoot_link_name_= l_foot_link_name;
-     rhand_link_name_= r_hand_link_name;
-     lhand_link_name_= l_hand_link_name;
+uint32_t VigirRobotModel::initializeRobotJoints(const std::vector<std::string>& controlled_joints,
+                                                const std::vector<std::string>& left_arm_chain,
+                                                const std::vector<std::string>& left_leg_chain,
+                                                const std::vector<std::string>& right_arm_chain,
+                                                const std::vector<std::string>& right_leg_chain,
+                                                const std::vector<std::string>& torso_chain,
+                                                const std::vector<std::string>& neck_chain,
+                                                const std::string& root_link_name,
+                                                const std::string& l_foot_link_name,
+                                                const std::string& r_foot_link_name,
+                                                const std::string& l_hand_link_name,
+                                                const std::string& r_hand_link_name)
+{
+    // Store the names of the specific links of concern
+    root_link_name_ = root_link_name;
+    rfoot_link_name_= r_foot_link_name;
+    lfoot_link_name_= l_foot_link_name;
+    rhand_link_name_= r_hand_link_name;
+    lhand_link_name_= l_hand_link_name;
 
-     // We will only process certain joints for modeling and control
-     // For example we may ignore a small spinning LIDAR or finger joints
-     // the robot stability calculations.
-     n_joints_    = controlled_joints.size();
-     joint_names_.reset(new std::vector<std::string>(controlled_joints));
+    // We will only process certain joints for modeling and control
+    // For example we may ignore a small spinning LIDAR or finger joints
+    // the robot stability calculations.
+    n_joints_    = controlled_joints.size();
+    joint_names_.reset(new std::vector<std::string>(controlled_joints));
 
-     printf(" Root(%s) Hands(%s, %s) Feet(%s, %s) n_joints=%d\n",
-            root_link_name_.c_str(),
-            rfoot_link_name_.c_str(),
-            lfoot_link_name_.c_str(),
-            rhand_link_name_.c_str(),
-            lhand_link_name_.c_str(),
-            n_joints_);
+    printf(" Root(%s) Hands(%s, %s) Feet(%s, %s) n_joints=%d\n",
+           root_link_name_.c_str(),
+           rfoot_link_name_.c_str(),
+           lfoot_link_name_.c_str(),
+           rhand_link_name_.c_str(),
+           lhand_link_name_.c_str(),
+           n_joints_);
 
-     // Load map of controlled joint names
-     joint_map_.clear();
-     //std::cout << "Loading joint map with controlled joint list ..." << std::endl;
-     for (uint8_t ndx=0; ndx < n_joints_; ndx++)
-     {
-         //std::cout << uint32_t(ndx) << " : " << controlled_joints[ndx] << std::endl;
-         joint_map_.insert(std::pair<std::string,uint8_t>(controlled_joints[ndx],ndx));
-     }
+    // Load map of controlled joint names
+    joint_map_.clear();
+    //std::cout << "Loading joint map with controlled joint list ..." << std::endl;
+    for (uint8_t ndx=0; ndx < n_joints_; ndx++)
+    {
+        //std::cout << uint32_t(ndx) << " : " << controlled_joints[ndx] << std::endl;
+        joint_map_.insert(std::pair<std::string,uint8_t>(controlled_joints[ndx],ndx));
+    }
 
-     std::cout << "Joint Map size = " << joint_map_.size() << std::endl;
+    std::cout << "Joint Map size = " << joint_map_.size() << std::endl;
 
-     if (joint_map_.size() != n_joints_)
-         return 1;
+    // Return code 1, when the map does not contain as many joints as in the input
+    if (joint_map_.size() != n_joints_)
+        return 1;
 
-     // Now load the joint chains
+    // Now load the joint chains
+    for (int i=0; i<left_arm_chain.size(); ++i)
+    {
+        left_arm_joint_chain_.push_back(joint_map_[left_arm_chain[i]]);
+    }
+    for (int i=0; i<left_leg_chain.size(); ++i)
+    {
+        left_leg_joint_chain_.push_back(joint_map_[left_leg_chain[i]]);
+    }
+    for (int i=0; i<right_arm_chain.size(); ++i)
+    {
+        right_arm_joint_chain_.push_back(joint_map_[right_arm_chain[i]]);
+    }
+    for (int i=0; i<right_leg_chain.size(); ++i)
+    {
+        right_leg_joint_chain_.push_back(joint_map_[right_leg_chain[i]]);
+    }
+    for (int i=0; i<torso_chain.size(); ++i)
+    {
+        torso_joint_chain_.push_back(joint_map_[torso_chain[i]]);
+    }
+    for (int i=0; i<neck_chain.size(); ++i)
+    {
+        neck_joint_chain_.push_back(joint_map_[neck_chain[i]]);
+    }
 
-     // Jonathan @todo
-     // for each joint name in chain, get the index from joint_map (search and return error if not already in map)
-     // append to the joint chain
+    // Return code 2, when a joint not in the map occures in a chain
+    if (joint_map_.size() != n_joints_)
+        return 2;
+    else
+        return 0; // All is as expected
 
-
-     return 0; // all is as expected
-
- }
+}
 
 } /* namespace flor_control */

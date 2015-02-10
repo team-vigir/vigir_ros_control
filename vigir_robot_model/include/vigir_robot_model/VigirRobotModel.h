@@ -76,7 +76,7 @@ namespace vigir_control {
     std::vector<int8_t>                             right_arm_joint_chain_;
     std::vector<int8_t>                             right_leg_joint_chain_;
     std::vector<int8_t>                             torso_joint_chain_;
-    std::vector<int8_t>                             head_joint_chain_;
+    std::vector<int8_t>                             neck_joint_chain_;
 
     uint64_t                                        timestamp_;   // time of latest kinematic update
     double                                          mass_;
@@ -96,8 +96,8 @@ namespace vigir_control {
 
     uint32_t initializeRobotJoints(const std::vector<std::string>& controlled_joints,
                                    const std::vector<std::string>& left_arm_chain,
-                                   const std::vector<std::string>& right_arm_chain,
                                    const std::vector<std::string>& left_leg_chain,
+                                   const std::vector<std::string>& right_arm_chain,
                                    const std::vector<std::string>& right_leg_chain,
                                    const std::vector<std::string>& torso_chain,
                                    const std::vector<std::string>& neck_chain,

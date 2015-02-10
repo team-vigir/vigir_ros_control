@@ -524,7 +524,7 @@ int32_t VigirHumanoidController::init_robot_model()
     }
     //std::cout << " URDF:\n" << xml_result << std::endl;
 
-    // Load joint list from parameters
+    // Load controlled joint list from parameters
     if (!private_nh_->searchParam("controlled_joints",full_urdf_xml))
     {
         std::cerr << "Failed to find controlled joints list on parameter server!" << std::endl;
@@ -539,7 +539,7 @@ int32_t VigirHumanoidController::init_robot_model()
     }
     std::cout << " Controlled joints:\n" << controlled_joints << std::endl;
 
-    // Load joint list from parameters
+    // Load left arm chain joint list from parameters
     if (!private_nh_->searchParam("left_arm_chain",full_urdf_xml))
     {
         std::cerr << "Failed to find left arm chain list on parameter server!" << std::endl;
@@ -552,26 +552,95 @@ int32_t VigirHumanoidController::init_robot_model()
         std::cerr << "Failed to load the left arm chain list from parameter server!" << std::endl;
         return ROBOT_MODEL_CONTROLLED_JOINTS_LIST_FAILED_TO_LOAD;
     }
-    std::cout << " Left arm Chain :\n" << left_arm_chain << std::endl;
+    std::cout << " Left arm chain :\n" << left_arm_chain << std::endl;
+
+    // Load left leg chain joint list from parameters
+    if (!private_nh_->searchParam("left_leg_chain",full_urdf_xml))
+    {
+        std::cerr << "Failed to find left leg chain list on parameter server!" << std::endl;
+        return ROBOT_MODEL_NO_CONTROLLED_JOINTS_LIST;
+    }
+
+    std::vector<std::string> left_leg_chain;
+    if (!private_nh_->getParam(full_urdf_xml, left_leg_chain))
+    {
+        std::cerr << "Failed to load the left leg chain list from parameter server!" << std::endl;
+        return ROBOT_MODEL_CONTROLLED_JOINTS_LIST_FAILED_TO_LOAD;
+    }
+    std::cout << " Left leg chain :\n" << left_leg_chain << std::endl;
+
+    // Load right arm chain joint list from parameters
+    if (!private_nh_->searchParam("right_arm_chain",full_urdf_xml))
+    {
+        std::cerr << "Failed to find right arm chain list on parameter server!" << std::endl;
+        return ROBOT_MODEL_NO_CONTROLLED_JOINTS_LIST;
+    }
 
     std::vector<std::string> right_arm_chain;
-    std::vector<std::string> left_leg_chain;
+    if (!private_nh_->getParam(full_urdf_xml, right_arm_chain))
+    {
+        std::cerr << "Failed to load the right arm chain list from parameter server!" << std::endl;
+        return ROBOT_MODEL_CONTROLLED_JOINTS_LIST_FAILED_TO_LOAD;
+    }
+    std::cout << " Right arm chain :\n" << right_arm_chain << std::endl;
+
+    // Load right leg chain joint list from parameters
+    if (!private_nh_->searchParam("right_leg_chain",full_urdf_xml))
+    {
+        std::cerr << "Failed to find right leg chain list on parameter server!" << std::endl;
+        return ROBOT_MODEL_NO_CONTROLLED_JOINTS_LIST;
+    }
+
     std::vector<std::string> right_leg_chain;
+    if (!private_nh_->getParam(full_urdf_xml, right_leg_chain))
+    {
+        std::cerr << "Failed to load the right leg chain list from parameter server!" << std::endl;
+        return ROBOT_MODEL_CONTROLLED_JOINTS_LIST_FAILED_TO_LOAD;
+    }
+    std::cout << " Right leg chain :\n" << right_leg_chain << std::endl;
+
+    // Load torso chain joint list from parameters
+    if (!private_nh_->searchParam("torso_chain",full_urdf_xml))
+    {
+        std::cerr << "Failed to find torso chain list on parameter server!" << std::endl;
+        return ROBOT_MODEL_NO_CONTROLLED_JOINTS_LIST;
+    }
+
     std::vector<std::string> torso_chain;
+    if (!private_nh_->getParam(full_urdf_xml, torso_chain))
+    {
+        std::cerr << "Failed to load the torso chain list from parameter server!" << std::endl;
+        return ROBOT_MODEL_CONTROLLED_JOINTS_LIST_FAILED_TO_LOAD;
+    }
+    std::cout << " Torso chain :\n" << torso_chain << std::endl;
+
+    // Load neck chain joint list from parameters
+    if (!private_nh_->searchParam("neck_chain",full_urdf_xml))
+    {
+        std::cerr << "Failed to find neck chain list on parameter server!" << std::endl;
+        return ROBOT_MODEL_NO_CONTROLLED_JOINTS_LIST;
+    }
+
     std::vector<std::string> neck_chain;
+    if (!private_nh_->getParam(full_urdf_xml, neck_chain))
+    {
+        std::cerr << "Failed to load the neck chain list from parameter server!" << std::endl;
+        return ROBOT_MODEL_CONTROLLED_JOINTS_LIST_FAILED_TO_LOAD;
+    }
+    std::cout << " Neck chain :\n" << neck_chain << std::endl;
 
     // Load model from URDF
     int32_t rc;
     if (rc = robot_model_->initializeRobotJoints(controlled_joints,
                                                  left_arm_chain,
-                                                 right_arm_chain,
                                                  left_leg_chain,
+                                                 right_arm_chain,
                                                  right_leg_chain,
                                                  torso_chain,
                                                  neck_chain,
-                                               "pelvis",
-                                               "l_foot", "r_foot",   // @todo - make these parameter names
-                                               "l_hand", "r_hand"))
+                                                 "pelvis",
+                                                 "l_foot", "r_foot",   // @todo - make these parameter names
+                                                 "l_hand", "r_hand"))
     {
         std::cerr << "Robot model initialization failed" << std::endl;
         return ROBOT_MODEL_CONTROLLED_JOINTS_FAILED_TO_INITIALIZE;

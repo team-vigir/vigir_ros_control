@@ -45,5 +45,13 @@
     </description>
   </class>
 
+  <class name="vigir_atlas_controllers/AtlasJointImpedanceController" 
+         type="vigir_atlas_controllers::AtlasJointImpedanceController"
+         base_class_type="controller_interface::ControllerBase">
+    <description>
+      AtlasJointImppedanceController adds computes effort required to let the joints behave passively with given parameters (stifness and damping) it does its own gravity and dynamics compensation and therefore can't be used together with other controllers
+    </description>
+  </class>
+
 
 </library>
