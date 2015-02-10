@@ -95,6 +95,12 @@ namespace vigir_control {
     VigirStabilityData                              stability_data_;
 
     uint32_t initializeRobotJoints(const std::vector<std::string>& controlled_joints,
+                                   const std::vector<std::string>& left_arm_chain,
+                                   const std::vector<std::string>& right_arm_chain,
+                                   const std::vector<std::string>& left_leg_chain,
+                                   const std::vector<std::string>& right_leg_chain,
+                                   const std::vector<std::string>& torso_chain,
+                                   const std::vector<std::string>& neck_chain,
                                    const std::string& root_link_name,
                                    const std::string& l_foot_link_name,
                                    const std::string& r_foot_link_name,

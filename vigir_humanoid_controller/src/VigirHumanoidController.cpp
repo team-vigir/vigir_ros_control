@@ -534,14 +534,41 @@ int32_t VigirHumanoidController::init_robot_model()
     std::vector<std::string> controlled_joints;
     if (!private_nh_->getParam(full_urdf_xml, controlled_joints))
     {
-        std::cerr << "Failed to load the controlled joint list for test!" << std::endl;
+        std::cerr << "Failed to load the controlled joint list from parameter server!" << std::endl;
         return ROBOT_MODEL_CONTROLLED_JOINTS_LIST_FAILED_TO_LOAD;
     }
     std::cout << " Controlled joints:\n" << controlled_joints << std::endl;
 
+    // Load joint list from parameters
+    if (!private_nh_->searchParam("left_arm_chain",full_urdf_xml))
+    {
+        std::cerr << "Failed to find left arm chain list on parameter server!" << std::endl;
+        return ROBOT_MODEL_NO_CONTROLLED_JOINTS_LIST;
+    }
+
+    std::vector<std::string> left_arm_chain;
+    if (!private_nh_->getParam(full_urdf_xml, left_arm_chain))
+    {
+        std::cerr << "Failed to load the left arm chain list from parameter server!" << std::endl;
+        return ROBOT_MODEL_CONTROLLED_JOINTS_LIST_FAILED_TO_LOAD;
+    }
+    std::cout << " Left arm Chain :\n" << left_arm_chain << std::endl;
+
+    std::vector<std::string> right_arm_chain;
+    std::vector<std::string> left_leg_chain;
+    std::vector<std::string> right_leg_chain;
+    std::vector<std::string> torso_chain;
+    std::vector<std::string> neck_chain;
+
     // Load model from URDF
     int32_t rc;
     if (rc = robot_model_->initializeRobotJoints(controlled_joints,
+                                                 left_arm_chain,
+                                                 right_arm_chain,
+                                                 left_leg_chain,
+                                                 right_leg_chain,
+                                                 torso_chain,
+                                                 neck_chain,
                                                "pelvis",
                                                "l_foot", "r_foot",   // @todo - make these parameter names
                                                "l_hand", "r_hand"))

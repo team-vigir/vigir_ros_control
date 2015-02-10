@@ -86,10 +86,18 @@ VigirRobotModel::VigirRobotModel()
 
      std::cout << "Joint Map size = " << joint_map_.size() << std::endl;
 
-     if (joint_map_.size() == n_joints_)
-         return 0; // all is as expected
-     else
+     if (joint_map_.size() != n_joints_)
          return 1;
+
+     // Now load the joint chains
+
+     // Jonathan @todo
+     // for each joint name in chain, get the index from joint_map (search and return error if not already in map)
+     // append to the joint chain
+
+
+     return 0; // all is as expected
+
  }
 
 } /* namespace flor_control */
