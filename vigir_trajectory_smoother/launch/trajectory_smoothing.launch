@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!-- This launch file relays our old trajectory command topics to the topics used by the JointTrajectoryAction controllers we now use -->
+
+<launch>   
+    <node name="left_arm_traj_command_smoother"  pkg="vigir_trajectory_smoother" type="trajectory_smoother" output="screen" >
+        <remap from="input_topic" to="/flor/r_arm_controller/trajectory" /> <!--/joint_controllers/right_arm_traj_controller/command" /-->
+        <remap from="output_topic" to="/joint_controllers/right_arm_traj_controller/command_smoothed" />
+        <param name="plot_flag" value="True"/>
+        <param name="test_trajectories" value="True"/>
+        <param name="plot_trajectories" value="False"/>
+    </node>
+
+</launch>
+

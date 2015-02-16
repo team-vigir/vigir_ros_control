@@ -1,0 +1,91 @@
+#! /usr/bin/env python
+import roslib
+import rospy
+import rosparam
+
+from urdf_parser_py.urdf import URDF
+
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+
+# Why isn't this working - cannot see package module
+from vigir_trajectory_smoother.vigir_trajectory_utility       import VigirTrajectoryLimits
+from vigir_trajectory_smoother.vigir_trajectory_smoother_base import VigirTrajectorySmoother
+from vigir_trajectory_smoother.vigir_trajectory_plotting import VigirTrajectoryPlotter
+
+# ROS specific code for this script
+class TrajectoryHandler(object):
+    def __init__(self):
+
+
+        self.plot_flag = rospy.get_param("~plot_flag", False)
+        self.test_trajectories=rospy.get_param("~test_trajectories", True)
+        self.plot_trajectories=rospy.get_param("~plot_trajectories",False)
+        self.vel_limit=rospy.get_param("~vel_limit",10.0)
+        self.acc_limit=rospy.get_param("~acc_limit",100.0)
+
+        print "For now grab velocity limits from the URDF; @todo - change to get urdf values and time parameterization"
+        # Will need to add dynamic reconfig of limits and time factor for this to be useful long term.
+        self.robot = URDF.from_parameter_server()
+        self.joint_limits = {}
+        for ndx,jnt in enumerate(self.robot.joints):
+            if (jnt.limit != None):
+                #print jnt
+                #print type(jnt.limit)
+                v_limit = min([jnt.limit.velocity, self.vel_limit]) # Limit ourselves to smaller of joint limit or parameter
+                a_limit = min([v_limit/0.010, self.acc_limit])
+
+                self.joint_limits[jnt.name] = VigirTrajectoryLimits(v_limit, a_limit)
+
+        #-------------------------------------------------
+        # Print out the current joint limits used
+        print "Active Joint Limits:"
+        for name, limits in self.joint_limits.iteritems():
+            print "    ",name," : v_max=",limits.v_max," a_max=",limits.a_max
+        print
+        print
+        #-------------------------------------------------
+
+        print "Set up the publisher for the new trajectory "
+        self.pub = rospy.Publisher( "output_topic",JointTrajectory, queue_size = 10)
+
+        print "Set up the subscriber to get the old trajectory "
+        self.sub = rospy.Subscriber("input_topic" ,JointTrajectory, self.trajectory_callback)
+
+        print "Set up the class to handle the smoothing"
+        self.vts = VigirTrajectorySmoother(self.joint_limits, test_trajectories=self.test_trajectories, plot_trajectories=self.plot_trajectories)
+
+        self.plotter = None
+        if (self.plot_flag):
+            self.plotter = VigirTrajectoryPlotter()
+
+    def shutdown():
+        print "Shutting down the VigirTrajectorySmoother TrajectoryHandler!"
+        self.pub.unregister()
+        self.sub.unregister()
+        print "Done!"
+
+    def trajectory_callback(self, old_trajectory):
+        print "Old trajectory in with ",len(old_trajectory.points)," points  end time=",old_trajectory.points[-1].time_from_start.to_sec()
+
+        new_traj = self.vts.reparameterize(old_trajectory)
+
+        print "New trajectory out with ",len(new_traj.points)," points  end time=",new_traj.points[-1].time_from_start.to_sec()
+        self.pub.publish(new_traj)
+
+        if (self.plot_flag):
+            print "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+            print "Call plot trajectories ..."
+            self.plotter.plot_trajectories([old_trajectory, new_traj],new_traj.joint_names)
+            print "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+
+
+# The main loop
+if __name__ == '__main__':
+
+    try:
+        rospy.init_node("vigir_trajectory_smoother")
+        print "Setup the trajectory smoother"
+        TrajectoryHandler()
+        rospy.spin()
+    except rospy.ROSInterruptException:
+        print "Done trajectory smoothing"

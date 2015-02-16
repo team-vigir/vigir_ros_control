@@ -1,0 +1,38 @@
+#! /usr/bin/env python
+import roslib
+import rospy
+import rosparam
+
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+
+from vigir_trajectory_smoother.vigir_trajectory_plotting import VigirTrajectoryPlotter
+
+# ROS specific code for this script
+class TrajectoryPlotter(object):
+    def __init__(self):
+
+        print "Set up the subscriber to get the old trajectory "
+        self.sub = rospy.Subscriber("input_topic" ,JointTrajectory, self.trajectory_callback)
+
+        self.plotter = VigirTrajectoryPlotter()
+
+    def shutdown():
+        print "Shutting down the VigirTrajectoryPlotter TrajectoryHandler!"
+        self.sub.unregister()
+        print "Done!"
+
+    def trajectory_callback(self, old_trajectory):
+        print "Plot trajectory in with ",len(old_trajectory.points)," points  end time=",old_trajectory.points[-1].time_from_start
+
+        self.plotter.plot_trajectories([old_trajectory],old_trajectory.joint_names)
+
+# The main loop
+if __name__ == '__main__':
+
+    try:
+        rospy.init_node("vigir_trajectory_plotter")
+        print "Setup the trajectory plotter"
+        TrajectoryPlotter()
+        rospy.spin()
+    except rospy.ROSInterruptException:
+        print "Done trajectory plotting"

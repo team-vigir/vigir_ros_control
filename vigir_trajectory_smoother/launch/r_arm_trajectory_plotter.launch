@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!-- This launch file relays our old trajectory command topics to the topics used by the JointTrajectoryAction controllers we now use -->
+
+<launch>   
+    <node name="right_arm_traj_command_plotter"  pkg="vigir_trajectory_smoother" type="trajectory_plotter" output="screen" >
+        <remap from="input_topic" to="/joint_controllers/right_arm_traj_controller/command" />
+    </node>
+
+    <node name="right_arm_trajectory_plotter"  pkg="vigir_trajectory_smoother" type="trajectory_plotter" output="screen" >
+        <remap from="input_topic" to="/flor/r_arm_controller/trajectory" />
+    </node>
+
+</launch>
+

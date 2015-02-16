@@ -7,3 +7,5 @@ srv_gen
 qtcreator-build
 *~
 *.user
+*.pyc
+
