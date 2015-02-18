@@ -4,8 +4,8 @@
 #include<vigir_robot_model/VigirRobotRBDLModel.h>
 #include<vigir_robot_model/VigirRobotBasic2StateKF.h>
 #include<vigir_robot_model/VigirRobotPoseFilter.h>
-#include <vigir_robot_model/VigirRobotCalibration.h>
 #include <vigir_humanoid_controller/VigirRealTimeBuffer.h>
+#include <vigir_humanoid_controller/VigirRobotCalibration.h>
 #include <vigir_robot_model/VigirRobotModel.h>
 #include <vigir_robot_model/VigirRobotState.h>
 #include <vigir_humanoid_controller/VigirHumanoidStatusCodes.h>

@@ -34,6 +34,9 @@ include_directories(include ${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 #######################################
 ## Declare ROS messages and services ##
 #######################################
+generate_dynamic_reconfigure_options(
+  cfg/VigirJointCalibrationGains.cfg
+)
 
 ## Generate messages in the 'msg' folder
 # add_message_files(
@@ -62,6 +65,8 @@ include/${PROJECT_NAME}/VigirHumanoidStatusCodes.h
 include/${PROJECT_NAME}/VigirHumanoidInterface.h
 include/${PROJECT_NAME}/VigirHumanoidHWInterface.h
 include/${PROJECT_NAME}/VigirHumanoidController.h
+include/${PROJECT_NAME}/VigirRobotCalibration.h
+include/${PROJECT_NAME}/VigirJointCalibrationGainsManager.h
 )
 
 SET(SOURCE
@@ -99,7 +104,7 @@ add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 ## Declare a cpp executable
 add_executable(test_${PROJECT_NAME} src/test_vigir_humanoid_controller.cpp ${HEADERS})
 target_link_libraries(test_${PROJECT_NAME} ${catkin_LIBRARIES} ${PROJECT_NAME} )
-add_dependencies(test_${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+add_dependencies(test_${PROJECT_NAME} ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_EXPORTED_TARGETS)
 
 
 install( TARGETS ${PROJECT_NAME} 

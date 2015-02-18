@@ -51,6 +51,7 @@ namespace vigir_control {
     // Apply correction step to filter based on sensed data
     virtual bool apply_calibration(VectorNd& q_sensed, VectorNd& dq_sensed, const VectorNd& q_raw, const VectorNd& dq_raw)=0;
     virtual bool adjust_offset(VectorNd& diff_offset)=0;
+    virtual bool adjust_offset(const uint8_t& jnt, const double& diff_offset)=0;
 
     std::string  name_;
     int8_t       n_elements_;
