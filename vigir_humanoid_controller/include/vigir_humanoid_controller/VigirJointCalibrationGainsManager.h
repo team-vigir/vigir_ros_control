@@ -46,7 +46,7 @@ class VigirJointCalibrationGainsManager
 {
 public:
 
-  VigirJointCalibrationGainsManager(const std::string& joint_name, const int& jnt_ndx, boost::shared_ptr<vigir_control::VigirRobotCalibration> calibration) :
+  VigirJointCalibrationGainsManager(const std::string& joint_name, const int& jnt_ndx, boost::shared_ptr<vigir_control::VigirRobotCalibration>& calibration) :
       joint_name_(joint_name),
       joint_index_(jnt_ndx),
       dynamic_reconfig_initialized_(false),
@@ -120,7 +120,8 @@ public:
 
     // Set up dynamic reconfigure for gains
     std::string calibration_data_name = calibration_->name_+"/"+joint_name_;
-    ros::NodeHandle joint_calibration_nh(*calibration_nh, calibration_data_name); // create node handle for this specific joint topic
+    ros::NodeHandle joint_calibration_nh(calibration_data_name); // create node handle for this specific joint topic
+    ROS_INFO(" Creating VigirJointInterfaceControlGainsManager NodeHandle for %s  (%s)",joint_calibration_nh.getNamespace().c_str(), calibration_data_name.c_str());
 
     joint_calibration_reconfig_server_.reset( new VigirJointCalibrationGainsDynamicReconfigServer(param_reconfig_mutex_, joint_calibration_nh));
 

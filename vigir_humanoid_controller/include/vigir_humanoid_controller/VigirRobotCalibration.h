@@ -85,8 +85,8 @@ struct VigirRobotCalibration : public VigirRobotCalibrationBase
 
       if (calibration_data_counter_ !=  calibration_rtb_.dataCount())
       { // Get the latest updated calibration data
-          ROS_INFO("Updated calibration data received!");
           calibration_data_counter_ =  calibration_rtb_.readBuffer(calibration_data_rt_);
+          ROS_INFO("Updated calibration data received  counter=%d! ", calibration_data_counter_);
       }
 
       q_sensed   = calibration_data_rt_.gearing.cwiseProduct(q_raw);
