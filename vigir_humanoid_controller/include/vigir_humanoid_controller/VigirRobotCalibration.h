@@ -55,6 +55,8 @@ struct VigirRobotCalibrationData {
     VectorNd gearing ;
     VectorNd offset;
 };
+typedef VigirRealTimeBuffer<vigir_control::VigirRobotCalibrationData>   VigirRobotCalibrationData_RTB;
+typedef boost::shared_ptr<VigirRobotCalibrationData_RTB>                VigirRobotCalibrationData_RTB_PTR;
 
 /**
  * This structure defines a simple linear calculation for calibration of variables.
@@ -68,11 +70,11 @@ struct VigirRobotCalibration : public VigirRobotCalibrationBase
                 : VigirRobotCalibrationBase(name,elements),
                   calibration_data_(elements),
                   calibration_data_rt_(elements),
-                  calibration_rtb_(calibration_data_,name+" calibration rtb"),
+                  calibration_rtb_(new VigirRobotCalibrationData_RTB(calibration_data_,name+" calibration rtb")),
                   calibration_data_counter_(-1)
   {
       // Pass valid data to the realtime thread
-      calibration_rtb_.writeBuffer(calibration_data_);
+      calibration_rtb_->writeBuffer(calibration_data_);
   }
 
   ~VigirRobotCalibration() {};
@@ -83,9 +85,9 @@ struct VigirRobotCalibration : public VigirRobotCalibrationBase
   bool apply_calibration(VectorNd& q_sensed, VectorNd& dq_sensed, const VectorNd& q_raw, const VectorNd& dq_raw)
   {
 
-      if (calibration_data_counter_ !=  calibration_rtb_.dataCount())
+      if (calibration_data_counter_ !=  calibration_rtb_->dataCount())
       { // Get the latest updated calibration data
-          calibration_data_counter_ =  calibration_rtb_.readBuffer(calibration_data_rt_);
+          calibration_data_counter_ =  calibration_rtb_->readBuffer(calibration_data_rt_);
       }
 
       q_sensed   = calibration_data_rt_.gearing.cwiseProduct(q_raw);
@@ -105,7 +107,7 @@ struct VigirRobotCalibration : public VigirRobotCalibrationBase
 
       calibration_data_.gearing = gearing;
       calibration_data_.offset  = offset;
-      calibration_rtb_.writeBuffer(calibration_data_);
+      calibration_rtb_->writeBuffer(calibration_data_);
 
       return true;
   }
@@ -119,7 +121,7 @@ struct VigirRobotCalibration : public VigirRobotCalibrationBase
       }
 
       calibration_data_.offset  += diff_offset;
-      calibration_rtb_.writeBuffer(calibration_data_);
+      calibration_rtb_->writeBuffer(calibration_data_);
 
       return true;
   }
@@ -129,7 +131,7 @@ struct VigirRobotCalibration : public VigirRobotCalibrationBase
       if (jnt < calibration_data_.offset.size())
       {
           calibration_data_.offset[jnt] += diff_offset;
-          calibration_rtb_.writeBuffer(calibration_data_);
+          calibration_rtb_->writeBuffer(calibration_data_);
           return true;
       }
       return false;
@@ -141,7 +143,7 @@ struct VigirRobotCalibration : public VigirRobotCalibrationBase
       {
           calibration_data_.offset[jnt]  = calibration.offset;
           calibration_data_.gearing[jnt] = calibration.gearing;
-          calibration_rtb_.writeBuffer(calibration_data_);
+          calibration_rtb_->writeBuffer(calibration_data_);
           return true;
       }
       return false;
@@ -152,18 +154,19 @@ struct VigirRobotCalibration : public VigirRobotCalibrationBase
       {
           calibration_data_.offset[jnt]  = new_offset;
           calibration_data_.gearing[jnt] = new_gearing;
-          calibration_rtb_.writeBuffer(calibration_data_);
+          calibration_rtb_->writeBuffer(calibration_data_);
           return true;
       }
       return false;
   }
 
   VigirRobotCalibrationData& getCalibrationData() { return calibration_data_;}
+  VigirRobotCalibrationData_RTB_PTR& getRealTimeBuffer(){return calibration_rtb_; };// Buffer for transfering data to realtime thread
 
 protected:
   VigirRobotCalibrationData                      calibration_data_;         // Data updated in non-realtime thread
   VigirRobotCalibrationData                      calibration_data_rt_;      // Data used in realtime thread for calculation
-  VigirRealTimeBuffer<VigirRobotCalibrationData> calibration_rtb_;          // Buffer for transfering data to realtime thread
+  VigirRobotCalibrationData_RTB_PTR              calibration_rtb_;          // Buffer for transfering data to realtime thread
   int32_t                                        calibration_data_counter_; // Counter to keep track of new data
 
 };

@@ -62,7 +62,7 @@ public:
     }
 
     // Templated topic publisher that extracts topic specific data from common structure passed between real time threads
-    virtual void publish(const DataType& data, const ros::Time& current_time) = 0;
+    virtual bool publish(const DataType& data, const ros::Time& current_time) = 0;
 
 
 protected:
@@ -86,6 +86,7 @@ class VigirRealTimePublisher
     // Default constructor - (cannot use default publishLoop)
     VigirRealTimePublisher(const std::string& name = "VigirRealTimePublisher")
         : keep_running_(true), publisher_name_(name),last_data_count_(std::numeric_limits<uint32_t>::max()),
+          last_publish_time_(0),
           publisher_timing_(name,true,false)
     {
         //sleep_ts_.tv_sec  = 0;
@@ -96,6 +97,7 @@ class VigirRealTimePublisher
     // Constructor that provides access to real time buffer for publishLoop
     VigirRealTimePublisher(const std::string& name, boost::shared_ptr<VigirRealTimeBuffer<DataType> >& rt_buffer)
         :  keep_running_(true), publisher_name_(name),rt_buffer_(rt_buffer), last_data_count_(std::numeric_limits<uint32_t>::max()),
+           last_publish_time_(0),
            publisher_timing_(name,true,false)
     {
         //sleep_ts_.tv_sec  = 0;
@@ -126,21 +128,42 @@ class VigirRealTimePublisher
     {
         for (typename std::vector<boost::shared_ptr<VigirRealTimeTopicBase<DataType> > >::const_iterator it=topics_.begin(); it != topics_.end(); ++it)
         {
-            (*it)->publish(data, current_time);
+            if ( (*it)->publish(data, current_time) )
+            { // if any published, then update time
+                last_publish_time_ = current_time;
+            }
         }
     }
 
-    inline bool publishAnyNewData()
+    inline bool publishAnyNewData(const ros::Time& current_time = ros::Time::now())
     {
         if (rt_buffer_->dataCount() != last_data_count_)
         {
             DO_TIMING(publisher_timing_);
             last_data_count_ = rt_buffer_->readBuffer(last_data_);
-            publish(last_data_,ros::Time::now());
+            publish(last_data_,current_time);
             return true;
         }
         return false;
     }
+
+    inline bool publishLatestData(const ros::Duration& interval, const ros::Time& current_time = ros::Time::now())
+    {
+        if (rt_buffer_->dataCount() != last_data_count_)
+        {
+            DO_TIMING(publisher_timing_);
+            last_data_count_ = rt_buffer_->readBuffer(last_data_);
+            publish(last_data_,current_time);
+            return true;
+        }
+        else if ( (current_time - last_publish_time_) > interval)
+        {
+            publish(last_data_, current_time);
+            return true;
+        }
+        return false;
+    }
+
 
     void publishLoop()
     {
@@ -177,6 +200,7 @@ class VigirRealTimePublisher
     DataType                                                             last_data_;
 
     Timing                                                               publisher_timing_;
+    ros::Time                                                            last_publish_time_;
 
     //timespec                                                             sleep_ts_;
 

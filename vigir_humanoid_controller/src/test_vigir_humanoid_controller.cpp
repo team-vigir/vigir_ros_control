@@ -312,7 +312,7 @@ int main(int argc, char ** argv)
 
         ~VigirRobotInterfaceDataTopic() {}
 
-        void publish(const vigir_control::VigirRobotInterfaceData& data, const ros::Time& current_time)
+        bool publish(const vigir_control::VigirRobotInterfaceData& data, const ros::Time& current_time)
         {
             try {
                 if (current_time > next_publish_time_)
@@ -323,13 +323,15 @@ int main(int argc, char ** argv)
                     publisher_.publish(msg);
                     next_publish_time_ = current_time + publish_rate_.expectedCycleTime();
                     std::cout << topic_name_ << " " << current_time << "  next=" << next_publish_time_ << std::endl;
+                    return true;
                 }
              }
             catch(...)
             {
                 ROS_ERROR("Bad conversion for VigirRobotInterfaceData");
-                return;
+                return false;
             }
+            return false;
         }
 
 
