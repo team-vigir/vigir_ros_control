@@ -91,10 +91,8 @@ public:
   {
       if (calibration_->update_calibration(joint_index_,gains))
       {
-            ROS_INFO("      setVigirJointCalibrationGains for joint[%d] %s: gearing=%6g offset=%6g",
-                     joint_index_,
-                     joint_name_.c_str(),
-                     gains.gearing,gains.offset);
+            ROS_INFO("      setVigirJointCalibrationGains for joint[%d] %s: gearing=%6g, offset=%6g",
+                     joint_index_, joint_name_.c_str(), gains.gearing, gains.offset);
             updateVigirJointCalibrationGainsDynamicReconfigure(gains);
       }
   }
@@ -102,8 +100,8 @@ public:
   // Process update from dynamic reconfigure
   inline void dynamicReconfigVigirJointCalibrationGainsCallback(vigir_humanoid_controller::VigirJointCalibrationGainsConfig &config, uint32_t level)
   {
-      ROS_INFO("Received dynamicReconfigVigirJointCalibrationGainsCallback for joint[%d] = %s : gearing=%6g offset=%6g!",
-                joint_index_, joint_name_.c_str(), config.gearing,config.offset);
+      //ROS_INFO("Received dynamicReconfigVigirJointCalibrationGainsCallback for joint[%d] = %s : gearing=%6g offset=%6g!",
+      //          joint_index_, joint_name_.c_str(), config.gearing,config.offset);
 
       vigir_control::VigirJointCalibrationGains gains;
       gains.gearing      = config.gearing     ;
