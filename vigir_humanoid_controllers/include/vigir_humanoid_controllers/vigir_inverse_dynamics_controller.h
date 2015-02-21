@@ -1,5 +1,5 @@
 /*=================================================================================================
-// Copyright (c) 2013-2014, David Conner, TORC Robotics
+// Copyright (c) 2015, David Conner, TORC Robotics
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,8 @@
 //=================================================================================================
 */
 
-#ifndef ATLAS_INVERSE_DYNAMICS_CONTROLLER_CONTROLLER___
-#define ATLAS_INVERSE_DYNAMICS_CONTROLLER_CONTROLLER___
+#ifndef VIGIR_INVERSE_DYNAMICS_CONTROLLER_CONTROLLER___
+#define VIGIR_INVERSE_DYNAMICS_CONTROLLER_CONTROLLER___
 
 #include <controller_interface/controller.h>
 

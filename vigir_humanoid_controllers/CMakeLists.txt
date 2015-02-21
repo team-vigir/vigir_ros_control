@@ -51,6 +51,7 @@ include/${PROJECT_NAME}/vigir_pelvis_trajectory_controller_impl.h
 include/${PROJECT_NAME}/vigir_controller_controller_base.h
 include/${PROJECT_NAME}/vigir_gravity_compensation_controller.h
 include/${PROJECT_NAME}/vigir_inverse_dynamics_controller.h
+include/${PROJECT_NAME}/vigir_friction_compensation_controller.h
 )
 
 SET(SOURCE
@@ -58,6 +59,7 @@ src/vigir_joint_trajectory_controller.cpp
 src/vigir_pelvis_trajectory_controller.cpp
 src/vigir_gravity_compensation_controller.cpp
 src/vigir_inverse_dynamics_controller.cpp
+src/vigir_friction_compensation_controller.cpp
 )
 
 add_library(${PROJECT_NAME} ${SOURCE} ${HEADERS} )

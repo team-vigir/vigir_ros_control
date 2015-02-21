@@ -45,7 +45,16 @@
     </description>
   </class>
 
-  <class name="vigir_atlas_controllers/AtlasJointImpedanceController" 
+  <class name="vigir_humanoid_controllers/VigirFrictionCompensationController"
+         type="vigir_humanoid_controllers::VigirFrictionCompensationController"
+         base_class_type="controller_interface::ControllerBase">
+    <description>
+      VigirFrictionCompensationController calculates a friction compensation term for each joint that can be added to the
+      controller command.
+    </description>
+  </class>
+
+  <class name="vigir_atlas_controllers/AtlasJointImpedanceController"
          type="vigir_atlas_controllers::AtlasJointImpedanceController"
          base_class_type="controller_interface::ControllerBase">
     <description>
