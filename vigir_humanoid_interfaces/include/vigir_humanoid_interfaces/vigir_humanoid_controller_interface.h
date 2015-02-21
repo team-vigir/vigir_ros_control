@@ -135,9 +135,11 @@ protected:
 };
 
 /** \brief Hardware interface to support access of controller data by whole body controllers
- *
+ *  NOTE: This interface DOES NOT claim handle resources, and therefore it is possible that multiple controllers could
+ * interfere with one another.  It is up to the user to define what controllers are active and ensure that they cooperate
+ * appropriately.
  */
-class VigirHumanoidControllerInterface : public HardwareResourceManager<VigirHumanoidControllerHandle, ClaimResources> {};
+class VigirHumanoidControllerInterface : public HardwareResourceManager<VigirHumanoidControllerHandle, DontClaimResources> {};
 
 }
 

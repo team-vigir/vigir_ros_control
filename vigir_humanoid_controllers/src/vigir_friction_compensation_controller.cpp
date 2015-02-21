@@ -83,13 +83,13 @@ namespace vigir_humanoid_controllers
   // Initialize to OFF on start up
   void VigirFrictionCompensationController::starting(const ros::Time& time)
   {
-      ROS_WARN_NAMED(controller_handle_.getName(), "Gravity compensation controller is starting.");
+      ROS_WARN_NAMED(controller_handle_.getName(), "Friction compensation controller is starting.");
   }
 
   // This must remain active for control, so shut off system if this unloads for any reason
   void VigirFrictionCompensationController::stopping(const ros::Time& time)
   {
-      ROS_WARN_NAMED(controller_handle_.getName(), "Gravity compensation controller is stopping.");
+      ROS_WARN_NAMED(controller_handle_.getName(), "Friction compensation controller is stopping.");
   }
 
   void VigirFrictionCompensationController::update(const ros::Time& time, const ros::Duration& period)
