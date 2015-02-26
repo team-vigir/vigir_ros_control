@@ -646,7 +646,7 @@ int32_t VigirHumanoidController::init_robot_model()
         return ROBOT_MODEL_CONTROLLED_JOINTS_FAILED_TO_INITIALIZE;
     }
 
-    if (uint32_t rc = robot_model_->loadRobotModel(xml_result, 1.0,verbose_))
+    if (uint32_t rc = robot_model_->loadRobotModel(xml_result, 1.3,verbose_))  // @HACK - adjust mass for Atlas - need to make parameter
     {
         printf("Failed to load the robot model (rc=%d)- abort!\n",rc);
         return ROBOT_MODEL_FAILED_TO_INITIALIZE;
