@@ -86,13 +86,13 @@ int main(int argc, char ** argv)
     controlled_joints.push_back("r_leg_kny");
     controlled_joints.push_back("r_leg_aky");
     controlled_joints.push_back("r_leg_akx");
-    controlled_joints.push_back("l_arm_shy");
+    controlled_joints.push_back("l_arm_shz");
     controlled_joints.push_back("l_arm_shx");
     controlled_joints.push_back("l_arm_ely");
     controlled_joints.push_back("l_arm_elx");
     controlled_joints.push_back("l_arm_wry");
     controlled_joints.push_back("l_arm_wrx");
-    controlled_joints.push_back("r_arm_shy");
+    controlled_joints.push_back("r_arm_shz");
     controlled_joints.push_back("r_arm_shx");
     controlled_joints.push_back("r_arm_ely");
     controlled_joints.push_back("r_arm_elx");
