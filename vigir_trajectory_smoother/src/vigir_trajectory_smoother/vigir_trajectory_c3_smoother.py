@@ -50,6 +50,10 @@ class VigirTrajectoryC3Smoother(object):
             print "Invalid number of segments =",num_segments," cannot smooth!"
             return new_trajectory
 
+        if (num_segments > 40):
+            print "High number of segments =",num_segments," ( > 40) will not smooth!"
+            return new_trajectory
+
         # Double check the time parameterization
         dT_new = self.time_refactor(new_trajectory, num_segments)
 

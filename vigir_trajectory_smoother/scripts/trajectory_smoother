@@ -69,6 +69,8 @@ class TrajectoryHandler(object):
 
         new_traj = self.vts.reparameterize(old_trajectory)
 
+        new_traj.header.stamp = rospy.Time.now() + rospy.Duration(0.250)  #Sending trajectory 250ms into the future
+
         print "New trajectory out with ",len(new_traj.points)," points  end time=",new_traj.points[-1].time_from_start.to_sec()
         self.pub.publish(new_traj)
 
