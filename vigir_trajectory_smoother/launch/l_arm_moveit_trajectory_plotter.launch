@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!-- This launch file plots each joints trajectory from a specified -->
+
+<launch>   
+    <node name="left_arm_traj_moveit_plotter"  pkg="vigir_trajectory_smoother" type="trajectory_plotter" output="screen" >
+        <remap from="input_topic" to="/flor/l_arm_controller/trajectory" />
+    </node>
+</launch>
+
