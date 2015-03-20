@@ -192,7 +192,12 @@ class VigirTrajectoryPlotter(object):
                   ddq =np.append(ddq , ddq_seg)
                   dddq =np.append(dddq, dddq_seg)
 
-          print "    plotting pos, vel, acc with color=",clr
+          #print "    plotting pos, vel, acc with color=",clr
+          #print "time=",time
+          #print "  q=",  q
+          #print " dq=", dq
+          #print "ddq=",ddq
+
           p1 = axes[0].plot(time,   q, clr+style, label="pos")
           p2 = axes[1].plot(time,  dq, clr+style, label="vel")
           p3 = axes[2].plot(time, ddq, clr+style, label="acc")
