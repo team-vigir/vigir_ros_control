@@ -125,6 +125,11 @@ enum VigirHumanoidSwitchMode
     VectorNd                                              joint_velocity_errors_;
     VectorNd                                              joint_effort_errors_;
 
+    Wrench                                                robot_l_foot_wrench_;
+    Wrench                                                robot_r_foot_wrench_;
+    Wrench                                                robot_l_hand_wrench_;
+    Wrench                                                robot_r_hand_wrench_;
+
     Pose                                                  robot_pose_;
 
     std::vector<double >                                  pelvis_states_;

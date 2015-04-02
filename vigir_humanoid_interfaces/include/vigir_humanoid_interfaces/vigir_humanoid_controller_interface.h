@@ -57,6 +57,10 @@ public:
       joint_position_errors_      ( NULL ),
       joint_velocity_errors_      ( NULL ),
       joint_effort_errors_        ( NULL ),
+      robot_l_foot_wrench_(NULL),
+      robot_r_foot_wrench_(NULL),
+      robot_l_hand_wrench_(NULL),
+      robot_r_hand_wrench_(NULL),
       robot_pose_(NULL)
  {}
 
@@ -73,6 +77,10 @@ public:
                                                  vigir_control::VectorNd * joint_position_errors,
                                                  vigir_control::VectorNd * joint_velocity_errors,
                                                  vigir_control::VectorNd * joint_effort_errors,
+                                                 vigir_control::Wrench   * robot_l_foot_wrench,
+                                                 vigir_control::Wrench   * robot_r_foot_wrench,
+                                                 vigir_control::Wrench   * robot_l_hand_wrench,
+                                                 vigir_control::Wrench   * robot_r_hand_wrench,
                                                  vigir_control::Pose     * robot_pose,
                                                  boost::shared_ptr<vigir_control::VigirRobotModel> robot_model)
       : name_(name),
@@ -89,6 +97,10 @@ public:
         joint_position_errors_      (joint_position_errors     ),
         joint_velocity_errors_      (joint_velocity_errors     ),
         joint_effort_errors_        (joint_effort_errors       ),
+        robot_l_foot_wrench_(robot_l_foot_wrench),
+        robot_r_foot_wrench_(robot_r_foot_wrench),
+        robot_l_hand_wrench_(robot_l_hand_wrench),
+        robot_r_hand_wrench_(robot_r_hand_wrench),
         robot_pose_(robot_pose),
         robot_model_(robot_model)
   {
@@ -107,6 +119,10 @@ public:
       if (NULL == joint_effort_errors_         ) throw HardwareInterfaceException("Cannot create handle '" + name + "' some pointer is null.");
       if (NULL == robot_pose_                  ) throw HardwareInterfaceException("Cannot create handle '" + name + "' robot pose pointer is null.");
       if (NULL == robot_model_.get()           ) throw HardwareInterfaceException("Cannot create handle '" + name + "' some pointer is null.");
+      if (NULL == robot_l_foot_wrench_         ) throw HardwareInterfaceException("Cannot create handle '" + name + "' robot l_foot wrench pointer is null.");
+      if (NULL == robot_r_foot_wrench_         ) throw HardwareInterfaceException("Cannot create handle '" + name + "' robot r_foot wrench pointer is null.");
+      if (NULL == robot_l_hand_wrench_         ) throw HardwareInterfaceException("Cannot create handle '" + name + "' robot l_hand wrench pointer is null.");
+      if (NULL == robot_r_hand_wrench_         ) throw HardwareInterfaceException("Cannot create handle '" + name + "' robot r_hand wrench pointer is null.");
 
   }
 
@@ -126,6 +142,10 @@ public:
   vigir_control::VectorNd *  joint_position_errors_;
   vigir_control::VectorNd *  joint_velocity_errors_;
   vigir_control::VectorNd *  joint_effort_errors_;
+  vigir_control::Wrench   *  robot_l_foot_wrench_;
+  vigir_control::Wrench   *  robot_r_foot_wrench_;
+  vigir_control::Wrench   *  robot_l_hand_wrench_;
+  vigir_control::Wrench   *  robot_r_hand_wrench_;
   vigir_control::Pose     *  robot_pose_;
   boost::shared_ptr<vigir_control::VigirRobotModel> robot_model_;
 
