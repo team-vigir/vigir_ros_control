@@ -60,12 +60,12 @@ public:
 
   void starting(const ros::Time& time)
   {
-      ROS_INFO("    STARTING Vigir pelvis trajectory controller - update controller gains");
+      ROS_INFO_THROTTLE(0.5,"    STARTING Vigir pelvis trajectory controller - update controller gains");
   }
 
   void stopping(const ros::Time& time)
   {
-      ROS_INFO("    STOPPING Vigir pelvis trajectory controller ");
+      ROS_INFO_THROTTLE(0.5,"    STOPPING Vigir pelvis trajectory controller ");
   }
 
   void updateCommand(const ros::Time&     /*time*/,
