@@ -138,11 +138,14 @@ namespace vigir_control {
     // Functions to extract parameters in generic form
     virtual void getRequiredTorques(VectorNd& cmd_efforts) = 0;
 
-    virtual void getLeftHandMass(Vector3d& CoM, float& mass) = 0;
-    virtual void getRightHandMass(Vector3d& CoM, float& mass) = 0;
+    virtual void getLeftHandMass(Vector3d& CoM, double& mass) = 0;
+    virtual void getRightHandMass(Vector3d& CoM, double& mass) = 0;
 
-    virtual void setLeftHandMass( const Vector3d& CoM, const float& mass, const Vector3d& Ix, const Vector3d& Iy, const Vector3d& Iz) = 0;
-    virtual void setRightHandMass(const Vector3d& CoM, const float& mass, const Vector3d& Ix, const Vector3d& Iy, const Vector3d& Iz) = 0;
+    virtual void setLeftHandMass( const Vector3d& CoM, const double& mass) = 0;
+    virtual void setRightHandMass(const Vector3d& CoM, const double& mass) = 0;
+
+    virtual void setLeftHandInteria( const Vector3d& CoM, const double& mass, const Vector3d& Ix, const Vector3d& Iy, const Vector3d& Iz) = 0;
+    virtual void setRightHandIntertia(const Vector3d& CoM, const double& mass, const Vector3d& Ix, const Vector3d& Iy, const Vector3d& Iz) = 0;
 
     virtual void getJointTransform(const int32_t& ctrl_joint_id, Transform& T) = 0;
     virtual void getBaseTransform(Transform& T) = 0;

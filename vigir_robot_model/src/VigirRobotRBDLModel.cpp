@@ -261,6 +261,7 @@ VigirRobotRBDLModel::VigirRobotRBDLModel()
      my_rbdl_->tau_   = RigidBodyDynamics::Math::VectorNd::Constant ((size_t)my_rbdl_->rbdl_model_.dof_count,0.0); // generalized forces
 
      std::cout << " Done loading RBDL model with "<< my_rbdl_->rbdl_model_.dof_count << " DOF! "<< std::endl << std::endl;
+
      return 0;
 }
 
@@ -475,19 +476,19 @@ void VigirRobotRBDLModel::getRequiredTorques(VectorNd& cmd_efforts)
     }
 }
 
-void VigirRobotRBDLModel::getLeftHandMass(Vector3d& CoM, float& mass)
+void VigirRobotRBDLModel::getLeftHandMass(Vector3d& CoM, double& mass)
 {
     CoM  = my_rbdl_->rbdl_model_.mBodies[l_hand_id_].mCenterOfMass, // CoM in body frame
     mass = my_rbdl_->rbdl_model_.mBodies[l_hand_id_].mMass;
 }
 
-void VigirRobotRBDLModel::getRightHandMass(Vector3d& CoM, float& mass)
+void VigirRobotRBDLModel::getRightHandMass(Vector3d& CoM, double& mass)
 {
     CoM  = my_rbdl_->rbdl_model_.mBodies[r_hand_id_].mCenterOfMass, // CoM in body frame
     mass = my_rbdl_->rbdl_model_.mBodies[r_hand_id_].mMass;
 }
 
-void VigirRobotRBDLModel::setLeftHandMass( const Vector3d& CoM, const float& mass, const Vector3d& Ix, const Vector3d& Iy, const Vector3d& Iz)
+void VigirRobotRBDLModel::setLeftHandInteria( const Vector3d& CoM, const double& mass, const Vector3d& Ix, const Vector3d& Iy, const Vector3d& Iz)
 {
     my_rbdl_->rbdl_model_.mBodies[l_hand_id_].mCenterOfMass = CoM; // CoM in body frame
     my_rbdl_->rbdl_model_.mBodies[l_hand_id_].mMass         = mass;
@@ -527,7 +528,20 @@ void VigirRobotRBDLModel::setLeftHandMass( const Vector3d& CoM, const float& mas
 
 }
 
-void VigirRobotRBDLModel::setRightHandMass(const Vector3d& CoM, const float& mass, const Vector3d& Ix, const Vector3d& Iy, const Vector3d& Iz)
+void VigirRobotRBDLModel::setRightHandIntertia(const Vector3d& CoM, const double& mass, const Vector3d& Ix, const Vector3d& Iy, const Vector3d& Iz)
+{
+    my_rbdl_->rbdl_model_.mBodies[r_hand_id_].mCenterOfMass = CoM; // CoM in body frame
+    my_rbdl_->rbdl_model_.mBodies[r_hand_id_].mMass         = mass;
+    // Ignoring inertia for now (see setLeftHandInertia)
+}
+
+void VigirRobotRBDLModel::setLeftHandMass(const Vector3d& CoM, const double& mass)
+{
+    my_rbdl_->rbdl_model_.mBodies[l_hand_id_].mCenterOfMass = CoM; // CoM in body frame
+    my_rbdl_->rbdl_model_.mBodies[l_hand_id_].mMass         = mass;
+}
+
+void VigirRobotRBDLModel::setRightHandMass(const Vector3d& CoM, const double& mass)
 {
     my_rbdl_->rbdl_model_.mBodies[r_hand_id_].mCenterOfMass = CoM; // CoM in body frame
     my_rbdl_->rbdl_model_.mBodies[r_hand_id_].mMass         = mass;
