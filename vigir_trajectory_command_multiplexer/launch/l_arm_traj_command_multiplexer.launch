@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!-- This launch file relays our old trajectory command topics to the topics used by the JointTrajectoryAction controllers we now use -->
+
+<launch>   
+    <node name="left_arm_traj_command_multiplexer"  pkg="vigir_trajectory_command_multiplexer" type="trajectory_command_multiplexer" output="screen" >
+        <param name="input_namespace"  value="/trajectory_controllers"/>
+        <param name="target_namespace" value="/joint_controllers"/>
+        <param name="appendage_name"   value="left_arm"/>
+    </node>
+
+</launch>
+

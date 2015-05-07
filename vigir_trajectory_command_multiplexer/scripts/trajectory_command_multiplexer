@@ -1,0 +1,64 @@
+#! /usr/bin/env python
+import roslib
+import rospy
+import rosparam
+
+from   control_msgs.msg import FollowJointTrajectoryAction
+import actionlib
+import control_msgs.msg
+from   vigir_trajectory_command_multiplexer.vigir_trajectory_command_multiplexer import VigirTrajectoryCommandInterface
+
+# ROS specific code for this script
+class TrajectoryHandler(object):
+    def __init__(self):
+
+        self._input_namespace    = rospy.get_param("~input_namespace", "") # e.g. "/trajectory_interfaces/left_arm_trajectory"
+        self._target_namespace   = rospy.get_param("~target_namespace", "") # e.g. "/joint_controllers"
+        self._appendage_name     = rospy.get_param("~appendage_name",   "") # e.g. "left_arm"
+
+        if (self._input_namespace == ""):
+            rospy.logerr( "Empty input_namespace - abort!" )
+            return
+
+        if (self._target_namespace == ""):
+            rospy.logerr( "Empty _target_namespace - abort!" )
+            return
+
+        if (self._appendage_name == ""):
+            rospy.logerr( "Empty _appendage_name - abort!" )
+            return
+
+        self._action_name = self._input_namespace+"/"+self._appendage_name+"_traj_controller"
+
+        rospy.loginfo( "Set up the action server for %s " % (self._action_name))
+        self._as = actionlib.SimpleActionServer(self._action_name, control_msgs.msg.FollowJointTrajectoryAction,
+                                                execute_cb=self.execute_cb, auto_start = False)
+
+        rospy.loginfo( "Set up the trajectory action interfaces for %s to %s controllers in %s" % (self._input_namespace, self._appendage_name,self._target_namespace))
+        self._trajectory_interfaces = VigirTrajectoryCommandInterface(self._action_name, self._target_namespace,  self._appendage_name, self._as)
+
+        self._as.start()
+
+        # Update the controller list every 5 seconds
+        rospy.loginfo( "Set up the periodic call to update_controllers ...")
+        self._timer = rospy.Timer(rospy.Duration(5.0),self._trajectory_interfaces.update_controllers)
+
+        rospy.loginfo( "Finished intializing the trajectory interface handler!")
+
+    def shutdown():
+        print "Shutting down the VigirTrajectoryCommandMultiplexer!"
+
+    def execute_cb(self, goal):
+        print "execute_cb:  ",goal
+
+
+# The main loop
+if __name__ == '__main__':
+
+    try:
+        rospy.init_node("vigir_trajectory_command_multiplexer")
+        print "Setup the trajectory command multiplexer for commands and actions ..."
+        TrajectoryHandler()
+        rospy.spin()
+    except rospy.ROSInterruptException:
+        print "Done trajectory command multiplexing"
