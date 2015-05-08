@@ -727,11 +727,12 @@ class VigirTrajectoryCommandInterface(object):
 
         self.pub_state         = rospy.Publisher(action_name + '/state', JointTrajectoryControllerState, queue_size=1)
 
+        self.get_controller_list_service = None
         self.controllers = {}
         self.active_controller = None
 
         rospy.loginfo(" Get the initial list of active controllers ...");
-        self.update_controllers(None)
+        self.update_running_controllers(None)
 
         rospy.loginfo(" Initialized the trajectory command interface!");
 
@@ -739,12 +740,20 @@ class VigirTrajectoryCommandInterface(object):
         self.pub_state.publish(msg)
 
     def source_goal_callback(self):
+        rospy.loginfo("vvvvv   source_goal_callback for %s vvvvvvvvv"%(self._name))
         goal = self._as.accept_new_goal()
+        self.update_running_controllers(None)
         if (self.active_controller is not None):
             print self.active_controller
             self.active_controller.set_goal(goal)
         else:
             rospy.logwarn("source_goal_callback - No active controllers for %s"%(self._name))
+            result = FollowTrajectoryResult()
+            result.error_string = "No active controllers"
+            result.error_code   = FollowTrajectoryResult.INVALID_GOAL
+            self._as.set_aborted(result)
+
+        rospy.loginfo("^^^^^^^  done source_goal_callback for %s ! ^^^^^^^^^"%(self._name))
 
     def source_preempt_callback(self):
         print "-vvvvvvvvvvv---source_preempt_callback---vvvvvvvvvvvvvvvvv---"
@@ -762,18 +771,20 @@ class VigirTrajectoryCommandInterface(object):
 
         return
     def shutdown():
-        print "Shutting down the VigirTrajectoryCommandInterface!"
+        print "Shutting down the VigirTrajectoryCommandInterface for ", self._name,"!"
 
-    def update_controllers(self,event):
+    def update_running_controllers(self,event):
         # update the list of currently initialized controllers
         # we will assume that once a controller is initialized it remains in the list until shutdown.
 
         #rospy.loginfo(" Update the controllers list ")
 
-        controllers =  VigirTrajectoryCommandInterface.get_active_traj_controllers(self._target_namespace)
-        if (controllers == None):
-            print "No controllers returned - abort!"
+        controllers =  self.get_active_traj_controllers(self._target_namespace)
 
+        self.active_controller = None # Reset the active controller list
+
+        if (controllers == None):
+            rospy.logwarn("No controllers returned - abort!")
             return
 
         for controller in controllers:
@@ -782,14 +793,20 @@ class VigirTrajectoryCommandInterface(object):
                     print "  Adding ",controller.name," to controller list ..."
                     self.controllers[controller.name] = VigirJointTrajectoryControllerInterface(controller, self._target_namespace + '/' + controller.name , self._as, self.publish_state_cb)
                     if ('running' == controller.state):
-                        self.active_controller = self.controllers[controller.name]
+                        if ( self.active_controller == None):
+                            self.active_controller = self.controllers[controller.name]
+                        else:
+                            rospy.logwarn(" Controller %s is already listed as active - ignore %s"%(self.active_controller.name, controller.name))
                 #else:
                 #    print "Controller ",controller.name, " is not for this appendage (",self._appendage_name,")"
             else:
                 #print "  ",controller.name," already exists in dictionary!"
                 self.controllers[controller.name].set_controller_state(controller.state)
                 if ('running' == controller.state):
-                    self.active_controller = self.controllers[controller.name]
+                    if ( self.active_controller == None):
+                        self.active_controller = self.controllers[controller.name]
+                    else:
+                        rospy.logwarn(" Controller %s is already listed as running - ignore %s"%(self.active_controller._name, controller.name))
 
     @staticmethod
     def get_traj_controllers(namespace, controller_list):
@@ -798,21 +815,22 @@ class VigirTrajectoryCommandInterface(object):
             if topic_type == 'trajectory_msgs/JointTrajectory':
                 yield controller
 
-    @staticmethod
-    def get_active_traj_controllers(namespace):
-        list_service = namespace + "/controller_manager/list_controllers"
-        try:
-            #rospy.loginfo("  Waiting for %s to get active trajectory controllers ..."%(list_service))
-            #rospy.wait_for_service(list_service,)
-            get_controller_list = rospy.ServiceProxy(list_service, ListControllers)
-        except rospy.ServiceException as exc:
-            rospy.logerr("Failed to connect to the controller action service %s - failed: %s"%(list_service, exc))
-            return None;
+    def get_active_traj_controllers(self, namespace):
+        if (self.get_controller_list_service == None):
+            try:
+                #rospy.loginfo("  Waiting for %s to get active trajectory controllers ..."%(list_service))
+                #rospy.wait_for_service(list_service,)
+                list_service = namespace + "/controller_manager/list_controllers"
+                self.get_controller_list_service = rospy.ServiceProxy(list_service, ListControllers)
+            except rospy.ServiceException as exc:
+                rospy.logerr("Failed to connect to the controller action service %s - failed: %s"%(list_service, exc))
+                return None;
 
         try:
-            controller_list = get_controller_list().controller
+            controller_list = self.get_controller_list_service().controller
         except rospy.ServiceException as exc:
             rospy.logerr("Retrieving controller list on namespace %s : failed %s"%( namespace, exc))
+            self.get_controller_list_service = None
             return None
 
         active_traj_controllers = list(VigirTrajectoryCommandInterface.get_traj_controllers(namespace, controller_list))

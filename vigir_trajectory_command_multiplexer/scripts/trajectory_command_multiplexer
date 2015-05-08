@@ -16,7 +16,7 @@ class TrajectoryHandler(object):
         self._input_namespace    = rospy.get_param("~input_namespace", "") # e.g. "/trajectory_interfaces/left_arm_trajectory"
         self._target_namespace   = rospy.get_param("~target_namespace","") # e.g. "/joint_controllers"
         self._appendage_name     = rospy.get_param("~appendage_name",  "") # e.g. "left_arm"
-        self._controller_status_update_rate = rospy.get_param("~controller_status_update_rate", 0.05) # how often to check controller status
+        self._controller_status_update_rate = rospy.get_param("~controller_status_update_rate", 0.1) # how often to check controller status
 
         if (self._input_namespace == ""):
             rospy.logerr( "Empty input_namespace - abort!" )
@@ -48,7 +48,7 @@ class TrajectoryHandler(object):
 
         # Update the controller running status
         rospy.loginfo( "Set up the periodic call to update_controller statuses at %f ..."%(self._controller_status_update_rate))
-        self._timer = rospy.Timer(rospy.Duration(self._controller_status_update_rate),self._trajectory_interfaces.update_controllers)
+        self._timer = rospy.Timer(rospy.Duration(self._controller_status_update_rate),self._trajectory_interfaces.update_running_controllers)
 
         rospy.loginfo( "Finished intializing the trajectory interface handler!")
 
