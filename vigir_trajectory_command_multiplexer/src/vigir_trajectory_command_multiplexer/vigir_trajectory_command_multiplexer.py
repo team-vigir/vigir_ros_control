@@ -639,39 +639,38 @@ class FollowJointTrajectoryActionClient:
         if (self.action_server.is_active()):
             if (GoalStatus.RECALLED == msg.status.status):
                 rospy.loginfo(" Recalled goal by %s"%self.ns)
-                self.action_server.set_aborted(msg)
+                self.action_server.set_aborted(msg.result)
             elif (GoalStatus.REJECTED == msg.status.status):
                 rospy.loginfo(" REJECTED goal  by %s"%self.ns)
-                self.action_server.set_aborted(msg)
+                self.action_server.set_aborted(msg.result)
             elif (GoalStatus.PREEMPTED == msg.status.status):
                 rospy.loginfo(" PREEMPTED goal by %s"%self.ns)
                 self.action_server.set_aborted(msg)
             elif (GoalStatus.ABORTED == msg.status.status):
                 rospy.loginfo(" ABORTED goal by %s"%self.ns)
-                self.action_server.set_aborted(msg)
+                self.action_server.set_aborted(msg.result)
             elif (GoalStatus.SUCCEEDED == msg.status.status):
                 rospy.loginfo(" SUCCEEDED goal by %s"%self.ns)
-                self.action_server.set_succeeded(msg)
+                self.action_server.set_succeeded(msg.result)
             elif (GoalStatus.LOST == msg.status.status):
                 rospy.loginfo(" LOST goal by %s"%self.ns)
-                self.action_server.set_aborted(msg)
+                self.action_server.set_aborted(msg.result)
             else:
                 rospy.loginfo(" Unknown status=%d by %s"%(msg.status.status,self.ns))
-                self.action_server.set_aborted(msg)
+                self.action_server.set_aborted(msg.result)
         else:
             rospy.loginfo("Action server for %s is NOT active!"%(self.ns))
 
     def _feedback_cb(self, msg):
         self.manager.update_feedbacks(msg)
-        print "feedback ",msg
-        self.action_server.publish_feedback(msg);
+        self.action_server.publish_feedback(msg.feedback);
 
     def server_transition_cb(self, gh):
         rospy.loginfo("  controller %s  transition %s"%(controller.name,gh))
 
     def server_feedback_cb(self, gh, msg):
-        rospy.loginfo("  controller %s  feedback %s"%(controller.name,msg))
-        self.action_server.publish_feedback(msg.status,msg.feedback)
+        rospy.loginfo("  server_feedback_cb - controller %s  feedback %s"%(controller.name,msg))
+        self.action_server.publish_feedback(msg.feedback)
 
 
 class VigirJointTrajectoryControllerInterface(object):
