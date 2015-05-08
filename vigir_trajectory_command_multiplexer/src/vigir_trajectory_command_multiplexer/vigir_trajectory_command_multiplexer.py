@@ -57,6 +57,7 @@ import rosservice
 
 from trajectory_msgs.msg import JointTrajectory
 from control_msgs.msg import FollowJointTrajectoryAction
+from control_msgs.msg import JointTrajectoryControllerState
 from controller_manager_msgs.srv import ListControllers
 
 
@@ -508,7 +509,7 @@ class FollowJointTrajectoryActionClient:
     ## example, the "goal" topic should occur under ns/goal
     ##
     ## will grab the other message types from this type.
-    def __init__(self, ns, action_server):
+    def __init__(self, ns, action_server, state_publish_cb):
         self.ns = ns
         self.last_status_msg = None
         self.action_server   = action_server
@@ -517,14 +518,19 @@ class FollowJointTrajectoryActionClient:
         try:
             a = FollowJointTrajectoryAction()
 
-            self.ActionSpec = FollowJointTrajectoryAction
-            self.ActionGoal = type(a.action_goal)
-            self.ActionResult = type(a.action_result)
-            self.ActionFeedback = type(a.action_feedback)
+            self.ActionSpec      = FollowJointTrajectoryAction
+            self.ActionGoal      = type(a.action_goal)
+            self.ActionResult    = type(a.action_result)
+            self.ActionFeedback  = type(a.action_feedback)
+            self.JointTrajectory = JointTrajectory
+
         except AttributeError:
             raise ActionException("Type is not an action spec: %s" % str(self.ActionSpec))
 
         print "Defining topics for ",ns, "  --> ",rospy.remap_name(ns)
+
+        self.pub_command   = rospy.Publisher(rospy.remap_name(ns) + '/command', self.JointTrajectory, queue_size=1)
+
         action_name = rospy.remap_name(ns)+"/follow_joint_trajectory";
         self.pub_goal   = rospy.Publisher(action_name + '/goal', self.ActionGoal, queue_size=1)
         self.pub_cancel = rospy.Publisher(action_name + '/cancel', GoalID, queue_size=1)
@@ -536,6 +542,7 @@ class FollowJointTrajectoryActionClient:
         self.status_sub   = rospy.Subscriber(action_name + '/status', GoalStatusArray, self._status_cb)
         self.result_sub   = rospy.Subscriber(action_name + '/result', self.ActionResult, self._result_cb)
         self.feedback_sub = rospy.Subscriber(action_name + '/feedback', self.ActionFeedback, self._feedback_cb)
+        self.state_sub    = rospy.Subscriber(rospy.remap_name(ns) + '/state', JointTrajectoryControllerState, state_publish_cb)
 
     ## @brief Sends a goal to the action server
     ##
@@ -551,8 +558,9 @@ class FollowJointTrajectoryActionClient:
     ## message.
     ##
     ## @return ClientGoalHandle for the sent goal.
-    def send_goal(self, goal, transition_cb = None, feedback_cb = None):
-        return self.manager.init_goal(goal, transition_cb, feedback_cb)
+    def send_goal(self, goal):#, transition_cb = None, feedback_cb = None):
+        print " send_goal from ",self.ns
+        return self.manager.init_goal(goal, self.server_transition_cb, self.server_feedback_cb)
 
     ## @brief Cancels all goals currently running on the action server.
     ##
@@ -624,34 +632,87 @@ class FollowJointTrajectoryActionClient:
     def _status_cb(self, msg):
         self.last_status_msg = msg
         self.manager.update_statuses(msg)
+        #print "Status CB: ",self.ns," :\n ",msg,"\n\n"
 
     def _result_cb(self, msg):
         self.manager.update_results(msg)
-
-        print "FollowJointTrajectoryAction result for ",self.ns," : ",msg
-        #self.action_server.status_cb(msg);
+        if (self.action_server.is_active()):
+            if (GoalStatus.RECALLED == msg.status.status):
+                rospy.loginfo(" Recalled goal by %s"%self.ns)
+                self.action_server.set_aborted(msg)
+            elif (GoalStatus.REJECTED == msg.status.status):
+                rospy.loginfo(" REJECTED goal  by %s"%self.ns)
+                self.action_server.set_aborted(msg)
+            elif (GoalStatus.PREEMPTED == msg.status.status):
+                rospy.loginfo(" PREEMPTED goal by %s"%self.ns)
+                self.action_server.set_aborted(msg)
+            elif (GoalStatus.ABORTED == msg.status.status):
+                rospy.loginfo(" ABORTED goal by %s"%self.ns)
+                self.action_server.set_aborted(msg)
+            elif (GoalStatus.SUCCEEDED == msg.status.status):
+                rospy.loginfo(" SUCCEEDED goal by %s"%self.ns)
+                self.action_server.set_succeeded(msg)
+            elif (GoalStatus.LOST == msg.status.status):
+                rospy.loginfo(" LOST goal by %s"%self.ns)
+                self.action_server.set_aborted(msg)
+            else:
+                rospy.loginfo(" Unknown status=%d by %s"%(msg.status.status,self.ns))
+                self.action_server.set_aborted(msg)
+        else:
+            rospy.loginfo("Action server for %s is NOT active!"%(self.ns))
 
     def _feedback_cb(self, msg):
         self.manager.update_feedbacks(msg)
-        print "FollowJointTrajectoryAction feedback for ",self.ns," : ",msg
+        print "feedback ",msg
+        self.action_server.publish_feedback(msg);
+
+    def server_transition_cb(self, gh):
+        rospy.loginfo("  controller %s  transition %s"%(controller.name,gh))
+
+    def server_feedback_cb(self, gh, msg):
+        rospy.loginfo("  controller %s  feedback %s"%(controller.name,msg))
+        self.action_server.publish_feedback(msg.status,msg.feedback)
 
 
 class VigirJointTrajectoryControllerInterface(object):
 
-    def __init__(self, controller_name, topic_name, action_server):
+    def __init__(self, controller, topic_name, action_server, state_publish_cb):
 
-        print "Initialize VigirJointTrajectoryControllerInterface : ",controller_name, "  > ",topic_name
+        rospy.loginfo("Add VigirJointTrajectoryControllerInterface for  %s  (%s) -> %s"%(controller.name, controller.state,topic_name))
 
-        rospy.loginfo(" Add controller %s ..."%(controller_name))
-
-        self._client = FollowJointTrajectoryActionClient(topic_name, action_server )
+        self._client = FollowJointTrajectoryActionClient(topic_name, action_server, state_publish_cb )
         # subscribe to feedback, state, result, and status topics
 
-        #
+        self._name          = controller.name
+        self._current_state = controller.state
+        self._running       = controller.state == 'running'
+
+    def is_running(self):
+        return self._running
+
+    def set_controller_state(self, state):
+        if (self._current_state != state):
+            self._running = state == 'running'
+            self._current_state = state
+            rospy.loginfo("  Controller %s is now in state (%s) - running=%d"%(self._name, self._current_state, self._running))
+
+    def set_goal(self, goal):
+        if (self._running):
+            rospy.loginfo("  Send goal to %s  "%(self._name))
+            self._client.send_goal(goal)
+            return True
+        else:
+            rospy.logerr("  Controller not running - abort goal to %s  "%(self._name))
+            return False
+
+    def preempt_goal(self):
+        rospy.loginfo("  Preempt goal from %s  "%(self._name))
+        self._client.cancel_all_goals()
+        return True
 
 
 """
-This allows single action to interface to multiplselfe controllers based on which one is running at current time.
+This allows single action to interface to multiple  controllers based on which one is running at current time.
 .
 """
 
@@ -665,12 +726,44 @@ class VigirTrajectoryCommandInterface(object):
         self._appendage_name   = appendage_name
         self._as               = action_server
 
+        self.pub_state         = rospy.Publisher(action_name + '/state', JointTrajectoryControllerState, queue_size=1)
+
         self.controllers = {}
+        self.active_controller = None
 
         rospy.loginfo(" Get the initial list of active controllers ...");
         self.update_controllers(None)
 
         rospy.loginfo(" Initialized the trajectory command interface!");
+
+    def publish_state_cb(self, msg):
+        self.pub_state.publish(msg)
+
+    def source_goal_callback(self):
+        goal = self._as.accept_new_goal()
+        if (self.active_controller is not None):
+            print self.active_controller
+            self.active_controller.set_goal(goal)
+        else:
+            rospy.logwarn("source_goal_callback - No active controllers for %s"%(self._name))
+
+    def source_preempt_callback(self):
+        print "-vvvvvvvvvvv---source_preempt_callback---vvvvvvvvvvvvvvvvv---"
+        if (self.active_controller is not None):
+            self.active_controller.preempt_goal()
+        else:
+            rospy.logwarn("source_preempt_callback - No active controllers for %s"%(self._name))
+        print "---^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^----------------"
+
+    def source_command_callback(self, msg):
+        if (self.active_controller is not None):
+            self.active_controller._client.pub_command.publish(msg)
+        else:
+            rospy.logwarn("source_command_callback: No active controllers for %s"%(self._name))
+
+        return
+    def shutdown():
+        print "Shutting down the VigirTrajectoryCommandInterface!"
 
     def update_controllers(self,event):
         # update the list of currently initialized controllers
@@ -679,19 +772,25 @@ class VigirTrajectoryCommandInterface(object):
         #rospy.loginfo(" Update the controllers list ")
 
         controllers =  VigirTrajectoryCommandInterface.get_active_traj_controllers(self._target_namespace)
+        if (controllers == None):
+            print "No controllers returned - abort!"
+
+            return
+
         for controller in controllers:
             if not (controller.name in self.controllers):
                 if (self._appendage_name in controller.name):
                     print "  Adding ",controller.name," to controller list ..."
-                    self.controllers[controller.name] = VigirJointTrajectoryControllerInterface(controller.name, self._target_namespace + '/' + controller.name , self._as)
+                    self.controllers[controller.name] = VigirJointTrajectoryControllerInterface(controller, self._target_namespace + '/' + controller.name , self._as, self.publish_state_cb)
+                    if ('running' == controller.state):
+                        self.active_controller = self.controllers[controller.name]
                 #else:
                 #    print "Controller ",controller.name, " is not for this appendage (",self._appendage_name,")"
-            #else:
-            #    print "  ",controller.name," already exists in dictionary!"
-
-
-    def shutdown():
-        print "Shutting down the VigirTrajectoryCommandInterface!"
+            else:
+                #print "  ",controller.name," already exists in dictionary!"
+                self.controllers[controller.name].set_controller_state(controller.state)
+                if ('running' == controller.state):
+                    self.active_controller = self.controllers[controller.name]
 
     @staticmethod
     def get_traj_controllers(namespace, controller_list):
@@ -703,24 +802,22 @@ class VigirTrajectoryCommandInterface(object):
     @staticmethod
     def get_active_traj_controllers(namespace):
         list_service = namespace + "/controller_manager/list_controllers"
-        rospy.loginfo("  Waiting for %s to get active trajectory controllers ..."%(list_service))
         try:
-            rospy.wait_for_service(list_service)
+            #rospy.loginfo("  Waiting for %s to get active trajectory controllers ..."%(list_service))
+            #rospy.wait_for_service(list_service,)
+            get_controller_list = rospy.ServiceProxy(list_service, ListControllers)
         except rospy.ServiceException as exc:
-            print 'Failed to connect to the controller action service', list_service, 'failed:', exc
+            rospy.logerr("Failed to connect to the controller action service %s - failed: %s"%(list_service, exc))
             return None;
 
-
-        get_controller_list = rospy.ServiceProxy(list_service, ListControllers)
         try:
             controller_list = get_controller_list().controller
         except rospy.ServiceException as exc:
-            print 'Retrieving controller list on namespace', namespace, 'failed:', exc
+            rospy.logerr("Retrieving controller list on namespace %s : failed %s"%( namespace, exc))
+            return None
 
-        #active_controllers = [controller for controller in controller_list
-        #                      if controller.state == 'running']
-        active_traj_controllers = list(VigirTrajectoryCommandInterface.get_traj_controllers(namespace, controller_list))#active_controllers))
-        controller_names = [controller.name for controller in active_traj_controllers]
+        active_traj_controllers = list(VigirTrajectoryCommandInterface.get_traj_controllers(namespace, controller_list))
+        #controller_names = [controller.name for controller in active_traj_controllers]
         #print 'Active traj controllers:', controller_names
         return active_traj_controllers
 
