@@ -740,38 +740,37 @@ class VigirTrajectoryCommandInterface(object):
         self.pub_state.publish(msg)
 
     def source_goal_callback(self):
-        rospy.loginfo("vvvvv   source_goal_callback for %s vvvvvvvvv"%(self._name))
+        rospy.loginfo("vvvvv   source_goal_callback for %s vvvvvvvvv"%(self._action_name))
         goal = self._as.accept_new_goal()
         self.update_running_controllers(None)
         if (self.active_controller is not None):
-            print self.active_controller
             self.active_controller.set_goal(goal)
         else:
-            rospy.logwarn("source_goal_callback - No active controllers for %s"%(self._name))
+            rospy.logwarn("source_goal_callback - No active controllers for %s"%(self._action_name))
             result = FollowTrajectoryResult()
             result.error_string = "No active controllers"
             result.error_code   = FollowTrajectoryResult.INVALID_GOAL
             self._as.set_aborted(result)
 
-        rospy.loginfo("^^^^^^^  done source_goal_callback for %s ! ^^^^^^^^^"%(self._name))
+        rospy.loginfo("^^^^^^^  done source_goal_callback for %s ! ^^^^^^^^^"%(self._action_name))
 
     def source_preempt_callback(self):
         print "-vvvvvvvvvvv---source_preempt_callback---vvvvvvvvvvvvvvvvv---"
         if (self.active_controller is not None):
             self.active_controller.preempt_goal()
         else:
-            rospy.logwarn("source_preempt_callback - No active controllers for %s"%(self._name))
+            rospy.logwarn("source_preempt_callback - No active controllers for %s"%(self._action_name))
         print "---^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^----------------"
 
     def source_command_callback(self, msg):
         if (self.active_controller is not None):
             self.active_controller._client.pub_command.publish(msg)
         else:
-            rospy.logwarn("source_command_callback: No active controllers for %s"%(self._name))
+            rospy.logwarn("source_command_callback: No active controllers for %s"%(self._action_name))
 
         return
-    def shutdown():
-        print "Shutting down the VigirTrajectoryCommandInterface for ", self._name,"!"
+    def shutdown(self):
+        print "Shutting down the VigirTrajectoryCommandInterface for ", self._action_name,"!"
 
     def update_running_controllers(self,event):
         # update the list of currently initialized controllers
