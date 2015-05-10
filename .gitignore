@@ -8,4 +8,5 @@ qtcreator-build
 *~
 *.user
 *.pyc
+.idea
 
