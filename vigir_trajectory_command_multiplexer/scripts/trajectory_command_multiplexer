@@ -3,55 +3,56 @@ import roslib
 import rospy
 import rosparam
 
-from   control_msgs.msg import FollowJointTrajectoryAction
+from control_msgs.msg import FollowJointTrajectoryAction
 import actionlib
 import control_msgs.msg
-from   vigir_trajectory_command_multiplexer.vigir_trajectory_command_multiplexer import VigirTrajectoryCommandInterface
+from vigir_trajectory_command_multiplexer.vigir_trajectory_command_multiplexer import VigirTrajectoryCommandInterface
 from trajectory_msgs.msg import JointTrajectory
+
 
 # ROS specific code for this script
 class TrajectoryHandler(object):
     def __init__(self):
 
-        self._input_namespace    = rospy.get_param("~input_namespace", "") # e.g. "/trajectory_interfaces/left_arm_trajectory"
-        self._target_namespace   = rospy.get_param("~target_namespace","") # e.g. "/joint_controllers"
-        self._appendage_name     = rospy.get_param("~appendage_name",  "") # e.g. "left_arm"
-        self._controller_status_update_rate = rospy.get_param("~controller_status_update_rate", 0.1) # how often to check controller status
+        self._input_namespace = rospy.get_param("~input_namespace", "")  # e.g. "/trajectory_interfaces/left_arm_trajectory"
+        self._target_namespace = rospy.get_param("~target_namespace", "")  # e.g. "/joint_controllers"
+        self._appendage_name = rospy.get_param("~appendage_name",  "")  # e.g. "left_arm"
+        self._controller_status_update_rate = rospy.get_param("~controller_status_update_rate", 0.1)  # how often to check controller status
 
-        if (self._input_namespace == ""):
-            rospy.logerr( "Empty input_namespace - abort!" )
+        if self._input_namespace == "":
+            rospy.logerr("Empty input_namespace - abort!")
             return
 
-        if (self._target_namespace == ""):
-            rospy.logerr( "Empty _target_namespace - abort!" )
+        if self._target_namespace == "":
+            rospy.logerr("Empty _target_namespace - abort!")
             return
 
-        if (self._appendage_name == ""):
-            rospy.logerr( "Empty _appendage_name - abort!" )
+        if self._appendage_name == "":
+            rospy.logerr("Empty _appendage_name - abort!")
             return
 
         self._controller_name = self._input_namespace+"/"+self._appendage_name+"_traj_controller"
 
-        rospy.loginfo( "Set up the action server for %s " % (self._controller_name))
-        self._as = actionlib.SimpleActionServer(self._controller_name+"/follow_joint_trajectory", control_msgs.msg.FollowJointTrajectoryAction, auto_start = False)
+        rospy.loginfo("Set up the action server for %s " % self._controller_name)
+        self._as = actionlib.SimpleActionServer(self._controller_name+"/follow_joint_trajectory", control_msgs.msg.FollowJointTrajectoryAction, auto_start=False)
 
-        rospy.loginfo( "Set up the trajectory action interfaces for %s to %s controllers in %s" % (self._input_namespace, self._appendage_name,self._target_namespace))
-        self._trajectory_interfaces = VigirTrajectoryCommandInterface(self._controller_name, self._target_namespace,  self._appendage_name, self._as)
-
+        rospy.loginfo("Set up the trajectory action interfaces for %s to %s controllers in %s" % (self._input_namespace, self._appendage_name, self._target_namespace))
+        self._trajectory_interfaces = VigirTrajectoryCommandInterface(self._controller_name, self._target_namespace, self._appendage_name, self._as)
 
         self._as.register_goal_callback(self._trajectory_interfaces.source_goal_callback)
         self._as.register_preempt_callback(self._trajectory_interfaces.source_preempt_callback)
         self._as.start()
 
         # Subscribe to the simple command topic
-        self.command_sub   = rospy.Subscriber(self._controller_name + '/command', JointTrajectory, self._trajectory_interfaces.source_command_callback)
+        self.command_sub = rospy.Subscriber(self._controller_name + '/command', JointTrajectory, self._trajectory_interfaces.source_command_callback)
 
         # Update the controller running status
-        rospy.loginfo( "Set up the periodic call to update_controller statuses at %f ..."%(self._controller_status_update_rate))
-        self._timer = rospy.Timer(rospy.Duration(self._controller_status_update_rate),self._trajectory_interfaces.update_running_controllers)
+        rospy.loginfo("Set up the periodic call to update_controller statuses at %f ..." % self._controller_status_update_rate)
+        self._timer = rospy.Timer(rospy.Duration(self._controller_status_update_rate), self._trajectory_interfaces.update_running_controllers)
 
-        rospy.loginfo( "Finished intializing the trajectory interface handler!")
+        rospy.loginfo("Finished initializing the trajectory interface handler!")
 
+    @staticmethod
     def shutdown():
         print "Shutting down the VigirTrajectoryCommandMultiplexer!"
 
