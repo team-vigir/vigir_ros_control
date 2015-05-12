@@ -147,6 +147,22 @@ class VigirRealTimePublisher
         return false;
     }
 
+    inline bool publishAnyNewDataNonBlocking(const ros::Time& current_time = ros::Time::now())
+    {
+        if (rt_buffer_->dataCount() != last_data_count_)
+        {
+            DO_TIMING(publisher_timing_);
+            uint32_t data_cnt = rt_buffer_->readBufferNonBlocking(last_data_);
+            if (data_cnt)
+            {
+                last_data_count_ = data_cnt;
+                publish(last_data_,current_time);
+            }
+            return true;
+        }
+        return false;
+    }
+
     inline bool publishLatestData(const ros::Duration& interval, const ros::Time& current_time = ros::Time::now())
     {
         if (rt_buffer_->dataCount() != last_data_count_)

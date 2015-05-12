@@ -32,6 +32,7 @@
 
 #include <time.h>
 #include <atomic>
+#include <boost/thread/mutex.hpp>
 
 namespace vigir_control
 {
@@ -43,12 +44,8 @@ class VigirRealTimeBuffer
 
     // Default constructor
     VigirRealTimeBuffer(const std::string& name="default")
-      : name_(name), lock_counter_(0), data_count_(std::numeric_limits<uint32_t>::max() )
+      : name_(name), data_count_(std::numeric_limits<uint32_t>::max() )
     {
-        // Define sleep for polling read lock
-        //sleep_ts_.tv_sec  = 0;
-        //sleep_ts_.tv_nsec = 1000; // 1 micro seconds
-
         // allocate memory
         read_data_buffer_  = new T();
         write_data_buffer_ = new T();
@@ -63,12 +60,8 @@ class VigirRealTimeBuffer
 
     // Copy constructor
     VigirRealTimeBuffer(VigirRealTimeBuffer &source,const std::string& name)
-        : name_(name), lock_counter_(0), data_count_(std::numeric_limits<uint32_t>::max() )
+        : name_(name), data_count_(std::numeric_limits<uint32_t>::max() )
     {
-        // Define sleep for polling read lock
-        //sleep_ts_.tv_sec  = 0;
-        //sleep_ts_.tv_nsec = 1000; // 1 micro seconds
-
         // allocate memory
         read_data_buffer_  = new T();
         write_data_buffer_ = new T();
@@ -81,12 +74,8 @@ class VigirRealTimeBuffer
 
     // Data constructor
     VigirRealTimeBuffer(const T &source, const std::string& name)
-        : name_(name), lock_counter_(0), data_count_(std::numeric_limits<uint32_t>::max() )
+        : name_(name), data_count_(std::numeric_limits<uint32_t>::max() )
     {
-        // Define sleep for polling read lock
-        //sleep_ts_.tv_sec  = 0;
-        //sleep_ts_.tv_nsec = 1000; // 1 micro seconds
-
         // allocate memory
         read_data_buffer_  = new T();
         write_data_buffer_ = new T();
@@ -124,31 +113,58 @@ class VigirRealTimeBuffer
     uint32_t readBuffer(T& data)
     {
 
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+          boost::this_thread::disable_interruption do_not_disturb;
+#endif
+        uint32_t lock_counter = 0;
         // Check if the data is currently being written to (is locked)
         while(!data_mutex_.try_lock_shared())
-        {
-            ++lock_counter_; // debug monitoring
-            //nanosleep(&sleep_ts_, &remaining_ts_);
+        { // busy spin lock
+            ++lock_counter; // busy wait for read to be sure we update data
+            if (1000 == lock_counter)
+            {   // Debug status if we ever get blocked for 1000 cycles
+                std::cout << "RTB " << name_ << " lock counter = " << lock_counter << " stuck?" << std::endl;
+            }
         }
 
-        // --------- debug ----------
-        //if (lock_counter_ > 2)
-        //{   // Debug status to we ever get blocked for more than 1 cycle
-        //    std::cout << "RTB " << name_ << " lock counter = " << lock_counter_ << std::endl;
-        //}
+        // -------------------------- debug ----------
+        if (lock_counter > 1000)
+        {   // Debug status to show that we were blocked for a significant number of cycles
+            std::cout << "      RTB " << name_ << " lock counter = " << lock_counter << "  unstuck!" << std::endl;
+        }
         // -------------------------------------------
 
 
         // Copy the data from the read buffer
         data = *read_data_buffer_;
         uint32_t   count = data_count_;
-        lock_counter_ = 0;           // debug lock counter that will print warning if we are blocked for more than 20 us
         data_mutex_.unlock_shared(); // free the lock now that we've copied data
 
         return count; // return data count associated with this data
 
     }
 
+    uint32_t readBufferNonBlocking(T& data)
+    {
+
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+          boost::this_thread::disable_interruption do_not_disturb;
+#endif
+        // Check if the data is currently being written to (is locked)
+        if (data_mutex_.try_lock_shared())
+        {
+            // Copy the data from the read buffer
+            data = *read_data_buffer_;
+            uint32_t   count = data_count_;
+            data_mutex_.unlock_shared(); // free the lock now that we've copied data
+
+            return count; // return data count associated with this data
+        }
+        else
+        { // return 0 to indicate that we did not update the data structure
+            return 0;
+        }
+    }
 
     // return the count of the data transfer to help readers track when new data is available
     uint32_t dataCount() { return data_count_.load();}
@@ -161,6 +177,10 @@ class VigirRealTimeBuffer
     // Set read buffer after updating the write buffer
     inline void setReadBuffer()
     {
+
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+          boost::this_thread::disable_interruption do_not_disturb;
+#endif
       // get upgradable access
       boost::upgrade_lock<boost::shared_mutex> lock(data_mutex_);
 
@@ -177,7 +197,6 @@ class VigirRealTimeBuffer
 
   void writeBuffer(const T& data)
   {
-
       // Copy the data to writeable buffer
       *write_data_buffer_ = data;
       setReadBuffer();
@@ -194,15 +213,8 @@ class VigirRealTimeBuffer
 
   std::string   name_;
 
-  // Using polling for now
-  //timespec sleep_ts_;
-  //timespec remaining_ts_;
-
   // Set as mutable for read buffer
   boost::shared_mutex data_mutex_;
-
-  // Debug monitoring to see if read buffer is every blocked more than once
-  uint lock_counter_;
 
 }; // class
 
