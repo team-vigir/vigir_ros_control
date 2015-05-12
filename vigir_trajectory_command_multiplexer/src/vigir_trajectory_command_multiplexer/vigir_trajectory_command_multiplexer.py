@@ -645,7 +645,7 @@ class FollowJointTrajectoryActionClient:
                 self.action_server.set_aborted(msg.result)
             elif GoalStatus.PREEMPTED == msg.status.status:
                 rospy.loginfo(" PREEMPTED goal by %s" % self.ns)
-                self.action_server.set_aborted(msg)
+                self.action_server.set_aborted(msg.result)
             elif GoalStatus.ABORTED == msg.status.status:
                 rospy.loginfo(" ABORTED goal by %s" % self.ns)
                 self.action_server.set_aborted(msg.result)
