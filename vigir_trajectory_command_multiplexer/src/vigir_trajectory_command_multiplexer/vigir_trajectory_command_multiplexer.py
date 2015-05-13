@@ -56,7 +56,7 @@ import rostopic
 import rosservice
 
 from trajectory_msgs.msg import JointTrajectory
-from control_msgs.msg import FollowJointTrajectoryAction
+from control_msgs.msg import *
 from control_msgs.msg import JointTrajectoryControllerState
 from controller_manager_msgs.srv import ListControllers
 
@@ -745,9 +745,9 @@ class VigirTrajectoryCommandInterface(object):
             self.active_controller.set_goal(goal)
         else:
             rospy.logwarn("source_goal_callback - No active controllers for %s" % self._action_name)
-            result = FollowTrajectoryResult()
+            result = FollowJointTrajectoryResult()
             result.error_string = "No active controllers"
-            result.error_code = FollowTrajectoryResult.INVALID_GOAL
+            result.error_code = FollowJointTrajectoryResult.INVALID_GOAL
             self._as.set_aborted(result)
 
         rospy.loginfo("^^^^^^^  done source_goal_callback for %s ! ^^^^^^^^^" % self._action_name)
