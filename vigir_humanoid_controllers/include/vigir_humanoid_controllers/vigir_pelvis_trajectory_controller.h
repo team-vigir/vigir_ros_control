@@ -217,8 +217,8 @@ private:
   ros::Timer         goal_handle_timer_;
   ros::Time          last_state_publish_time_;
 
-  bool updateTrajectoryCommand(const JointTrajectoryConstPtr& msg, RealtimeGoalHandlePtr gh);
-  void trajectoryCommandCB(const JointTrajectoryConstPtr& msg);
+  bool updateTrajectoryCommand(const JointTrajectoryConstPtr msg, RealtimeGoalHandlePtr gh);
+  void trajectoryCommandCB(const JointTrajectoryConstPtr msg);
   void goalCB(GoalHandle gh);
   void cancelCB(GoalHandle gh);
   void preemptActiveGoal();

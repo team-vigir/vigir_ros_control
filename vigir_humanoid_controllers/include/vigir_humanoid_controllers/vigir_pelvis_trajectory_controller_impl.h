@@ -159,7 +159,7 @@ stopping(const ros::Time& time)
 
 template <class SegmentImpl, class HardwareInterface>
 inline void VigirPelvisTrajectoryController<SegmentImpl, HardwareInterface>::
-trajectoryCommandCB(const JointTrajectoryConstPtr& msg)
+trajectoryCommandCB(const JointTrajectoryConstPtr msg)
 {
   const bool update_ok = updateTrajectoryCommand(msg, RealtimeGoalHandlePtr());
   if (update_ok) {preemptActiveGoal();}
@@ -456,7 +456,7 @@ update(const ros::Time& time, const ros::Duration& period)
 
 template <class SegmentImpl, class HardwareInterface>
 bool VigirPelvisTrajectoryController<SegmentImpl, HardwareInterface>::
-updateTrajectoryCommand(const JointTrajectoryConstPtr& msg, RealtimeGoalHandlePtr gh)
+updateTrajectoryCommand(const JointTrajectoryConstPtr msg, RealtimeGoalHandlePtr gh)
 {
   typedef joint_trajectory_controller::InitJointTrajectoryOptions<Trajectory> Options;
 
