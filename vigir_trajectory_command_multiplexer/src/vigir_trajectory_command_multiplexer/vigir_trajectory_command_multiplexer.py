@@ -158,7 +158,7 @@ class ClientGoalHandle:
     ## @return The current goal's communication state with the server
     def get_comm_state(self):
         if not self.comm_state_machine:
-            rospy.logerr("Trying to get_comm_state on an inactive ClientGoalHandle.")
+            rospy.logerr("TCMX:  Trying to get_comm_state on an inactive ClientGoalHandle.")
             return CommState.LOST
         return self.comm_state_machine.state
 
@@ -170,7 +170,7 @@ class ClientGoalHandle:
     ## @return The current status of the goal.
     def get_goal_status(self):
         if not self.comm_state_machine:
-            rospy.logerr("Trying to get_goal_status on an inactive ClientGoalHandle.")
+            rospy.logerr("TCMX:  Trying to get_goal_status on an inactive ClientGoalHandle.")
             return GoalStatus.PENDING
         return self.comm_state_machine.latest_goal_status.status
 
@@ -181,7 +181,7 @@ class ClientGoalHandle:
     ## @return The current status text of the goal.
     def get_goal_status_text(self):
         if not self.comm_state_machine:
-            rospy.logerr("Trying to get_goal_status_text on an inactive ClientGoalHandle.")
+            rospy.logerr("TCMX: Trying to get_goal_status_text on an inactive ClientGoalHandle.")
             return "ERROR: Trying to get_goal_status_text on an inactive ClientGoalHandle."
         return self.comm_state_machine.latest_goal_status.text
 
@@ -190,10 +190,10 @@ class ClientGoalHandle:
     ## @return None if no result was receieved.  Otherwise the goal's result as a *Result message.
     def get_result(self):
         if not self.comm_state_machine:
-            rospy.logerr("Trying to get_result on an inactive ClientGoalHandle.")
+            rospy.logerr("TCMX: Trying to get_result on an inactive ClientGoalHandle.")
             return None
         if not self.comm_state_machine.latest_result:
-            #rospy.logerr("Trying to get_result on a ClientGoalHandle when no result has been received.")
+            #rospy.logerr("TCMX: Trying to get_result on a ClientGoalHandle when no result has been received.")
             return None
         return self.comm_state_machine.latest_result.result
 
@@ -205,12 +205,12 @@ class ClientGoalHandle:
     ## @return The terminal state as an integer from the GoalStatus message.
     def get_terminal_state(self):
         if not self.comm_state_machine:
-            rospy.logerr("Trying to get_terminal_state on an inactive ClientGoalHandle.")
+            rospy.logerr("TCMX:  Trying to get_terminal_state on an inactive ClientGoalHandle.")
             return GoalStatus.LOST
 
         with self.comm_state_machine.mutex:
             if self.comm_state_machine.state != CommState.DONE:
-                rospy.logwarn("Asking for the terminal state when we're in [%s]",
+                rospy.logwarn("TCMX:  Asking for the terminal state when we're in [%s]",
                              CommState.to_string(self.comm_state_machine.state))
 
             goal_status = self.comm_state_machine.latest_goal_status.status
@@ -219,7 +219,7 @@ class ClientGoalHandle:
                                GoalStatus.RECALLED, GoalStatus.LOST]:
                 return goal_status
 
-            rospy.logerr("Asking for a terminal state, but the goal status is %d", goal_status)
+            rospy.logerr("TCMX:  Asking for a terminal state, but the goal status is %d", goal_status)
             return GoalStatus.LOST
 
 
@@ -351,10 +351,10 @@ class CommStateMachine:
 
             # Determines the next state from the lookup table
             if self.state not in _transitions:
-                rospy.logerr("CommStateMachine is in a funny state: %i" % self.state)
+                rospy.logerr("TCMX:  CommStateMachine is in a funny state: %i" % self.state)
                 return
             if status.status not in _transitions[self.state]:
-                rospy.logerr("Got an unknown status from the ActionServer: %i" % status.status)
+                rospy.logerr("TCMX:  Got an unknown status from the ActionServer: %i" % status.status)
                 return
             next_state = _transitions[self.state][status.status]
 
@@ -362,7 +362,7 @@ class CommStateMachine:
             if next_state == NO_TRANSITION:
                 pass
             elif next_state == INVALID_TRANSITION:
-                rospy.logerr("Invalid goal status transition from %s to %s" %
+                rospy.logerr("TCMX:  Invalid goal status transition from %s to %s" %
                              (CommState.to_string(self.state), GoalStatus.to_string(status.status)))
             else:
                 if hasattr(next_state, '__getitem__'):
@@ -406,9 +406,9 @@ class CommStateMachine:
 
                 self.transition_to(CommState.DONE)
             elif self.state == CommState.DONE:
-                rospy.logerr("Got a result when we were already in the DONE state")
+                rospy.logerr("TCMX:  Got a result when we were already in the DONE state")
             else:
-                rospy.logerr("In a funny state: %i" % self.state)
+                rospy.logerr("TCMX:  In a funny state: %i" % self.state)
 
     def update_feedback(self, action_feedback):
         # Might not be for us
@@ -638,38 +638,38 @@ class FollowJointTrajectoryActionClient:
         self.manager.update_results(msg)
         if self.action_server.is_active():
             if GoalStatus.RECALLED == msg.status.status:
-                rospy.loginfo(" Recalled goal by %s" % self.ns)
+                rospy.loginfo("TCMX:   Recalled goal by %s" % self.ns)
                 self.action_server.set_aborted(msg.result)
             elif GoalStatus.REJECTED == msg.status.status:
-                rospy.loginfo(" REJECTED goal  by %s" % self.ns)
+                rospy.loginfo("TCMX:   REJECTED goal  by %s" % self.ns)
                 self.action_server.set_aborted(msg.result)
             elif GoalStatus.PREEMPTED == msg.status.status:
-                rospy.loginfo(" PREEMPTED goal by %s" % self.ns)
+                rospy.loginfo("TCMX:   PREEMPTED goal by %s" % self.ns)
                 self.action_server.set_aborted(msg.result)
             elif GoalStatus.ABORTED == msg.status.status:
-                rospy.loginfo(" ABORTED goal by %s" % self.ns)
+                rospy.loginfo("TCMX:   ABORTED goal by %s" % self.ns)
                 self.action_server.set_aborted(msg.result)
             elif GoalStatus.SUCCEEDED == msg.status.status:
-                rospy.loginfo(" SUCCEEDED goal by %s" % self.ns)
+                rospy.loginfo("TCMX:   SUCCEEDED goal by %s" % self.ns)
                 self.action_server.set_succeeded(msg.result)
             elif GoalStatus.LOST == msg.status.status:
-                rospy.loginfo(" LOST goal by %s" % self.ns)
+                rospy.loginfo("TCMX:   LOST goal by %s" % self.ns)
                 self.action_server.set_aborted(msg.result)
             else:
-                rospy.loginfo(" Unknown status=%d by %s" % (msg.status.status, self.ns))
+                rospy.loginfo("TCMX:   Unknown status=%d by %s" % (msg.status.status, self.ns))
                 self.action_server.set_aborted(msg.result)
         else:
-            rospy.loginfo("Action server for %s is NOT active!" % self.ns)
+            rospy.loginfo("TCMX:  Action server for %s is NOT active!" % self.ns)
 
     def _feedback_cb(self, msg):
         self.manager.update_feedbacks(msg)
         self.action_server.publish_feedback(msg.feedback);
 
     def server_transition_cb(self, gh):
-        rospy.loginfo("  controller %s  transition %s" % (self.ns, gh))
+        rospy.loginfo("TCMX:    controller %s  transition %s" % (self.ns, gh))
 
     def server_feedback_cb(self, gh, msg):
-        rospy.loginfo("  server_feedback_cb - controller %s  feedback %s" % (self.ns, msg))
+        rospy.loginfo("TCMX:    server_feedback_cb - controller %s  feedback %s" % (self.ns, msg))
         self.action_server.publish_feedback(msg.feedback)
 
 
@@ -677,7 +677,7 @@ class VigirJointTrajectoryControllerInterface(object):
 
     def __init__(self, controller, topic_name, action_server, state_publish_cb):
 
-        rospy.loginfo("Add VigirJointTrajectoryControllerInterface for  %s  (%s) -> %s" % (controller.name, controller.state,topic_name))
+        rospy.loginfo("TCMX:  Add VigirJointTrajectoryControllerInterface for  %s  (%s) -> %s" % (controller.name, controller.state,topic_name))
 
         self._client = FollowJointTrajectoryActionClient(topic_name, action_server, state_publish_cb )
         # subscribe to feedback, state, result, and status topics
@@ -693,19 +693,19 @@ class VigirJointTrajectoryControllerInterface(object):
         if self._current_state != state:
             self._running = state == 'running'
             self._current_state = state
-            rospy.loginfo("  Controller %s is now in state (%s) - running=%d" % (self._name, self._current_state, self._running))
+            rospy.loginfo("TCMX:    Controller %s is now in state (%s) - running=%d" % (self._name, self._current_state, self._running))
 
     def set_goal(self, goal):
         if self._running:
-            rospy.loginfo("  Send goal to %s  " % self._name)
+            rospy.loginfo("TCMX:    Send goal to %s  " % self._name)
             self._client.send_goal(goal)
             return True
         else:
-            rospy.logerr("  Controller not running - abort goal to %s  " % self._name)
+            rospy.logerr("TCMX:    Controller not running - abort goal to %s  " % self._name)
             return False
 
     def preempt_goal(self):
-        rospy.loginfo("  Preempt goal from %s  " % self._name)
+        rospy.loginfo("TCMX:    Preempt goal from %s by calling cancel_all_goals ... " % self._name)
         self._client.cancel_all_goals()
         return True
 
@@ -729,42 +729,42 @@ class VigirTrajectoryCommandInterface(object):
         self.controllers = {}
         self.active_controller = None
 
-        rospy.loginfo(" Get the initial list of active controllers ...")
+        rospy.loginfo("TCMX:   Get the initial list of active controllers ...")
         self.update_running_controllers(None)
 
-        rospy.loginfo(" Initialized the trajectory command interface!")
+        rospy.loginfo("TCMX:   Initialized the trajectory command interface!")
 
     def publish_state_cb(self, msg):
         self.pub_state.publish(msg)
 
     def source_goal_callback(self):
-        rospy.loginfo("vvvvv   source_goal_callback for %s vvvvvvvvv" % self._action_name)
+        rospy.loginfo("TCMX:  vvvvv   source_goal_callback for %s vvvvvvvvv" % self._action_name)
         goal = self._as.accept_new_goal()
         self.update_running_controllers(None)
         if self.active_controller is not None:
             self.active_controller.set_goal(goal)
         else:
-            rospy.logwarn("source_goal_callback - No active controllers for %s" % self._action_name)
+            rospy.logwarn("TCMX:  source_goal_callback - No active controllers for %s" % self._action_name)
             result = FollowJointTrajectoryResult()
             result.error_string = "No active controllers"
             result.error_code = FollowJointTrajectoryResult.INVALID_GOAL
             self._as.set_aborted(result)
 
-        rospy.loginfo("^^^^^^^  done source_goal_callback for %s ! ^^^^^^^^^" % self._action_name)
+        rospy.loginfo("TCMX:  ^^^^^^^  done source_goal_callback for %s ! ^^^^^^^^^" % self._action_name)
 
     def source_preempt_callback(self):
         print "-vvvvvvvvvvv---source_preempt_callback---vvvvvvvvvvvvvvvvv---"
         if self.active_controller is not None:
             self.active_controller.preempt_goal()
         else:
-            rospy.logwarn("source_preempt_callback - No active controllers for %s" % self._action_name)
+            rospy.logwarn("TCMX:  source_preempt_callback - No active controllers for %s" % self._action_name)
         print "---^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^----------------"
 
     def source_command_callback(self, msg):
         if self.active_controller is not None:
             self.active_controller._client.pub_command.publish(msg)
         else:
-            rospy.logwarn("source_command_callback: No active controllers for %s" % self._action_name)
+            rospy.logwarn("TCMX:  source_command_callback: No active controllers for %s" % self._action_name)
 
         return
 
@@ -775,14 +775,14 @@ class VigirTrajectoryCommandInterface(object):
         # update the list of currently initialized controllers
         # we will assume that once a controller is initialized it remains in the list until shutdown.
 
-        #rospy.loginfo(" Update the controllers list ")
+        #rospy.loginfo("TCMX:   Update the controllers list ")
 
         controllers = self.get_active_traj_controllers(self._target_namespace)
 
         self.active_controller = None  # Reset the active controller list
 
         if controllers is None:
-            rospy.logwarn("No controllers returned - abort!")
+            rospy.logwarn("TCMX:  No controllers returned - abort!")
             return
 
         for controller in controllers:
@@ -795,7 +795,7 @@ class VigirTrajectoryCommandInterface(object):
                         if self.active_controller is None:
                             self.active_controller = self.controllers[controller.name]
                         else:
-                            rospy.logwarn("Controller %s is already listed as active - ignore %s" % (self.active_controller.name, controller.name))
+                            rospy.logwarn("TCMX:  Controller %s is already listed as active - ignore %s" % (self.active_controller.name, controller.name))
                 # else:
                 #    print "Controller ",controller.name, " is not for this appendage (",self._appendage_name,")"
             else:
@@ -805,7 +805,7 @@ class VigirTrajectoryCommandInterface(object):
                     if self.active_controller is None:
                         self.active_controller = self.controllers[controller.name]
                     else:
-                        rospy.logwarn(" Controller %s is already listed as running - ignore %s" % (self.active_controller.name, controller.name))
+                        rospy.logwarn("TCMX:   Controller %s is already listed as running - ignore %s" % (self.active_controller.name, controller.name))
 
     # @staticmethod
     # def get_traj_controllers(namespace, controller_list):
@@ -822,18 +822,18 @@ class VigirTrajectoryCommandInterface(object):
     def get_active_traj_controllers(self, namespace):
         if self.get_controller_list_service is None:
             try:
-                # rospy.loginfo("  Waiting for %s to get active trajectory controllers ..."%(list_service))
+                # rospy.loginfo("TCMX:    Waiting for %s to get active trajectory controllers ..."%(list_service))
                 # rospy.wait_for_service(list_service,)
                 list_service = namespace + "/controller_manager/list_controllers"
                 self.get_controller_list_service = rospy.ServiceProxy(list_service, ListControllers)
             except rospy.ServiceException as exc:
-                rospy.logerr("Failed to connect to the controller action service %s - failed: %s" % (list_service, exc))
+                rospy.logerr("TCMX:  Failed to connect to the controller action service %s - failed: %s" % (list_service, exc))
                 return None
 
         try:
             controller_list = self.get_controller_list_service().controller
         except rospy.ServiceException as exc:
-            rospy.logerr("Retrieving controller list on namespace %s : failed %s" % (namespace, exc))
+            rospy.logerr("TCMX:  Retrieving controller list on namespace %s : failed %s" % (namespace, exc))
             self.get_controller_list_service = None
             return None
 
