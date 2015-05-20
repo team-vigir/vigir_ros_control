@@ -26,6 +26,7 @@ add_message_files(
   msg
   FILES
   ControlModeStatus.msg
+  VigirRobotStability.msg
 )
 
 ## Generate services in the 'srv' folder
