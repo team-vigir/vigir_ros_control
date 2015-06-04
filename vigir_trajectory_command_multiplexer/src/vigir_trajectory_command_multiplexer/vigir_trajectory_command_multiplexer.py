@@ -777,12 +777,17 @@ class VigirTrajectoryCommandInterface(object):
 
         #rospy.loginfo("TCMX:   Update the controllers list ")
 
-        controllers = self.get_active_traj_controllers(self._target_namespace)
-
         self.active_controller = None  # Reset the active controller list
 
+        try:
+           controllers = self.get_active_traj_controllers(self._target_namespace)
+        except:
+            rospy.logerr("TCMX:  Get active traj controllers failed for namespace %s : failed %s" % (self._target_namespace, exc))
+            self.get_controller_list_service = None
+            return None
+
         if controllers is None:
-            rospy.logwarn("TCMX:  No controllers returned - abort!")
+            rospy.logwarn("TCMX:  No controllers returned for %s - abort!" % self._target_namespace)
             return
 
         for controller in controllers:
