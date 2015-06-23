@@ -27,7 +27,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Author: Stuart Glaser
+# Author: David Conner based on SimpleActionClient by Stuart Glaser
 """
 Example:
 
@@ -781,8 +781,12 @@ class VigirTrajectoryCommandInterface(object):
 
         try:
            controllers = self.get_active_traj_controllers(self._target_namespace)
-        except:
+        except rospy.ServiceException as exc:
             rospy.logerr("TCMX:  Get active traj controllers failed for namespace %s : failed %s" % (self._target_namespace, exc))
+            self.get_controller_list_service = None
+            return None
+        except:
+            rospy.logerr("TCMX:  Get active traj controllers failed for namespace %s : unknown exception" % (self._target_namespace))
             self.get_controller_list_service = None
             return None
 
@@ -800,7 +804,7 @@ class VigirTrajectoryCommandInterface(object):
                         if self.active_controller is None:
                             self.active_controller = self.controllers[controller.name]
                         else:
-                            rospy.logwarn("TCMX:  Controller %s is already listed as active - ignore %s" % (self.active_controller.name, controller.name))
+                            rospy.logwarn("TCMX:  Controller %s is already listed as active - ignore %s" % (self.active_controller._name, controller.name))
                 # else:
                 #    print "Controller ",controller.name, " is not for this appendage (",self._appendage_name,")"
             else:
@@ -810,7 +814,7 @@ class VigirTrajectoryCommandInterface(object):
                     if self.active_controller is None:
                         self.active_controller = self.controllers[controller.name]
                     else:
-                        rospy.logwarn("TCMX:   Controller %s is already listed as running - ignore %s" % (self.active_controller.name, controller.name))
+                        rospy.logwarn("TCMX:   Controller %s is already listed as running - ignore %s" % (self.active_controller._name, controller.name))
 
     # @staticmethod
     # def get_traj_controllers(namespace, controller_list):
@@ -834,11 +838,18 @@ class VigirTrajectoryCommandInterface(object):
             except rospy.ServiceException as exc:
                 rospy.logerr("TCMX:  Failed to connect to the controller action service %s - failed: %s" % (list_service, exc))
                 return None
+            except :
+                rospy.logerr("TCMX:  Failed to connect to the controller action service %s - unknown exception" % (list_service ))
+                return None
 
         try:
             controller_list = self.get_controller_list_service().controller
         except rospy.ServiceException as exc:
             rospy.logerr("TCMX:  Retrieving controller list on namespace %s : failed %s" % (namespace, exc))
+            self.get_controller_list_service = None
+            return None
+        except :
+            rospy.logerr("TCMX:  Retrieving controller list on namespace %s : unknown exception" % (namespace))
             self.get_controller_list_service = None
             return None
 
