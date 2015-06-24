@@ -58,7 +58,7 @@
   <build_depend>urdf</build_depend>
   <build_depend>libqhull</build_depend>
   <build_depend>rbdl</build_depend>
-  <build_depend>flor_utilities</build_depend>
+  <build_depend>vigir_utilities</build_depend>
   <build_depend>eigen_stl_containers</build_depend>
   <build_depend>eigen_conversions</build_depend>
 
@@ -68,7 +68,7 @@
   <run_depend>urdf</run_depend>
   <run_depend>libqhull</run_depend>
   <run_depend>rbdl</run_depend>
-  <run_depend>flor_utilities</run_depend>
+  <run_depend>vigir_utilities</run_depend>
   <run_depend>eigen_stl_containers</run_depend>
   <run_depend>eigen_conversions</run_depend>
 

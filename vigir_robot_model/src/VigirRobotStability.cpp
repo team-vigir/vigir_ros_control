@@ -28,7 +28,7 @@
 #include <ros/ros.h>
 
 #include <flor_dynamics/FlorStability.h>
-#include <flor_utilities/timing.h>
+#include <vigir_utilities/timing.h>
 
 #include <boost/thread/locks.hpp>
 

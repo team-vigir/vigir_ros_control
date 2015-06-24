@@ -3,7 +3,7 @@
 #include <vigir_robot_model/VigirRobotRBDLModel.h>
 #include <vigir_robot_model/VigirRobotState.h>
 #include <fstream>
-#include <flor_utilities/timing.h>
+#include <vigir_utilities/timing.h>
 
 
 inline std::ostream& operator << (std::ostream& os, const vigir_control::Quatd& q)
