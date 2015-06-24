@@ -31,7 +31,7 @@
 #include <ros/ros.h>
 
 #include <controller_manager/controller_manager.h>
-#include <flor_utilities/timing.h>
+#include <vigir_utilities/timing.h>
 
 #include <vigir_robot_model/VigirRobotModel.h>
 #include <vigir_humanoid_controller/VigirHumanoidHWInterface.h>

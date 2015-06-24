@@ -36,7 +36,7 @@
 #include <ros/ros.h>
 
 #include <vigir_humanoid_controller/VigirRealTimeBuffer.h>
-#include <flor_utilities/timing.h>
+#include <vigir_utilities/timing.h>
 
 namespace vigir_control
 {
