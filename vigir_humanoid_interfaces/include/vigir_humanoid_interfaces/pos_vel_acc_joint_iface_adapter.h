@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
-@TODO_ADD_AUTHOR_INFO
+//@TODO_ADD_AUTHOR_INFO
 // Taken from https://github.com/gt-ros-pkg/universal_robot/blob/hydro-devel-c-api/ur_controllers/include/ur_controllers/ur_hardware_interface_adapter.h
 
 #ifndef POS_VEL_ACC_JOINT_CMD_INTERFACE_ARAPTER_H
